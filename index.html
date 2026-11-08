@@ -201,7 +201,7 @@ window.addEventListener('hashchange',render);
 
 /* ===== NGUỒN DỮ LIỆU SỐNG: dán link CSV của Google Sheets (Publish to web) vào dòng dưới =====
    Để trống thì trang dùng dữ liệu nhúng sẵn (bản chụp). */
-var SHEET_CSV='';
+var SHEET_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vTeFZJ6kVoksGbJEoZ57orYuBI1m01E91CWwyqcPEj0M4gmICkzZXCUbgqS5_pKrWqf3lWrWcw5nrIq/pub?gid=0&single=true&output=csv';
 var HEAD={'mã kk':'kk','vị trí':'vt','huy hiệu':'hh','sku':'sku','loại box':'type','mã lô':'lo','tên vật tư':'ten','số lượng':'sl','đvt':'dvt','số box × sl/box':'sld','ngày nhập':'nn','nsx':'nsx','hsd':'hsd','mới/cũ':'mc','tình trạng':'tt','mất nhãn gốc':'mnh','kích thước':'kt','người kiểm':'nk','người dự trù':'dt','ngày kiểm':'ngk','mức chắc chắn':'cc','ghi chú':'gc','độ rõ':'ai','cần xác nhận':'cx','hãng':'hang','model':'model','ncc':'ncc','loại phiếu':'loai','bộ phận':'bp','khu/máy':'km','mã thiết bị':'mtb'};
 function parseCSV(t){var rows=[],r=[],f='',q=false,i=0,c;t=t.replace(/^\uFEFF/,'');
   for(;i<t.length;i++){c=t[i];
