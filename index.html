@@ -64,6 +64,11 @@ a{color:var(--ink)}
 .tl{flex:none;width:30px;font:600 13px var(--mono);color:var(--mute)}.trows{display:flex;flex-direction:column;gap:3px}.cells{display:flex;gap:3px}
 .cell{flex:none;min-width:34px;text-align:center;padding:7px 2px;border:1px solid var(--line);border-radius:4px;font:600 13px var(--mono);text-decoration:none;color:var(--mute);background:var(--bg)}
 .cell.has{background:var(--okbg);color:var(--ok);border-color:var(--ok)}.cell.hl{background:#ffb347;color:#3a2300;border-color:#b36b00}
+#lb{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;touch-action:pinch-zoom}
+#lb.on{display:flex}#lbi{max-width:100%;max-height:78vh;object-fit:contain;border-radius:8px;background:#222}
+#lbx{position:absolute;top:10px;right:12px;width:48px;height:48px;border:0;border-radius:50%;background:#fff;color:#111;font-size:32px;line-height:1;cursor:pointer}
+#lbc{color:#fff;font-size:15px;text-align:center;max-width:92vw}#lbo{color:#9bbcff;font-size:14px}
+.pic{cursor:zoom-in}
 </style>
 </head><body>
 <div class="wrap">
@@ -91,10 +96,10 @@ function card(r){
   h+='<div class="name">'+esc(r.ten)+'</div>';
   var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
-  var pic='img/'+encodeURIComponent(r.kk)+'.jpg';
+  var pic=IMG_BASE+encodeURIComponent(r.kk)+'.jpg', big=IMG_BIG+encodeURIComponent(r.kk)+'.jpg';
   h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+'</span></div>';
   if(r.sld)h+='<div class="qd">'+esc(r.sld)+'</div>';
-  h+='</div><a class="pic" href="'+pic+'" target="_blank" rel="noopener"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a></div>';
+  h+='</div><a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+pic+'" data-cap="'+esc(r.kk+' · '+(r.ten||''))+'" aria-label="Phóng to ảnh '+esc(r.kk)+'"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a></div>';
   h+='<dl>'+field('Mới / Cũ',r.mc)+field('Tình trạng',r.tt)+field('Kích thước bao',r.kt)+field('Mất nhãn gốc',r.mnh)+field('Mã lô',r.lo)+field('Ngày nhập',r.nn)+field('NSX',r.nsx)+field('HSD',r.hsd)+field('NCC',r.ncc)+field('Người kiểm',r.nk)+field('Ngày kiểm',r.ngk)+field('Người dự trù',r.dt)+field('Mức chắc chắn',r.cc)+field('Loại box',r.type)+field('Bộ phận sử dụng',r.bp)+field('Khu chuyền / máy',r.km)+field('Mã thiết bị',r.mtb)+'</dl>';
   if(r.cx){var w=r.ai&&r.ai!=='Rõ';h+='<div class="note'+(w?'':' ok')+'"><strong>'+(w?'Cần xác nhận':'Ghi chú đọc nhãn')+'</strong>'+esc(r.cx)+'</div>';}
   if(r.gc)h+='<p class="plain">'+esc(r.gc)+'</p>';
@@ -222,7 +227,23 @@ function loadSheet(){
     if(d.length){DATA=d;SRC='Google Sheets ('+d.length+' dòng KK)';UPDATED=new Date().toLocaleString('vi-VN')}else{UPDATED=UPDATED+' (Google Sheets tải được nhưng không có dòng KK hợp lệ. Cột đầu đọc được: '+rows[0].slice(0,4).join(' | ')+')'}
     setFoot();render();
   }).catch(function(e){UPDATED=UPDATED+' (không tải được Google Sheets: '+((e&&e.message)||'lỗi mạng/CORS')+'; đang dùng bản chụp)';setFoot();render()});
-}
+}var IMG_BASE='img/', IMG_BIG='img/big/';  /* đổi 2 dòng này nếu sau này chuyển ảnh sang nơi khác */
+(function(){
+  var lb=document.createElement('div');lb.id='lb';lb.setAttribute('role','dialog');lb.setAttribute('aria-modal','true');
+  lb.innerHTML='<button id="lbx" type="button" aria-label="Đóng">×</button><img id="lbi" alt=""><div id="lbc"></div><a id="lbo" target="_blank" rel="noopener">Mở ảnh trong tab mới</a>';
+  document.body.appendChild(lb);
+  var im=document.getElementById('lbi');
+  function close(){lb.className='';im.removeAttribute('src');document.body.style.overflow=''}
+  function open(a){var big=a.getAttribute('data-big'),sm=a.getAttribute('data-small');
+    im.onerror=function(){im.onerror=null;im.src=sm};im.src=big;
+    document.getElementById('lbc').textContent=a.getAttribute('data-cap')||'';
+    document.getElementById('lbo').href=big;lb.className='on';document.body.style.overflow='hidden'}
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a.pic');if(a){e.preventDefault();open(a);return}
+    if(e.target.id==='lbx'||e.target===lb)close()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+})();
+
 loadSheet();
 </script>
 </body></html>
