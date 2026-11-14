@@ -74,7 +74,19 @@ a{color:var(--ink)}
 .bar i.cg,.legend i.cg{background:#2ea05a}.bar i.cy,.legend i.cy{background:#e9a21c}.bar i.cr,.legend i.cr{background:#d94040}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12.5px;color:var(--mute)}.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);display:inline-block}.legend i.has{background:var(--okbg);border-color:var(--ok)}.legend i.hlg{background:#ffb347;border-color:#b36b00}
 .plan .pl.cg{fill:rgba(46,160,90,.45);stroke:#2ea05a}.plan .pl.cy{fill:rgba(233,162,28,.5);stroke:#d99a1e}.plan .pl.cr{fill:rgba(217,64,64,.5);stroke:#d94040}
+.plan .pl.w{fill:var(--card)}.plan .wv.cg{fill:#8fd4a8}.plan .wv.cy{fill:#f2c46a}.plan .wv.cr{fill:#e88a8a}
+.plan .rs{animation:rs 1.4s ease-out}.plan .wv{animation:wx var(--sp,6s) linear infinite}
+@keyframes rs{from{transform:translateY(var(--h))}}@keyframes wx{to{transform:translateX(var(--w))}}
+@media (prefers-reduced-motion:reduce){.plan .rs,.plan .wv{animation:none}}
 .cell.cg{background:rgba(46,160,90,.4);color:var(--fg);border-color:#2ea05a}.cell.cy{background:rgba(233,162,28,.5);color:var(--fg);border-color:#d99a1e}.cell.cr{background:rgba(217,64,64,.5);color:var(--fg);border-color:#d94040}
+.cell.w{position:relative;overflow:hidden;isolation:isolate;background:var(--bg)}
+.cell.w>span{position:relative;z-index:2}
+.cell .wt{position:absolute;left:0;right:0;bottom:0;height:var(--lv);z-index:1;animation:rise 1.4s ease-out}
+.cell .wt::before{content:'';position:absolute;left:50%;margin-left:-80px;top:-4px;width:160px;height:160px;border-radius:44%;background:inherit;animation:wv var(--sp,7s) linear infinite;animation-delay:var(--dl,0s)}
+.cell.cg .wt{background:#8fd4a8}.cell.cy .wt{background:#f2c46a}.cell.cr .wt{background:#e88a8a}
+.cell.w.cg,.cell.w.cy,.cell.w.cr{background:var(--bg)}
+@keyframes rise{from{height:0}to{height:var(--lv)}}@keyframes wv{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.cell .wt,.cell .wt::before{animation:none}}
 .boxpic img{width:84px;height:84px;object-fit:cover}
 </style>
 </head><body>
@@ -199,7 +211,10 @@ function planSVG(){
   var cnt={},hl={};DATA.forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var c=p[0]+'.'+p[1];cnt[c]=(cnt[c]||0)+1}});
   Object.keys(HL).forEach(function(v){var p=v.split('.');if(p.length>=2){var c=p[0]+'.'+p[1];hl[c]=(hl[c]||0)+HL[v]}});
   function rect(c,x,y,w,hh){var cp=cnt[c]?clusterCap(c):null;var cls='pl'+(hl[c]?' hl':(cnt[c]?(cp!=null?' '+capCls(cp):' has'):''));
-    return '<a href="#'+hashOf(c)+'"><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/><text x="'+(x+w/2)+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+(x+w/2)+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+(hl[c]?hl[c]+' khớp':(cnt[c]?cnt[c]+' nhãn'+(cp!=null?' · '+pf(cp):''):''))+'</text><title>'+c+(cp!=null?' — sức chứa '+pf(cp):'')+'</title></a>'}
+    var wt='';if(!hl[c]&&cp!=null){cls+=' w';var id='cp'+c.replace(/\W/g,''),lh=hh*Math.min(100,Math.max(cp,6))/100,H=hh,q=w/4,
+      d='M0 0q'+q+' -6 '+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0V'+H+'H0Z';
+      wt='<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/></clipPath><g clip-path="url(#'+id+')"><g class="rs" style="--h:'+hh+'px"><g transform="translate('+x+','+(y+hh-lh)+')"><path class="wv '+capCls(cp)+'" style="--w:-'+w+'px;--sp:'+(5+(x%4))+'s" d="'+d+'"/></g></g></g>'}
+    return '<a href="#'+hashOf(c)+'"><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/>'+wt+'<text x="'+(x+w/2)+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+(x+w/2)+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+(hl[c]?hl[c]+' khớp':(cnt[c]?cnt[c]+' nhãn'+(cp!=null?' · '+pf(cp):''):''))+'</text><title>'+c+(cp!=null?' — sức chứa '+pf(cp):'')+'</title></a>'}
   var s='<svg viewBox="0 0 940 390" class="plan" style="min-width:620px" role="img" aria-label="Mặt bằng kho"><text x="10" y="16" class="ps">Mặt bằng kho WH_EN-01 (bấm một cụm để xem các ô)</text>';
   var cols=[11,10,9,8,7,6,5,4,3,2,1];
   cols.forEach(function(d,i){var x=10+i*84;s+=rect('F'+d+'.2',x,26,80,130)+rect('F'+d+'.1',x,160,80,130)});
@@ -233,7 +248,8 @@ function gridFor(cl,o,tangFocus){
       var cells=es.filter(function(e){return e[2]===t&&e[4]===rk}).sort(function(a,b){return a[3]-b[3]});
       if(!cells.length)return;
       h+='<div class="cells">'+cells.map(function(e){var c=e[0],cp=o[c]?capOf(c).pct:null;var cls='cell'+(HL[c]?' hl':(o[c]?(cp!=null?' '+capCls(cp):' has'):''));
-        return '<a class="'+cls+'" href="#'+hashOf(c)+'" title="'+c+(o[c]?' — '+o[c]+' nhãn'+(cp!=null?' — sức chứa '+pf(cp):''):' — chưa có nhãn')+'">'+e[3]+'</a>'}).join('')+'</div>';
+        var w=(!HL[c]&&cp!=null),lv=w?Math.min(100,Math.max(cp,6)):0;if(w)cls+=' w';
+        return '<a class="'+cls+'" href="#'+hashOf(c)+'" title="'+c+(o[c]?' — '+o[c]+' nhãn'+(cp!=null?' — sức chứa '+pf(cp):''):' — chưa có nhãn')+'">'+(w?'<u class="wt" style="--lv:'+lv+'%;--sp:'+(5+(e[3]*7%5))+'s;--dl:-'+(e[3]*13%7)+'s"></u><span>'+e[3]+'</span>':e[3])+'</a>'}).join('')+'</div>';
     });
     h+='</div></div>';
   });
