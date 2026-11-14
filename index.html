@@ -69,6 +69,13 @@ a{color:var(--ink)}
 #lbx{position:absolute;top:10px;right:12px;width:48px;height:48px;border:0;border-radius:50%;background:#fff;color:#111;font-size:32px;line-height:1;cursor:pointer}
 #lbc{color:#fff;font-size:15px;text-align:center;max-width:92vw}#lbo{color:#9bbcff;font-size:14px}
 .pic{cursor:zoom-in}
+.cap{margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:6px}.cap small{color:var(--mute);font-size:12.5px}.capt{font-size:14.5px}
+.bar{height:12px;border-radius:6px;background:rgba(128,128,128,.25);overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
+.bar i.cg,.legend i.cg{background:#2ea05a}.bar i.cy,.legend i.cy{background:#e9a21c}.bar i.cr,.legend i.cr{background:#d94040}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12.5px;color:var(--mute)}.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);display:inline-block}.legend i.has{background:var(--okbg);border-color:var(--ok)}.legend i.hlg{background:#ffb347;border-color:#b36b00}
+.plan .pl.cg{fill:rgba(46,160,90,.45);stroke:#2ea05a}.plan .pl.cy{fill:rgba(233,162,28,.5);stroke:#d99a1e}.plan .pl.cr{fill:rgba(217,64,64,.5);stroke:#d94040}
+.cell.cg{background:rgba(46,160,90,.4);color:var(--fg);border-color:#2ea05a}.cell.cy{background:rgba(233,162,28,.5);color:var(--fg);border-color:#d99a1e}.cell.cr{background:rgba(217,64,64,.5);color:var(--fg);border-color:#d94040}
+.boxpic img{width:84px;height:84px;object-fit:cover}
 </style>
 </head><body>
 <div class="wrap">
@@ -100,7 +107,7 @@ function card(r){
   h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+'</span></div>';
   if(r.sld)h+='<div class="qd">'+esc(r.sld)+'</div>';
   h+='</div><a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+pic+'" data-cap="'+esc(r.kk+' · '+(r.ten||''))+'" aria-label="Phóng to ảnh '+esc(r.kk)+'"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a></div>';
-  h+='<dl>'+field('Mới / Cũ',r.mc)+field('Tình trạng',r.tt)+field('Kích thước bao',r.kt)+field('Mất nhãn gốc',r.mnh)+field('Mã lô',r.lo)+field('Ngày nhập',r.nn)+field('NSX',r.nsx)+field('HSD',r.hsd)+field('NCC',r.ncc)+field('Người kiểm',r.nk)+field('Ngày kiểm',r.ngk)+field('Người dự trù',r.dt)+field('Mức chắc chắn',r.cc)+field('Loại box',r.type)+field('Bộ phận sử dụng',r.bp)+field('Khu chuyền / máy',r.km)+field('Mã thiết bị',r.mtb)+'</dl>';
+  h+='<dl>'+field('Mới / Cũ',r.mc)+field('Tình trạng',r.tt)+field('Kích thước bao',ktOf(r))+field('Thể tích ước tính',itemVol(r)!=null?nf(itemVol(r))+' cm³ (1 chiếc × SL)':'')+field('Mất nhãn gốc',r.mnh)+field('Mã lô',r.lo)+field('Ngày nhập',r.nn)+field('NSX',r.nsx)+field('HSD',r.hsd)+field('NCC',r.ncc)+field('Người kiểm',r.nk)+field('Ngày kiểm',r.ngk)+field('Người dự trù',r.dt)+field('Mức chắc chắn',r.cc)+field('Loại box',r.type)+field('Bộ phận sử dụng',r.bp)+field('Khu chuyền / máy',r.km)+field('Mã thiết bị',r.mtb)+'</dl>';
   if(r.cx){var w=r.ai&&r.ai!=='Rõ';h+='<div class="note'+(w?'':' ok')+'"><strong>'+(w?'Cần xác nhận':'Ghi chú đọc nhãn')+'</strong>'+esc(r.cx)+'</div>';}
   if(r.gc)h+='<p class="plain">'+esc(r.gc)+'</p>';
   return h+'</div>';
@@ -111,7 +118,9 @@ function uniq(a){var o={};return a.filter(function(x){if(!x||o[x])return false;o
 function openBox(loc){OPENED[loc]=1;render()}
 function boxView(loc){
   var rs=DATA.filter(function(r){return r.vt===loc}).sort(function(a,b){return (+a.hh||999)-(+b.hh||999)});
-  var h='<div class="card"><div class="head"><div><div class="code">'+esc(loc)+'</div><span class="sub" style="padding:0">Hộp vật tư tại vị trí này</span></div></div>';
+  var cpx=capOf(loc),tn=(cpx.type||'').replace(/\D/g,''),bd=cpx.type?boxDim(cpx.type,loc.split('.')[0]):null,bcap=cpx.type+(bd?' · '+bd.join('×')+' mm':'')+' · ô '+loc;
+  var bpic=tn?'<a class="pic boxpic" href="img/box/big/T'+tn+'.jpg" data-big="img/box/big/T'+tn+'.jpg" data-small="img/box/T'+tn+'.jpg" data-cap="'+esc('Ảnh minh hoạ '+bcap)+'" aria-label="Phóng to ảnh '+esc(cpx.type)+'"><img src="img/box/T'+tn+'.jpg" alt="'+esc(cpx.type)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a>':'';
+  var h='<div class="card"><div class="head"><div><div class="code">'+esc(loc)+'</div><span class="sub" style="padding:0">Hộp vật tư tại vị trí này</span></div>'+bpic+'</div>';
   if(!rs.length)return h+'<div class="empty">Hộp đang trống: chưa có nhãn kiểm kê nào ở vị trí này.</div></div>';
   var today=new Date(),n90=new Date(today.getTime()+90*864e5);
   var hsd=rs.filter(function(r){var d=pdate(r.hsd);return d&&d<n90});
@@ -123,7 +132,7 @@ function boxView(loc){
   var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip">'+tot+' đơn vị (cộng chung)</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
   if(hsdQ)chips+='<span class="chip warn">'+hsdQ+' loại quá hạn</span>';else if(hsd.length)chips+='<span class="chip warn">'+hsd.length+' loại sắp hết hạn (90 ngày)</span>';
   if(cx)chips+='<span class="chip warn">'+cx+' loại cần xác nhận</span>';
-  h+='<div class="chips">'+chips+'</div>';
+  h+='<div class="chips">'+chips+'</div>'+capHTML(loc);
   if(!OPENED[loc])return h+'<button class="open" onclick="openBox(\''+loc+'\')">Mở hộp xem bên trong</button></div>';
   var z='';
   if(bp.length||km.length||tb.length)z='<dl class="zone">'+field('Bộ phận sử dụng',bp.join(', '))+field('Khu chuyền / máy',km.join(', '))+field('Mã thiết bị',tb.join(', '))+'</dl>';
@@ -135,18 +144,68 @@ function boxView(loc){
 var HL={};
 function fold(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d')}
 function hay(r){return fold([r.kk,r.vt,r.ten,r.sku,r.model,r.hang,r.lo,r.ncc,r.bp,r.km,r.mtb].join(' '))}
+/* ===== SỨC CHỨA (thể tích vật tư / thể tích box cơ sở) =====
+   Số đo 10 loại box [dài, rộng, cao] mm = cột 'Kích thước chiếm chỗ' trong bảng DANH SÁCH CÁC LOẠI BOX (Lợi chốt 14/11/2026). */
+var BOX_DIM={'Type 1':[500,300,180],'Type 2':[600,420,135],'Type 3':[600,420,305],'Type 4':[220,130.5,120],'Type 5':[600,420,370],
+ 'Type 6':[360,545,290],'Type 7':[455,310,225],'Type 8':[500,400,400],'Type 9':[590,400,145],'Type 10':[400,300,230]};
+var BOX_VOL={'Type 6':35000,'Type 7':20000};                    /* thể tích khả dụng thực tế (cm³) do Lợi chốt 14/11/2026 — ưu tiên hơn số đo chiếm chỗ: Type 6 = 35 lít, Type 7 = 20 lít */
+var BOX_DIM_DAY={};                                              /* số đo riêng theo dãy (nếu cần), dạng {'F12':{'Type 3':[d,r,c]}} */
+var BASE_BY_DAY={'F1':'Type 1','F2':'Type 4','F12':'Type 3'};   /* Quy ước 2; dãy khác (kể cả F4) = Type 5 */
+var BASE_BY_TANG={'F3':{1:'Type 5',2:'Type 5',3:'Type 6',4:'Type 6',5:'Type 6',6:'Type 7',7:'Type 7'}};   /* dãy chia box theo tầng: F3 — ưu tiên hơn quy ước chung và ngoại lệ tầng 7 */
+var USABLE=0.8;                                                 /* hệ số lấp đầy 0,8 (quy tắc 80/20): thể tích dùng được = 80% thể tích box */
+var CAP_LO=50, CAP_HI=80;                                       /* ngưỡng màu: <50 xanh, 50–80 vàng cam, >80 đỏ */
+function boxDim(t,day){var o=BOX_DIM_DAY[day];return (o&&o[t])||BOX_DIM[t]||null}
+function boxVol(t,day){if(BOX_VOL[t])return BOX_VOL[t]*USABLE;var d=boxDim(t,day);return d?d[0]*d[1]*d[2]/1000*USABLE:null}
+/* Kích thước bổ sung cho KK chưa có trong cột 'Kích thước' của Google Sheets (chỉ dùng khi Sheet để trống) */
+var KT_BU={'KK-0011':'44 × 35 × 14 mm','KK-0015':'Ø20 × 35 mm','KK-0028':'43 × 34 × 14 mm'};
+function ktOf(r){return r.kt||KT_BU[r.kk]||''}
+function parseKT(s){s=String(s||'').replace(/,/g,'.').replace(/\s+/g,' ');
+  var u=/\bcm\b/i.test(s)?10:1,m=/[Øø⌀]\s*(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)/.exec(s);
+  if(m){var d=+m[1]*u,h=+m[2]*u;return Math.PI*d*d/4*h/1000}
+  m=/(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)/.exec(s);
+  return m?(+m[1]*u)*(+m[2]*u)*(+m[3]*u)/1000:null}
+function itemVol(r){var v=parseKT(ktOf(r)),q=parseFloat(String(r.sl||'').replace(',','.'));return (v!=null&&q>0)?v*q:null}
+function typeKey(t){var m=/Type\s*(\d+)/i.exec(String(t||''));return m?'Type '+m[1]:''}
+function baseType(loc){var p=loc.split('.'),day=p[0],tang=+p[2];
+  if(BASE_BY_TANG[day]&&BASE_BY_TANG[day][tang])return BASE_BY_TANG[day][tang];
+  if(tang===7)return day==='F12'?'Type 3':'Type 5';
+  return BASE_BY_DAY[day]||'Type 5'}
+var CAPC=null;
+function capOf(loc){
+  if(!CAPC){CAPC={};DATA.forEach(function(r){var c=CAPC[r.vt]||(CAPC[r.vt]={rs:[]});c.rs.push(r)})}
+  var c=CAPC[loc]||(CAPC[loc]={rs:[]});
+  if(c.done)return c; c.done=1;
+  var day=loc.split('.')[0],ts=uniq(c.rs.map(function(r){return typeKey(r.type)})).filter(Boolean),t=null;
+  if(ts.length===1&&boxVol(ts[0],day))t=ts[0];
+  if(!t)t=baseType(loc);
+  c.type=t;c.box=boxVol(t,day);c.vol=0;c.n=0;c.miss=[];
+  c.rs.forEach(function(r){var v=itemVol(r);if(v==null)c.miss.push(r.kk);else{c.vol+=v;c.n++}});
+  c.pct=(c.box&&c.n)?c.vol/c.box*100:null;
+  return c}
+function capCls(p){return p==null?'':(p<CAP_LO?'cg':(p<=CAP_HI?'cy':'cr'))}
+function nf(x,d){return (+x).toLocaleString('vi-VN',{maximumFractionDigits:d==null?0:d})}
+function pf(p){return nf(p,p<10?1:0)+'%'}
+function capHTML(loc){var c=capOf(loc);if(!c.rs.length)return '';
+  var miss=c.miss.length?'<small>'+c.n+'/'+c.rs.length+' loại có kích thước nên được tính; thiếu: '+c.miss.join(', ')+'</small>':'';
+  if(!c.box)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · chưa có số đo box '+esc(c.type)+'</div><small>Thể tích vật tư đã đo: '+nf(c.vol)+' cm³</small>'+miss+'</div>';
+  if(c.pct==null)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · vật tư chưa có kích thước</div>'+miss+'</div>';
+  return '<div class="cap"><div class="capt"><b>Sức chứa: '+pf(c.pct)+'</b> · vật tư chiếm '+nf(c.vol)+' cm³ / thể tích dùng được của box '+esc(c.type)+' '+nf(c.box)+' cm³ (đã nhân hệ số lấp đầy '+USABLE+')</div><div class="bar"><i class="'+capCls(c.pct)+'" style="width:'+Math.min(100,c.pct)+'%"></i></div>'+miss+'</div>'}
+function clusterCap(cl){var es=(window.KHO_VITRI&&vtIdx()[cl])||[],num=0,den=0,k=0;
+  es.forEach(function(e){var c=capOf(e[0]);if(c.box){den+=c.box;num+=c.vol;if(c.rs.length)k++}});
+  return (den&&k)?num/den*100:null}
+function legend(){return '<div class="legend"><span><i class="cg"></i>&lt;'+CAP_LO+'% còn nhiều chỗ</span><span><i class="cy"></i>'+CAP_LO+'–'+CAP_HI+'% vừa</span><span><i class="cr"></i>&gt;'+CAP_HI+'% sắp đầy</span><span><i class="has"></i>có nhãn, chưa tính được %</span><span><i class="hlg"></i>khớp tìm kiếm</span></div>'}
 function occ(){var o={};DATA.forEach(function(r){o[r.vt]=(o[r.vt]||0)+1});return o}
 function planSVG(){
   var cnt={},hl={};DATA.forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var c=p[0]+'.'+p[1];cnt[c]=(cnt[c]||0)+1}});
   Object.keys(HL).forEach(function(v){var p=v.split('.');if(p.length>=2){var c=p[0]+'.'+p[1];hl[c]=(hl[c]||0)+HL[v]}});
-  function rect(c,x,y,w,hh){var cls='pl'+(hl[c]?' hl':(cnt[c]?' has':''));
-    return '<a href="#'+hashOf(c)+'"><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/><text x="'+(x+w/2)+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+(x+w/2)+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+(hl[c]?hl[c]+' khớp':(cnt[c]?cnt[c]+' nhãn':''))+'</text><title>'+c+'</title></a>'}
+  function rect(c,x,y,w,hh){var cp=cnt[c]?clusterCap(c):null;var cls='pl'+(hl[c]?' hl':(cnt[c]?(cp!=null?' '+capCls(cp):' has'):''));
+    return '<a href="#'+hashOf(c)+'"><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/><text x="'+(x+w/2)+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+(x+w/2)+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+(hl[c]?hl[c]+' khớp':(cnt[c]?cnt[c]+' nhãn'+(cp!=null?' · '+pf(cp):''):''))+'</text><title>'+c+(cp!=null?' — sức chứa '+pf(cp):'')+'</title></a>'}
   var s='<svg viewBox="0 0 940 390" class="plan" style="min-width:620px" role="img" aria-label="Mặt bằng kho"><text x="10" y="16" class="ps">Mặt bằng kho WH_EN-01 (bấm một cụm để xem các ô)</text>';
   var cols=[11,10,9,8,7,6,5,4,3,2,1];
   cols.forEach(function(d,i){var x=10+i*84;s+=rect('F'+d+'.2',x,26,80,130)+rect('F'+d+'.1',x,160,80,130)});
   s+=rect('F12.3',10,310,200,56)+rect('F12.2',214,310,200,56)+rect('F12.1',418,310,200,56);
   s+='<rect class="pl" x="622" y="310" width="312" height="56" rx="3" style="stroke-dasharray:4 3"/><text x="778" y="342" text-anchor="middle" class="ps">KHU PHỤ / THIẾT BỊ</text></svg>';
-  return '<div class="card" style="padding:10px;overflow-x:auto">'+s+'</div>';
+  return '<div class="card" style="padding:10px;overflow-x:auto">'+s+legend()+'</div>';
 }
 function search(t){
   var tk=fold(t).split(/\s+/).filter(Boolean); if(!tk.length)return '';
@@ -167,18 +226,18 @@ function vtIdx(){if(VT_IDX)return VT_IDX;VT_IDX={};(window.KHO_VITRI||[]).forEac
 function gridFor(cl,o,tangFocus){
   var es=vtIdx()[cl]||[]; if(!es.length)return '<div class="card"><div class="empty">Cụm '+esc(cl)+' chưa có trong danh mục ô.</div></div>';
   var tangs=[];es.forEach(function(e){if(tangs.indexOf(e[2])<0)tangs.push(e[2])});tangs.sort(function(a,b){return b-a});
-  var h='<div class="card"><div class="head"><div><div class="code">'+esc(cl)+'</div><span class="sub" style="padding:0">Mặt đứng: tầng trên cùng ở trên. Ô xanh = có nhãn, ô cam = khớp tìm kiếm</span></div></div><div class="elev">';
+  var h='<div class="card"><div class="head"><div><div class="code">'+esc(cl)+'</div><span class="sub" style="padding:0">Mặt đứng: tầng trên cùng ở trên. Màu theo sức chứa; ô cam = khớp tìm kiếm</span></div></div><div class="elev">';
   tangs.forEach(function(t){
     h+='<div class="tang'+(tangFocus===t?' foc':'')+'"><b class="tl">T'+t+'</b><div class="trows">';
     [0,1,2].forEach(function(rk){
       var cells=es.filter(function(e){return e[2]===t&&e[4]===rk}).sort(function(a,b){return a[3]-b[3]});
       if(!cells.length)return;
-      h+='<div class="cells">'+cells.map(function(e){var c=e[0];var cls='cell'+(HL[c]?' hl':(o[c]?' has':''));
-        return '<a class="'+cls+'" href="#'+hashOf(c)+'" title="'+c+(o[c]?' — '+o[c]+' nhãn':' — chưa có nhãn')+'">'+e[3]+'</a>'}).join('')+'</div>';
+      h+='<div class="cells">'+cells.map(function(e){var c=e[0],cp=o[c]?capOf(c).pct:null;var cls='cell'+(HL[c]?' hl':(o[c]?(cp!=null?' '+capCls(cp):' has'):''));
+        return '<a class="'+cls+'" href="#'+hashOf(c)+'" title="'+c+(o[c]?' — '+o[c]+' nhãn'+(cp!=null?' — sức chứa '+pf(cp):''):' — chưa có nhãn')+'">'+e[3]+'</a>'}).join('')+'</div>';
     });
     h+='</div></div>';
   });
-  return h+'</div></div>';
+  return h+'</div>'+legend()+'</div>';
 }
 function clusterView(l){
   if(!window.KHO_VITRI)return '<div class="card"><div class="empty">Thiếu file vi_tri.js (phải nằm cùng thư mục với trang này) nên chưa vẽ được các ô.</div></div>';
@@ -193,6 +252,7 @@ function locView(l){var p=l.split('.');
   return clusterView(l);
 }
 function render(){
+  CAPC=null;
   var h=decodeURIComponent(location.hash.replace(/^#/,''));if(!h){var mq=/[?&]o=([^&]+)/.exec(location.search);if(mq)h=decodeURIComponent(mq[1]);}
   var k=normKK(h), l=h?normLoc(h):null, html;
   if(k){var r=DATA.filter(function(x){return x.kk===k})[0];
