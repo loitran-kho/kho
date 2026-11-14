@@ -50,7 +50,7 @@ dd{margin:0;font-weight:500;overflow-wrap:anywhere}
 .sum{padding:12px 16px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 .empty{padding:20px 16px;color:var(--mute)}
 .pill{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle;padding:3px 8px;border-radius:999px;background:var(--okbg);color:var(--ok)}
-.foot{font-size:13px;color:var(--mute)}
+.foot{font-size:13px;color:var(--mute)}.dlb{font:600 13px inherit;font-family:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);cursor:pointer}
 a{color:var(--ink)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;padding:4px 16px 12px}
 .chip{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--okbg);color:var(--ok)}
@@ -95,6 +95,7 @@ a{color:var(--ink)}
 <form class="search" id="f" autocomplete="off"><input id="q" type="search" placeholder="Mã KK, vị trí, tên hoặc SKU" inputmode="search" aria-label="Tìm vật tư"><button type="submit">Tìm</button></form>
 <div id="out"></div>
 <p class="foot" id="foot"></p>
+<p class="foot" id="offl" hidden><button type="button" id="dl" class="dlb">⬇ Tải data.js cho bản offline</button> <span id="dlmsg"></span></p>
 </div>
 <script src="data.js" charset="utf-8"></script><script src="vi_tri.js" charset="utf-8"></script>
 <script>
@@ -294,6 +295,14 @@ function parseCSV(t){var rows=[],r=[],f='',q=false,i=0,c;t=t.replace(/^\uFEFF/,'
     else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;r.push(f);f='';rows.push(r);r=[]}
     else f+=c}
   if(f!==''||r.length){r.push(f);rows.push(r)}return rows}
+
+function pad2(n){return(n<10?'0':'')+n}
+function showDL(){var b=document.getElementById('dl'),w=document.getElementById('offl');if(!b||!w)return;w.hidden=false;
+  b.onclick=function(){try{var n=new Date(),dt=pad2(n.getDate())+'/'+pad2(n.getMonth()+1)+'/'+n.getFullYear();
+    var txt='/* Dữ liệu vật tư cho tra_cuu.html. Xuất từ Google Sheets bằng nút trên trang tra cứu. */\nwindow.KHO_DATA={updated:'+JSON.stringify(dt)+',rows:'+JSON.stringify(DATA)+'};\n';
+    var bl=new Blob([txt],{type:'application/javascript;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='data.js';document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+    document.getElementById('dlmsg').textContent='Đã tải data.js ('+DATA.length+' dòng, '+dt+'). Chép đè vào thư mục bản offline.'}catch(e){document.getElementById('dlmsg').textContent='Không tạo được file: '+e.message}}}
 function loadSheet(){
   if(!SHEET_CSV){render();return}
   fetch(SHEET_CSV+(SHEET_CSV.indexOf('?')<0?'?':'&')+'t='+Date.now()).then(function(x){if(!x.ok)throw new Error('HTTP '+x.status);return x.text()}).then(function(t){
@@ -301,7 +310,7 @@ function loadSheet(){
     var keys=rows[0].map(function(h){h=h.trim().toLowerCase();return HEAD[h]||h});
     var d=[];rows.slice(1).forEach(function(r){var o={};keys.forEach(function(k,i){o[k]=(r[i]||'').trim()});if(/^KK-/i.test(o.kk)||o.loai)d.push(o)});
     if(d.length){DATA=d;SRC='Google Sheets ('+d.length+' dòng KK)';UPDATED=new Date().toLocaleString('vi-VN')}else{UPDATED=UPDATED+' (Google Sheets tải được nhưng không có dòng KK hợp lệ. Cột đầu đọc được: '+rows[0].slice(0,4).join(' | ')+')'}
-    setFoot();render();
+    setFoot();render();if(d.length)showDL();
   }).catch(function(e){UPDATED=UPDATED+' (không tải được Google Sheets: '+((e&&e.message)||'lỗi mạng/CORS')+'; đang dùng bản chụp)';setFoot();render()});
 }var IMG_BASE='img/', IMG_BIG='img/big/';  /* đổi 2 dòng này nếu sau này chuyển ảnh sang nơi khác */
 (function(){
