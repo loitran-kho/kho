@@ -88,6 +88,10 @@ a{color:var(--ink)}
 @keyframes rise{from{height:0}to{height:var(--lv)}}@keyframes wv{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.cell .wt,.cell .wt::before{animation:none}}
 .boxpic img{width:84px;height:84px;object-fit:cover}
+.gal{margin:10px 16px 4px}.gal summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}
+.galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
+.galg .pic{position:relative;line-height:0}.galg .pic img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:10px}
+.galg .pic span{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.68);color:#fff;font:600 11px var(--mono);padding:2px 5px;border-radius:4px;line-height:1.25}
 </style>
 </head><body>
 <div class="wrap">
@@ -129,12 +133,22 @@ var OPENED={};
 function pdate(v){v=(v||'').trim();var m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v);if(m)return new Date(+m[3],+m[2]-1,+m[1]);m=/^(\d{1,2})\/(\d{4})$/.exec(v);if(m)return new Date(+m[2],+m[1],0);return null}
 function uniq(a){var o={};return a.filter(function(x){if(!x||o[x])return false;o[x]=1;return true})}
 function openBox(loc){OPENED[loc]=1;render()}
+/* Thư viện ảnh thực tế theo ô. Thêm ô mới: GALLERY['F1.1.1.6']={dir:'img/F1.1.1.6/',files:[...]}; ảnh nhỏ = dir+file, ảnh lớn = dir+'big/'+file.
+   Tên KK-xxxx.jpg tự lấy chú thích từ dữ liệu; mục dạng ['tên.jpg','Chú thích'] là ảnh toàn cảnh. */
+var GALLERY={'F1.1.1.5':{dir:'img/F1.1.1.5/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.5 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.5 (các túi có huy hiệu số)'],
+ 'KK-0043.jpg','KK-0044.jpg','KK-0045.jpg','KK-0046.jpg','KK-0047.jpg','KK-0048.jpg','KK-0049.jpg','KK-0050.jpg','KK-0051.jpg','KK-0052.jpg','KK-0053.jpg','KK-0054.jpg','KK-0055.jpg']}};
+function galHTML(loc){var g=GALLERY[loc];if(!g)return '';var by={};DATA.forEach(function(r){by[r.kk]=r});
+  var a=g.files.map(function(f){var file=Array.isArray(f)?f[0]:f,cap=Array.isArray(f)?f[1]:'',lab='Toàn cảnh',m=/^(KK-\d{4})\./i.exec(file);
+    if(m){var k=m[1].toUpperCase(),r=by[k];lab=k;cap=k+(r&&r.ten?' · '+r.ten:'')}
+    var sm=g.dir+file,big=g.dir+'big/'+file;
+    return '<a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+sm+'" data-cap="'+esc(cap)+'" aria-label="Phóng to: '+esc(cap)+'"><img src="'+sm+'" alt="'+esc(cap)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"><span>'+esc(lab)+'</span></a>'}).join('');
+  return '<details class="gal" open><summary>Ảnh thực tế tại ô '+esc(loc)+' ('+g.files.length+' ảnh)</summary><div class="galg">'+a+'</div></details>'}
 function boxView(loc){
   var rs=DATA.filter(function(r){return r.vt===loc}).sort(function(a,b){return (+a.hh||999)-(+b.hh||999)});
   var cpx=capOf(loc),tn=(cpx.type||'').replace(/\D/g,''),bd=cpx.type?boxDim(cpx.type,loc.split('.')[0]):null,bcap=cpx.type+(bd?' · '+bd.join('×')+' mm':'')+' · ô '+loc;
   var bpic=tn?'<a class="pic boxpic" href="img/box/big/T'+tn+'.jpg" data-big="img/box/big/T'+tn+'.jpg" data-small="img/box/T'+tn+'.jpg" data-cap="'+esc('Ảnh minh hoạ '+bcap)+'" aria-label="Phóng to ảnh '+esc(cpx.type)+'"><img src="img/box/T'+tn+'.jpg" alt="'+esc(cpx.type)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a>':'';
   var h='<div class="card"><div class="head"><div><div class="code">'+esc(loc)+'</div><span class="sub" style="padding:0">Hộp vật tư tại vị trí này</span></div>'+bpic+'</div>';
-  if(!rs.length)return h+'<div class="empty">Hộp đang trống: chưa có nhãn kiểm kê nào ở vị trí này.</div></div>';
+  if(!rs.length)return h+galHTML(loc)+'<div class="empty">Hộp đang trống: chưa có nhãn kiểm kê nào ở vị trí này.</div></div>';
   var today=new Date(),n90=new Date(today.getTime()+90*864e5);
   var hsd=rs.filter(function(r){var d=pdate(r.hsd);return d&&d<n90});
   var hsdQ=rs.filter(function(r){var d=pdate(r.hsd);return d&&d<today}).length;
@@ -145,7 +159,7 @@ function boxView(loc){
   var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip">'+tot+' đơn vị (cộng chung)</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
   if(hsdQ)chips+='<span class="chip warn">'+hsdQ+' loại quá hạn</span>';else if(hsd.length)chips+='<span class="chip warn">'+hsd.length+' loại sắp hết hạn (90 ngày)</span>';
   if(cx)chips+='<span class="chip warn">'+cx+' loại cần xác nhận</span>';
-  h+='<div class="chips">'+chips+'</div>'+capHTML(loc);
+  h+='<div class="chips">'+chips+'</div>'+capHTML(loc)+galHTML(loc);
   if(!OPENED[loc])return h+'<button class="open" onclick="openBox(\''+loc+'\')">Mở hộp xem bên trong</button></div>';
   var z='';
   if(bp.length||km.length||tb.length)z='<dl class="zone">'+field('Bộ phận sử dụng',bp.join(', '))+field('Khu chuyền / máy',km.join(', '))+field('Mã thiết bị',tb.join(', '))+'</dl>';
