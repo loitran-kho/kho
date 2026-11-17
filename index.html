@@ -171,10 +171,13 @@ function boxView(loc){
 var HL={};
 function fold(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d')}
 function hay(r){return fold([r.kk,r.vt,r.ten,r.sku,r.model,r.hang,r.lo,r.ncc,r.bp,r.km,r.mtb].join(' '))}
-/* ===== SỨC CHỨA (thể tích vật tư / thể tích box cơ sở) =====
-   Số đo 10 loại box [dài, rộng, cao] mm = cột 'Kích thước chiếm chỗ' trong bảng DANH SÁCH CÁC LOẠI BOX (Lợi chốt 14/11/2026). */
-var BOX_DIM={'Type 1':[500,300,180],'Type 2':[600,420,135],'Type 3':[600,420,305],'Type 4':[220,130.5,120],'Type 5':[600,420,370],
- 'Type 6':[360,545,290],'Type 7':[455,310,225],'Type 8':[500,400,400],'Type 9':[590,400,145],'Type 10':[400,300,230]};
+/* ===== SỨC CHỨA (thể tích vật tư / thể tích LÒNG box cơ sở) =====
+   Số đo [dài, rộng, cao] mm = kích thước KHẢ DỤNG (lòng box) trong bảng DANH SÁCH CÁC LOẠI BOX — Lợi chốt 17/11/2026 (bản 20:00):
+   chiều cao khả dụng = chiều cao lòng box (không cộng khoảng trống giữa 2 box xếp chồng).
+   Type 6, 7: dùng BOX_VOL (lít thực). Type 4 = 120×210×130,5; Type 8 = 400×320×320 (80% chiếm chỗ) — Lợi chốt 17/11/2026 20:25. */
+var BOX_DIM={'Type 1':[420,273,180],'Type 2':[570,385,135],'Type 3':[580,385,305],'Type 4':[210,120,130.5],'Type 5':[570,390,370],
+ 'Type 6':[360,545,290],'Type 7':[455,310,225],'Type 8':[400,320,320],'Type 9':[565,370,145],'Type 10':[565,365,230]};
+var TYPE_TAM={};                                                /* (trống) mọi Type đã có số khả dụng; Type 8 = 80% mỗi chiều của 500×400×400 (Lợi chốt 17/11) */
 var BOX_VOL={'Type 6':35000,'Type 7':20000};                    /* thể tích khả dụng thực tế (cm³) do Lợi chốt 14/11/2026 — ưu tiên hơn số đo chiếm chỗ: Type 6 = 35 lít, Type 7 = 20 lít */
 var BOX_DIM_DAY={};                                              /* số đo riêng theo dãy (nếu cần), dạng {'F12':{'Type 3':[d,r,c]}} */
 var BASE_BY_DAY={'F1':'Type 1','F2':'Type 4','F12':'Type 3'};   /* Quy ước 2; dãy khác (kể cả F4) = Type 5 */
