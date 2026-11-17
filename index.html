@@ -72,22 +72,29 @@ a{color:var(--ink)}
 .cap{margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:6px}.cap small{color:var(--mute);font-size:12.5px}.capt{font-size:14.5px}
 .bar{height:12px;border-radius:6px;background:rgba(128,128,128,.25);overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
 .bar i.cg,.legend i.cg{background:#2ea05a}.bar i.cy,.legend i.cy{background:#e9a21c}.bar i.cr,.legend i.cr{background:#d94040}
+.bar i.cx,.legend i.cx{background:repeating-linear-gradient(135deg,#8b0000 0 8px,#b30000 8px 16px)}
+.warn{color:#b00000;font-weight:700;font-size:14px}@media (prefers-color-scheme:dark){.warn{color:#ff8a8a}}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12.5px;color:var(--mute)}.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);display:inline-block}.legend i.has{background:var(--okbg);border-color:var(--ok)}.legend i.hlg{background:#ffb347;border-color:#b36b00}
-.plan .pl.cg{fill:rgba(46,160,90,.45);stroke:#2ea05a}.plan .pl.cy{fill:rgba(233,162,28,.5);stroke:#d99a1e}.plan .pl.cr{fill:rgba(217,64,64,.5);stroke:#d94040}
-.plan .pl.w{fill:var(--card)}.plan .wv.cg{fill:#8fd4a8}.plan .wv.cy{fill:#f2c46a}.plan .wv.cr{fill:#e88a8a}
+.plan .pl.cg{fill:rgba(46,160,90,.45);stroke:#2ea05a}.plan .pl.cy{fill:rgba(233,162,28,.5);stroke:#d99a1e}.plan .pl.cr{fill:rgba(217,64,64,.5);stroke:#d94040}.plan .pl.cx{fill:rgba(139,0,0,.62);stroke:#8b0000}
+.plan .pl.w{fill:var(--card)}.plan .wv.cg{fill:#8fd4a8}.plan .wv.cy{fill:#f2c46a}.plan .wv.cr{fill:#e88a8a}.plan .wv.cx{fill:#c24a4a}
 .plan .rs{animation:rs 1.4s ease-out}.plan .wv{animation:wx var(--sp,6s) linear infinite}
 @keyframes rs{from{transform:translateY(var(--h))}}@keyframes wx{to{transform:translateX(var(--w))}}
 @media (prefers-reduced-motion:reduce){.plan .rs,.plan .wv{animation:none}}
-.cell.cg{background:rgba(46,160,90,.4);color:var(--fg);border-color:#2ea05a}.cell.cy{background:rgba(233,162,28,.5);color:var(--fg);border-color:#d99a1e}.cell.cr{background:rgba(217,64,64,.5);color:var(--fg);border-color:#d94040}
+.cell.cg{background:rgba(46,160,90,.4);color:var(--fg);border-color:#2ea05a}.cell.cy{background:rgba(233,162,28,.5);color:var(--fg);border-color:#d99a1e}.cell.cr{background:rgba(217,64,64,.5);color:var(--fg);border-color:#d94040}.cell.cx{background:rgba(139,0,0,.6);color:var(--fg);border-color:#8b0000}
 .cell.w{position:relative;overflow:hidden;isolation:isolate;background:var(--bg)}
 .cell.w>span{position:relative;z-index:2}
 .cell .wt{position:absolute;left:0;right:0;bottom:0;height:var(--lv);z-index:1;animation:rise 1.4s ease-out}
 .cell .wt::before{content:'';position:absolute;left:50%;margin-left:-80px;top:-4px;width:160px;height:160px;border-radius:44%;background:inherit;animation:wv var(--sp,7s) linear infinite;animation-delay:var(--dl,0s)}
-.cell.cg .wt{background:#8fd4a8}.cell.cy .wt{background:#f2c46a}.cell.cr .wt{background:#e88a8a}
-.cell.w.cg,.cell.w.cy,.cell.w.cr{background:var(--bg)}
+.cell.cg .wt{background:#8fd4a8}.cell.cy .wt{background:#f2c46a}.cell.cr .wt{background:#e88a8a}.cell.cx .wt{background:#c24a4a}
+.cell.w.cg,.cell.w.cy,.cell.w.cr,.cell.w.cx{background:var(--bg)}
 @keyframes rise{from{height:0}to{height:var(--lv)}}@keyframes wv{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.cell .wt,.cell .wt::before{animation:none}}
 .boxpic img{width:84px;height:84px;object-fit:cover}
+#faqb{position:fixed;right:14px;bottom:14px;z-index:90;min-height:44px;padding:0 16px;border:0;border-radius:22px;background:#1f5fd6;color:#fff;font-size:15px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer}
+#faq{display:none;position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:14px}
+#faq.on{display:flex}#faq .fq{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:16px 18px;position:relative}
+#faq h2{margin:0 36px 10px 0;font-size:18px}#faq h3{margin:14px 0 4px;font-size:15px}#faq p{margin:0;font-size:14.5px;line-height:1.5}
+#faqx{position:absolute;top:8px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:var(--line);color:var(--fg);font-size:26px;line-height:1;cursor:pointer}
 .gal{margin:10px 16px 4px}.gal summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}
 .galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
 .galg .pic{position:relative;line-height:0}.galg .pic img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:10px}
@@ -212,18 +219,18 @@ function capOf(loc){
   c.rs.forEach(function(r){var v=itemVol(r);if(v==null)c.miss.push(r.kk);else{c.vol+=v;c.n++}});
   c.pct=(c.box&&c.n)?c.vol/c.box*100:null;
   return c}
-function capCls(p){return p==null?'':(p<CAP_LO?'cg':(p<=CAP_HI?'cy':'cr'))}
+function capCls(p){return p==null?'':(p>100?'cx':(p<CAP_LO?'cg':(p<=CAP_HI?'cy':'cr')))}   /* >100% = quá tải (đỏ đậm) */
 function nf(x,d){return (+x).toLocaleString('vi-VN',{maximumFractionDigits:d==null?0:d})}
 function pf(p){return nf(p,p<10?1:0)+'%'}
 function capHTML(loc){var c=capOf(loc);if(!c.rs.length)return '';
   var miss=c.miss.length?'<small>'+c.n+'/'+c.rs.length+' loại có kích thước nên được tính; thiếu: '+c.miss.join(', ')+'</small>':'';
   if(!c.box)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · chưa có số đo box '+esc(c.type)+'</div><small>Thể tích vật tư đã đo: '+nf(c.vol)+' cm³</small>'+miss+'</div>';
   if(c.pct==null)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · vật tư chưa có kích thước</div>'+miss+'</div>';
-  return '<div class="cap"><div class="capt"><b>Sức chứa: '+pf(c.pct)+'</b> · vật tư chiếm '+nf(c.vol)+' cm³ / thể tích dùng được của box '+esc(c.type)+' '+nf(c.box)+' cm³ (đã nhân hệ số lấp đầy '+USABLE+')</div><div class="bar"><i class="'+capCls(c.pct)+'" style="width:'+Math.min(100,c.pct)+'%"></i></div>'+miss+'</div>'}
+  return '<div class="cap"><div class="capt"><b>Sức chứa: '+pf(c.pct)+'</b> · vật tư chiếm '+nf(c.vol)+' cm³ / thể tích dùng được của box '+esc(c.type)+' '+nf(c.box)+' cm³ (đã nhân hệ số lấp đầy '+USABLE+')</div><div class="bar"><i class="'+capCls(c.pct)+'" style="width:'+Math.min(100,c.pct)+'%"></i></div>'+(c.pct>100?'<div class="warn">⚠ Quá tải! Vượt ngưỡng an toàn</div>':'')+miss+'</div>'}
 function clusterCap(cl){var es=(window.KHO_VITRI&&vtIdx()[cl])||[],num=0,den=0,k=0;
   es.forEach(function(e){var c=capOf(e[0]);if(c.box){den+=c.box;num+=c.vol;if(c.rs.length)k++}});
   return (den&&k)?num/den*100:null}
-function legend(){return '<div class="legend"><span><i class="cg"></i>&lt;'+CAP_LO+'% còn nhiều chỗ</span><span><i class="cy"></i>'+CAP_LO+'–'+CAP_HI+'% vừa</span><span><i class="cr"></i>&gt;'+CAP_HI+'% sắp đầy</span><span><i class="has"></i>có nhãn, chưa tính được %</span><span><i class="hlg"></i>khớp tìm kiếm</span></div>'}
+function legend(){return '<div class="legend"><span><i class="cg"></i>&lt;'+CAP_LO+'% còn nhiều chỗ</span><span><i class="cy"></i>'+CAP_LO+'–'+CAP_HI+'% vừa</span><span><i class="cr"></i>&gt;'+CAP_HI+'% sắp đầy</span><span><i class="cx"></i>&gt;100% quá tải</span><span><i class="has"></i>có nhãn, chưa tính được %</span><span><i class="hlg"></i>khớp tìm kiếm</span></div>'}
 function occ(){var o={};DATA.forEach(function(r){o[r.vt]=(o[r.vt]||0)+1});return o}
 function planSVG(){
   var cnt={},hl={};DATA.forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var c=p[0]+'.'+p[1];cnt[c]=(cnt[c]||0)+1}});
@@ -347,5 +354,22 @@ function loadSheet(){
 })();
 
 loadSheet();
+</script>
+<script>
+(function(){
+  var b=document.createElement('button');b.id='faqb';b.type='button';b.textContent='❓ Giải thích';b.setAttribute('aria-label','Cẩm nang giải đáp về sức chứa');
+  var m=document.createElement('div');m.id='faq';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Cẩm nang giải đáp về sức chứa');
+  m.innerHTML='<div class="fq"><button id="faqx" type="button" aria-label="Đóng">×</button><h2>Cẩm nang giải đáp về sức chứa</h2>'
+  +'<h3>0. Con số % được tính thế nào?</h3><p>% = thể tích tất cả vật tư trong ô ÷ (thể tích lòng box × 0,8). Thể tích mỗi vật tư lấy từ kích thước ghi trong dữ liệu, nhân với số lượng. Hệ số 0,8 là ngưỡng an toàn (nguyên lý 80/20): 100% nghĩa là vật tư đã chiếm 80% lòng box.</p>'
+  +'<h3>1. Tại sao hệ thống báo, ví dụ 59%, mà nhìn thấy còn trống nhiều?</h3><p>Vì hệ thống tính theo thể tích hình học (dài × rộng × cao). Khi xếp vật tư, góc hộp và khoảng trên nóc box có chỗ trống mà hệ thống không tính tới. Nhìn thấy ít hơn con số trên màn hình là bình thường.</p>'
+  +'<h3>2. Tại sao hệ thống báo 59% mà nhét không vô?</h3><p>Vì vật tư (túi nilon, đầu nối…) có hình dạng lộn xộn, và túi, hộp con, bao bì chiếm thêm chỗ mà dữ liệu không đo. Hệ thống đã trừ sẵn 20% (nguyên lý 80/20) làm ngưỡng an toàn để lấy đồ dễ và không làm hỏng vật tư; phần còn lại là khoảng hở thực tế.</p>'
+  +'<h3>3. Tại sao lại hiện số trên 100% (ví dụ 120%)?</h3><p>Đó là khi vật tư vượt quá ngưỡng an toàn của box (tức vượt 80% lòng box). Thanh sẽ đầy, chuyển đỏ đậm và hiện cảnh báo "Quá tải! Vượt ngưỡng an toàn" để nhắc cần phân bổ lại hàng hóa.</p></div>';
+  document.body.appendChild(b);document.body.appendChild(m);
+  function open(){m.className='on';document.body.style.overflow='hidden';document.getElementById('faqx').focus()}
+  function close(){m.className='';document.body.style.overflow='';b.focus()}
+  b.addEventListener('click',open);
+  m.addEventListener('click',function(e){if(e.target===m||e.target.id==='faqx')close()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.className==='on')close()});
+})();
 </script>
 </body></html>
