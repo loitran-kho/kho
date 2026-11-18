@@ -90,10 +90,14 @@ a{color:var(--ink)}
 @keyframes rise{from{height:0}to{height:var(--lv)}}@keyframes wv{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.cell .wt,.cell .wt::before{animation:none}}
 .boxpic img{width:84px;height:84px;object-fit:cover}
-#faqb{position:fixed;right:14px;bottom:14px;z-index:90;min-height:44px;padding:0 16px;border:0;border-radius:22px;background:#1f5fd6;color:#fff;font-size:15px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer}
+#faqb{position:fixed;right:14px;bottom:14px;z-index:90;min-height:44px;padding:0 16px;border:0;border-radius:22px;background:#e8710a;color:#fff;font-size:16px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer}
 #faq{display:none;position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:14px}
 #faq.on{display:flex}#faq .fq{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:16px 18px;position:relative}
 #faq h2{margin:0 36px 10px 0;font-size:18px}#faq h3{margin:14px 0 4px;font-size:15px}#faq p{margin:0;font-size:14.5px;line-height:1.5}
+#faq .tabs{display:flex;gap:6px;margin:0 0 12px}#faq .tb{flex:1;min-height:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--fg);font-size:15px;font-weight:600;cursor:pointer}
+#faq .tb.on{background:#e8710a;border-color:#e8710a;color:#fff}#faq .pn{display:none}#faq .pn.on{display:block}
+#faq .box{border-radius:10px;padding:10px 12px;margin:8px 0;border-left:5px solid}#faq .bo{background:rgba(232,113,10,.12);border-color:#e8710a}#faq .bg{background:rgba(31,140,70,.13);border-color:#1f8c46}
+#faq .box b{display:block;font-size:16px;margin-bottom:2px}#faq .box p{font-size:16px}
 #faqx{position:absolute;top:8px;right:8px;width:40px;height:40px;border:0;border-radius:50%;background:var(--line);color:var(--fg);font-size:26px;line-height:1;cursor:pointer}
 .gal{margin:10px 16px 4px}.gal summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}
 .galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
@@ -358,16 +362,26 @@ loadSheet();
 </script>
 <script>
 (function(){
-  var b=document.createElement('button');b.id='faqb';b.type='button';b.textContent='❓ Giải thích';b.setAttribute('aria-label','Cẩm nang giải đáp về sức chứa');
-  var m=document.createElement('div');m.id='faq';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Cẩm nang giải đáp về sức chứa');
-  m.innerHTML='<div class="fq"><button id="faqx" type="button" aria-label="Đóng">×</button><h2>Cẩm nang giải đáp về sức chứa</h2>'
+  var b=document.createElement('button');b.id='faqb';b.type='button';b.textContent='❗ Cẩm nang';b.setAttribute('aria-label','Cẩm nang sử dụng kho');
+  var m=document.createElement('div');m.id='faq';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Cẩm nang sử dụng kho');
+  m.innerHTML='<div class="fq"><button id="faqx" type="button" aria-label="Đóng">×</button><h2>Cẩm nang sử dụng kho</h2><div class="tabs"><button type="button" class="tb on" data-t="a">Về sức chứa</button><button type="button" class="tb" data-t="b">Tra cứu &amp; Lấy đồ</button></div><div class="pn on" id="pna">'
   +'<h3>0. Con số % được tính thế nào?</h3><p>% = thể tích tất cả vật tư trong ô ÷ (thể tích lòng box × 0,8). Thể tích mỗi vật tư lấy từ kích thước ghi trong dữ liệu, nhân với số lượng. Hệ số 0,8 là ngưỡng an toàn (nguyên lý 80/20): 100% nghĩa là vật tư đã chiếm 80% lòng box.</p>'
   +'<h3>1. Tại sao hệ thống báo, ví dụ 59%, mà nhìn thấy còn trống nhiều?</h3><p>Vì hệ thống tính theo thể tích hình học (dài × rộng × cao). Khi xếp vật tư, góc hộp và khoảng trên nóc box có chỗ trống mà hệ thống không tính tới. Nhìn thấy ít hơn con số trên màn hình là bình thường.</p>'
   +'<h3>2. Tại sao hệ thống báo 59% mà nhét không vô?</h3><p>Vì vật tư (túi nilon, đầu nối…) có hình dạng lộn xộn, và túi, hộp con, bao bì chiếm thêm chỗ mà dữ liệu không đo. Hệ thống đã trừ sẵn 20% (nguyên lý 80/20) làm ngưỡng an toàn để lấy đồ dễ và không làm hỏng vật tư; phần còn lại là khoảng hở thực tế.</p>'
-  +'<h3>3. Tại sao lại hiện số trên 100% (ví dụ 120%)?</h3><p>Đó là khi vật tư vượt quá ngưỡng an toàn của box (tức vượt 80% lòng box). Thanh sẽ đầy, chuyển đỏ đậm và hiện cảnh báo "Quá tải! Vượt ngưỡng an toàn" để nhắc cần phân bổ lại hàng hóa.</p></div>';
+  +'<h3>3. Tại sao lại hiện số trên 100% (ví dụ 120%)?</h3><p>Đó là khi vật tư vượt quá ngưỡng an toàn của box (tức vượt 80% lòng box). Thanh sẽ đầy, chuyển đỏ đậm và hiện cảnh báo "Quá tải! Vượt ngưỡng an toàn" để nhắc cần phân bổ lại hàng hóa.</p></div>'
+  +'<div class="pn" id="pnb"><h3>1. Cách tìm đồ nhanh</h3>'
+  +'<div class="box bo"><b>Bước 1</b><p>Quét mã QR trên kệ (hoặc mở web). Gõ tên vật tư cần tìm.</p></div>'
+  +'<div class="box bo"><b>Bước 2</b><p>Nhìn kết quả, ghi nhớ 2 thông tin: <b style="display:inline">Mã ô</b> (VD: F1.1.1.4) và <b style="display:inline">Số huy hiệu</b> (tem đỏ dán trên hộp).</p></div>'
+  +'<div class="box bo"><b>Bước 3</b><p>Ra kệ, tìm thanh sắt ghi mã ô, rồi tìm hộp xanh có dán số huy hiệu tương ứng.</p></div>'
+  +'<h3>2. Quy trình SOP lấy đồ (không xáo trộn kho)</h3>'
+  +'<div class="box bg"><b>Quy tắc 1</b><p>Lấy đúng hộp, đúng số.</p></div>'
+  +'<div class="box bg"><b>Quy tắc 2</b><p>Lấy xong phải trả về đúng vị trí cũ. Nghiêm cấm bỏ lộn sang hộp bên cạnh.</p></div>'
+  +'<div class="box bg"><b>Quy tắc 3</b><p>Vuốt và buộc kín miệng túi nilon sau khi lấy.</p></div>'
+  +'<div class="box bg"><b>Quy tắc 4</b><p>Nếu lấy hộp cuối cùng (hết sạch), nhắn Zalo báo Thủ kho để nạp thêm.</p></div></div></div>';
   document.body.appendChild(b);document.body.appendChild(m);
   function open(){m.className='on';document.body.style.overflow='hidden';document.getElementById('faqx').focus()}
   function close(){m.className='';document.body.style.overflow='';b.focus()}
+  m.addEventListener('click',function(e){var t=e.target.getAttribute&&e.target.getAttribute('data-t');if(t){['a','b'].forEach(function(k){document.getElementById('pn'+k).className='pn'+(k===t?' on':'')});Array.prototype.forEach.call(m.querySelectorAll('.tb'),function(x){x.className='tb'+(x.getAttribute('data-t')===t?' on':'')});m.querySelector('.fq').scrollTop=0}});
   b.addEventListener('click',open);
   m.addEventListener('click',function(e){if(e.target===m||e.target.id==='faqx')close()});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.className==='on')close()});
