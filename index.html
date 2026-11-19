@@ -146,7 +146,8 @@ function uniq(a){var o={};return a.filter(function(x){if(!x||o[x])return false;o
 function openBox(loc){OPENED[loc]=1;render()}
 /* Thư viện ảnh thực tế theo ô. Thêm ô mới: GALLERY['F1.1.1.6']={dir:'img/F1.1.1.6/',files:[...]}; ảnh nhỏ = dir+file, ảnh lớn = dir+'big/'+file.
    Tên KK-xxxx.jpg tự lấy chú thích từ dữ liệu; mục dạng ['tên.jpg','Chú thích'] là ảnh toàn cảnh. */
-var GALLERY={'F1.1.1.6':{dir:'img/F1.1.1.6/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.6 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.6'],
+var GALLERY={'F1.1.1.7':{dir:'img/F1.1.1.7/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.7 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.7 (các túi có huy hiệu số)'],
+ 'KK-0078.jpg','KK-0079.jpg','KK-0080.jpg','KK-0081.jpg','KK-0082.jpg','KK-0083.jpg','KK-0084.jpg','KK-0085.jpg']},'F1.1.1.6':{dir:'img/F1.1.1.6/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.6 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.6'],
  'KK-0057.jpg','KK-0058.jpg','KK-0059.jpg','KK-0060.jpg','KK-0061.jpg','KK-0062.jpg','KK-0063.jpg','KK-0064.jpg','KK-0065.jpg','KK-0066.jpg','KK-0067.jpg','KK-0068.jpg','KK-0069.jpg','KK-0070.jpg','KK-0071.jpg','KK-0072.jpg','KK-0073.jpg','KK-0074.jpg','KK-0075.jpg','KK-0076.jpg','KK-0077.jpg']},'F1.1.1.5':{dir:'img/F1.1.1.5/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.5 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.5 (các túi có huy hiệu số)'],
  'KK-0043.jpg','KK-0044.jpg','KK-0045.jpg','KK-0046.jpg','KK-0047.jpg','KK-0048.jpg','KK-0049.jpg','KK-0050.jpg','KK-0051.jpg','KK-0052.jpg','KK-0053.jpg','KK-0054.jpg','KK-0055.jpg']}};
 function galHTML(loc){var g=GALLERY[loc];if(!g)return '';var by={};DATA.forEach(function(r){by[r.kk]=r});
