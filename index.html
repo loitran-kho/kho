@@ -131,7 +131,7 @@ function card(r){
   h+='<div class="name">'+esc(r.ten)+'</div>';
   var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
-  var pic=IMG_BASE+encodeURIComponent(r.kk)+'.jpg', big=IMG_BIG+encodeURIComponent(r.kk)+'.jpg';
+  var ik=IMG_ALIAS[r.kk]||r.kk,pic=IMG_BASE+encodeURIComponent(ik)+'.jpg', big=IMG_BIG+encodeURIComponent(ik)+'.jpg';
   h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+'</span></div>';
   if(r.sld)h+='<div class="qd">'+esc(r.sld)+'</div>';
   h+='</div><a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+pic+'" data-cap="'+esc(r.kk+' · '+(r.ten||''))+'" aria-label="Phóng to ảnh '+esc(r.kk)+'"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a></div>';
@@ -146,16 +146,20 @@ function uniq(a){var o={};return a.filter(function(x){if(!x||o[x])return false;o
 function openBox(loc){OPENED[loc]=1;render()}
 /* Thư viện ảnh thực tế theo ô. Thêm ô mới: GALLERY['F1.1.1.6']={dir:'img/F1.1.1.6/',files:[...]}; ảnh nhỏ = dir+file, ảnh lớn = dir+'big/'+file.
    Tên KK-xxxx.jpg tự lấy chú thích từ dữ liệu; mục dạng ['tên.jpg','Chú thích'] là ảnh toàn cảnh. */
-var GALLERY={'F1.1.1.7':{dir:'img/F1.1.1.7/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.7 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.7 (các túi có huy hiệu số)'],
- 'KK-0078.jpg','KK-0079.jpg','KK-0080.jpg','KK-0081.jpg','KK-0082.jpg','KK-0083.jpg','KK-0084.jpg','KK-0085.jpg']},'F1.1.1.6':{dir:'img/F1.1.1.6/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.6 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.6'],
+/* Mã KK chưa có ảnh riêng dùng lại ảnh của mã khác (VD KK-0086 tách từ KK-0082 nên dùng chung ảnh). Thêm dòng: 'KK-xxxx':'KK-yyyy'. */
+var IMG_ALIAS={'KK-0086':'KK-0082'};
+var GALLERY={'F1.1.1.7':{dir:'img/F1.1.1.7/',pano:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.7 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.7 (các túi có huy hiệu số)']]},'F1.1.1.6':{dir:'img/F1.1.1.6/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.6 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.6'],
  'KK-0057.jpg','KK-0058.jpg','KK-0059.jpg','KK-0060.jpg','KK-0061.jpg','KK-0062.jpg','KK-0063.jpg','KK-0064.jpg','KK-0065.jpg','KK-0066.jpg','KK-0067.jpg','KK-0068.jpg','KK-0069.jpg','KK-0070.jpg','KK-0071.jpg','KK-0072.jpg','KK-0073.jpg','KK-0074.jpg','KK-0075.jpg','KK-0076.jpg','KK-0077.jpg']},'F1.1.1.5':{dir:'img/F1.1.1.5/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.5 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.5 (các túi có huy hiệu số)'],
  'KK-0043.jpg','KK-0044.jpg','KK-0045.jpg','KK-0046.jpg','KK-0047.jpg','KK-0048.jpg','KK-0049.jpg','KK-0050.jpg','KK-0051.jpg','KK-0052.jpg','KK-0053.jpg','KK-0054.jpg','KK-0055.jpg']}};
-function galHTML(loc){var g=GALLERY[loc];if(!g)return '';var by={};DATA.forEach(function(r){by[r.kk]=r});
-  var a=g.files.map(function(f){var file=Array.isArray(f)?f[0]:f,cap=Array.isArray(f)?f[1]:'',lab='Toàn cảnh',m=/^(KK-\d{4})\./i.exec(file);
+/* Ô khai {dir, pano:[[tên,chú thích],...]} (không có files): lưới ảnh TỰ SINH từ DATA (mọi mã KK có vt=ô đó) → dir+KK-xxxx.jpg / dir+big/KK-xxxx.jpg. Không cần liệt kê từng KK. */
+function galFiles(loc,g){if(g.files)return g.files;var k=DATA.filter(function(r){return r.vt===loc&&/^KK-\d{4}$/.test(r.kk)}).map(function(r){return r.kk}).sort();return (g.pano||[]).concat(k.map(function(x){return x+'.jpg'}))}
+function galHTML(loc){var g=GALLERY[loc];if(!g)return '';var by={};DATA.forEach(function(r){by[r.kk]=r});var fl=galFiles(loc,g);
+  var a=fl.map(function(f){var file=Array.isArray(f)?f[0]:f,cap=Array.isArray(f)?f[1]:'',lab='Toàn cảnh',m=/^(KK-\d{4})\./i.exec(file);
     if(m){var k=m[1].toUpperCase(),r=by[k];lab=k;cap=k+(r&&r.ten?' · '+r.ten:'')}
-    var sm=g.dir+file,big=g.dir+'big/'+file;
+    var pf=m&&IMG_ALIAS[m[1].toUpperCase()]?IMG_ALIAS[m[1].toUpperCase()]+'.jpg':file;
+    var sm=g.dir+pf,big=g.dir+'big/'+pf;
     return '<a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+sm+'" data-cap="'+esc(cap)+'" aria-label="Phóng to: '+esc(cap)+'"><img src="'+sm+'" alt="'+esc(cap)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"><span>'+esc(lab)+'</span></a>'}).join('');
-  return '<details class="gal" open><summary>Ảnh thực tế tại ô '+esc(loc)+' ('+g.files.length+' ảnh)</summary><div class="galg">'+a+'</div></details>'}
+  return '<details class="gal" open><summary>Ảnh thực tế tại ô '+esc(loc)+' ('+fl.length+' ảnh)</summary><div class="galg">'+a+'</div></details>'}
 function boxView(loc){
   var rs=DATA.filter(function(r){return r.vt===loc}).sort(function(a,b){return (+a.hh||999)-(+b.hh||999)});
   var cpx=capOf(loc),tn=(cpx.type||'').replace(/\D/g,''),bd=cpx.type?boxDim(cpx.type,loc.split('.')[0]):null,bcap=cpx.type+(bd?' · '+bd.join('×')+' mm':'')+' · ô '+loc;
