@@ -1,0 +1,82 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Khung 3D cụm F1.1</title>
+<style>
+:root{--bg:#f5f7fa}
+body{margin:0;font:14px system-ui,sans-serif;background:var(--bg);color:#223}
+header{padding:10px 14px}
+#bar{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 8px;align-items:center}
+button,label{padding:6px 12px;border:1px solid #9ab;background:#fff;border-radius:6px;font:inherit}
+#stage{height:72vh;min-height:520px;perspective:2200px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:grab;touch-action:none}
+#shelf{position:relative;transform-style:preserve-3d}
+.c{position:absolute;transform-style:preserve-3d}
+.c>div{position:absolute;box-sizing:border-box;backface-visibility:visible}
+.beam>div{background:#f26a21;border:1px solid #b84a10}.beam .t,.beam .bm{background:#d9581a}
+.post>div{background:#2457d6;border:1px solid #17389a}
+.box>div{border:1px solid rgba(0,0,0,.45)}
+.slot{position:absolute;box-sizing:border-box;border:1px solid #6d7f99;background:rgba(232,238,247,.55);font-size:10px;color:#345;display:flex;align-items:flex-end;justify-content:center;text-decoration:none}
+.slot:hover{background:#ffe08a}
+#hit{font-weight:600}
+</style></head><body>
+<header><b>Khung 3D cụm F1.1</b> · số đo thật theo bản vẽ tay (mm) · kéo để xoay, lăn chuột/nhéo để phóng</header>
+<div id="bar"><button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button>
+<label><input type="checkbox" id="dm"> Hộp mẫu (thử chồng box)</label><span id="hit">—</span></div>
+<div id="stage"><div id="shelf"></div></div>
+<script>
+/* ===== CẤU HÌNH (mm) — chỉnh ở đây, không phải sửa code vẽ ===== */
+var CFG={
+ W:2810, postW:60, inner:2720, depth:600,
+ floor:150, beam:80, zone:465,          // tầng k: đáy zone = floor+beam+(k-1)*(beam+zone)
+ types:{ 1:{n:'Type 1',slotW:302,box:[300,180,500],col:'#2e7bd6'},   // [rộng, cao, sâu] mm
+         2:{n:'Type 2',slotW:453,box:[420,135,600],col:'#1d9bd1'},
+         3:{n:'Type 3',slotW:453,box:[420,305,600],col:'#27ae60'} },
+ // tầng: [kiểu hộp|null, số ô/hàng, số hàng, ô đầu của hàng dưới]; hàng trên đánh tiếp
+ tiers:[[1,9,2],[1,9,2],[1,9,2],[2,6,1],[2,6,1],[2,6,1],[null,6,1]],
+ rowBase:[0,215]   // Lợi đo: đáy hàng dưới -> đáy hàng trên ≈215 (khe 30-35); hộp trên cách bim ≈70 (215+180+70=465)
+};
+var STACK={'F1.1.5.2':2};   // ô nào chồng N hộp: mỗi hộp 1 khối riêng
+/* ================================================================ */
+var S=.17,sh=document.getElementById('shelf'),H=3500+450;
+sh.style.width=CFG.W*S+'px';sh.style.height=H*S+'px';
+function cub(cls,x,y,z,w,h,d,col,html){ // x,y,z = góc trái-dưới-trước (mm); y lên trên
+ var c=document.createElement('div');c.className='c '+cls;
+ c.style.cssText='left:'+x*S+'px;top:'+(H-y-h)*S+'px;width:'+w*S+'px;height:'+h*S+'px;transform:translateZ('+(z-d/2)*S+'px)';
+ var f=[[w,h,0,0,'translateZ('+d*S/2+'px)'],[w,h,0,0,'rotateY(180deg) translateZ('+d*S/2+'px)'],
+  [w,d,0,(h-d)/2,'rotateX(90deg) translateZ('+h*S/2+'px)'],[w,d,0,(h-d)/2,'rotateX(-90deg) translateZ('+h*S/2+'px)'],
+  [d,h,(w-d)/2,0,'rotateY(90deg) translateZ('+w*S/2+'px)'],[d,h,(w-d)/2,0,'rotateY(-90deg) translateZ('+w*S/2+'px)']];
+ f.forEach(function(a){var e=document.createElement('div');
+  e.style.cssText='width:'+a[0]*S+'px;height:'+a[1]*S+'px;left:'+a[2]*S+'px;top:'+a[3]*S+'px;transform:'+a[4]+';'+(col?'background:'+col:'');c.appendChild(e)});
+ sh.appendChild(c);return c}
+var Z0=CFG.depth/2; // mặt trước z=+300 → dùng tâm z=0
+function tierY(k){return CFG.floor+CFG.beam+(k-1)*(CFG.beam+CFG.zone)} // đáy zone tầng k
+// trụ
+[0,CFG.W-CFG.postW].forEach(function(x){[Z0-30,-Z0].forEach(function(z){cub('post',x,0,z+15,CFG.postW,3500,30,'')})});
+// thanh bim cam + mặt sàn
+for(var k=1;k<=7;k++){var yb=tierY(k)-CFG.beam;
+ cub('beam',0,yb,Z0-20,CFG.W,CFG.beam,40,'');cub('beam',0,yb,-Z0+20,CFG.W,CFG.beam,40,'');
+ cub('beam',CFG.postW,yb+CFG.beam-18,0,CFG.inner,18,CFG.depth,'')}
+// ô trống + hộp mẫu
+var boxes=[],hit=document.getElementById('hit');
+CFG.tiers.forEach(function(t,i){var k=i+1,ty=t[0],n=t[1],rows=t[2];
+ var sw=CFG.inner/n,y0=tierY(k);
+ if(!ty)sw=CFG.inner/n;
+ for(var r=0;r<rows;r++){
+  var base=y0+(rows>1?CFG.rowBase[r]:0),hh=rows>1?(r==0?CFG.rowBase[1]:CFG.zone-CFG.rowBase[1]):CFG.zone;
+  for(var j=0;j<n;j++){
+   var no=r*n+j+1,code='F1.1.'+k+'.'+no,a=document.createElement('a');
+   a.className='slot';a.href='#'+code;a.title=code+(ty?' · '+CFG.types[ty].n:' · ô trống chưa có hộp');a.textContent=no;
+   a.style.cssText='left:'+(CFG.postW+j*sw)*S+'px;top:'+(H-base-hh)*S+'px;width:'+sw*S+'px;height:'+hh*S+'px;transform:translateZ('+Z0*S+'px)';
+   a.onmouseenter=function(){hit.textContent=this.title};sh.appendChild(a);
+   if(ty){var T=CFG.types[ty],L=STACK[code]||1;
+    for(var q=0;q<L;q++){var b=cub('box',CFG.postW+j*sw+(sw-T.box[0])/2,base+q*T.box[1],0,T.box[0],T.box[1],T.box[2],T.col);b.style.display='none';boxes.push(b)}}
+  }}});
+// xoay + phóng
+var rx=-10,ry=-28,z=.78,dr=null,st=document.getElementById('stage');
+function ap(){sh.style.transform='scale('+z+') rotateX('+rx+'deg) rotateY('+ry+'deg)'}
+st.onpointerdown=function(e){dr=[e.clientX,e.clientY,rx,ry];st.setPointerCapture(e.pointerId)};
+st.onpointermove=function(e){if(!dr)return;ry=dr[3]+(e.clientX-dr[0])*.4;rx=Math.max(-90,Math.min(30,dr[2]-(e.clientY-dr[1])*.4));ap()};
+st.onpointerup=function(){dr=null};
+st.onwheel=function(e){e.preventDefault();z=Math.max(.4,Math.min(2.5,z*(e.deltaY<0?1.08:.92)));ap()};
+document.querySelectorAll('button').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
+document.getElementById('dm').onchange=function(){boxes.forEach(function(b){b.style.display=this.checked?'':'none'},this)};
+ap();
+</script></body></html>
