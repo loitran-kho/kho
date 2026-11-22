@@ -103,6 +103,12 @@ a{color:var(--ink)}
 .galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
 .galg .pic{position:relative;line-height:0}.galg .pic img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:10px}
 .galg .pic span{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.68);color:#fff;font:600 11px var(--mono);padding:2px 5px;border-radius:4px;line-height:1.25}
+.lnk{font-size:13px;margin-left:4px}
+details.dup{margin:6px 0 2px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:14px}
+details.dup summary{cursor:pointer;font-weight:600}
+details.dup ul{margin:6px 0 2px;padding-left:18px}
+details.dup li{margin:3px 0;line-height:1.45}
+.dtot{margin-top:4px;color:var(--muted,#666);font-size:13px}
 </style>
 </head><body>
 <div class="wrap">
@@ -124,13 +130,25 @@ function hashOf(loc){return loc.replace(/\./g,'-')}
 function normKK(s){var m=/^kk-?(\d{1,4})$/i.exec(s.trim());return m?'KK-'+('0000'+m[1]).slice(-4):null}
 function normLoc(s){var t=s.trim().toUpperCase().replace(/-/g,'.');return /^F\d+(\.\d+){0,3}$/.test(t)?t:null}
 function badge(h){return h?'<span class="badge" title="Số huy hiệu">'+esc(h)+'</span>':''}
-function row(r){return '<a class="row" href="#'+r.kk+'">'+badge(r.hh)+'<span class="t"><b>'+esc(r.ten)+'</b><small>'+r.kk+(r.loai?' (nhập)':'')+' · '+esc(r.vt)+(r.sku?' · '+esc(r.sku):'')+'</small></span><span class="n">'+esc(r.sl)+' '+esc(r.dvt)+'</span></a>'}
+/* ===== MODULE 1: SKU trùng ở nhiều box (tính động từ cột SKU) ===== */
+var SKUI=null;
+function skuIdx(){if(SKUI)return SKUI;SKUI={};DATA.forEach(function(r){if(!/^[A-Z]{2}-\d{4}$/.test(r.sku||''))return;(SKUI[r.sku]=SKUI[r.sku]||[]).push(r)});return SKUI}
+function skuBoxes(s){return uniq((skuIdx()[s]||[]).map(function(r){return r.vt}))}
+function skuShared(r){return !!r.sku&&skuBoxes(r.sku).length>1}
+function lnkIcon(r){return skuShared(r)?' <span class="lnk" title="SKU '+esc(r.sku)+' có ở '+skuBoxes(r.sku).length+' box">🔗</span>':''}
+function dupHTML(r){if(!skuShared(r))return '';var a=skuIdx()[r.sku],bx=skuBoxes(r.sku).sort(),tot=0,num=true;
+  a.forEach(function(x){var n=parseFloat(String(x.sl||'').replace(',','.'));if(isNaN(n))num=false;else tot+=n});
+  var li=bx.map(function(v){var ks=a.filter(function(x){return x.vt===v}).map(function(x){return (x.kk===r.kk?'<b>'+x.kk+' (đây)</b>':'<a href="#'+x.kk+'">'+x.kk+'</a>')+' · '+esc(x.sl)+' '+esc(x.dvt)});
+    return '<li><a href="#'+hashOf(v)+'">'+esc(v)+'</a>: '+ks.join('; ')+'</li>'}).join('');
+  return '<details class="dup"><summary>🔗 SKU '+esc(r.sku)+' có ở '+bx.length+' box</summary><ul>'+li+'</ul>'+(num?'<div class="dtot">Tổng cộng các box: <b>'+nf(tot)+'</b> '+esc(r.dvt)+'</div>':'')+'</details>'}
+function row(r){return '<a class="row" href="#'+r.kk+'">'+badge(r.hh)+'<span class="t"><b>'+esc(r.ten)+'</b>'+lnkIcon(r)+'<small>'+r.kk+(r.loai?' (nhập)':'')+' · '+esc(r.vt)+(r.sku?' · '+esc(r.sku):'')+'</small></span><span class="n">'+esc(r.sl)+' '+esc(r.dvt)+'</span></a>'}
 function field(k,v,full){return v?'<div'+(full?' class="full"':'')+'><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>':''}
 function card(r){
   var h='<div class="card"><div class="head"><div><div class="code">'+r.kk+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a></div>'+badge(r.hh)+'</div>';
   h+='<div class="name">'+esc(r.ten)+'</div>';
   var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
+  h+=dupHTML(r);
   var ik=IMG_ALIAS[r.kk]||r.kk,pic=IMG_BASE+encodeURIComponent(ik)+'.jpg', big=IMG_BIG+encodeURIComponent(ik)+'.jpg';
   h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+'</span></div>';
   if(r.sld)h+='<div class="qd">'+esc(r.sld)+'</div>';
@@ -176,6 +194,7 @@ function boxView(loc){
   var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip">'+tot+' đơn vị (cộng chung)</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
   if(hsdQ)chips+='<span class="chip warn">'+hsdQ+' loại quá hạn</span>';else if(hsd.length)chips+='<span class="chip warn">'+hsd.length+' loại sắp hết hạn (90 ngày)</span>';
   if(cx)chips+='<span class="chip warn">'+cx+' loại cần xác nhận</span>';
+  var nd=uniq(rs.filter(skuShared).map(function(r){return r.sku})).length;if(nd)chips+='<span class="chip" title="SKU này cũng có ở box khác">🔗 '+nd+' SKU có ở box khác</span>';
   h+='<div class="chips">'+chips+'</div>'+capHTML(loc)+galHTML(loc);
   if(!OPENED[loc])return h+'<button class="open" onclick="openBox(\''+loc+'\')">Mở hộp xem bên trong</button></div>';
   var z='';
@@ -303,7 +322,7 @@ function locView(l){var p=l.split('.');
   return clusterView(l);
 }
 function render(){
-  CAPC=null;
+  CAPC=null;SKUI=null;
   var h=decodeURIComponent(location.hash.replace(/^#/,''));if(!h){var mq=/[?&]o=([^&]+)/.exec(location.search);if(mq)h=decodeURIComponent(mq[1]);}
   var k=normKK(h), l=h?normLoc(h):null, html;
   if(k){var r=DATA.filter(function(x){return x.kk===k})[0];
