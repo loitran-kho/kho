@@ -338,16 +338,18 @@ function gridFor(cl,o,tangFocus){
   });
   return h+'</div>'+legend()+'</div>';
 }
+var D3=['F1.1','F1.2','F2.1','F2.2','F3.1','F3.2'];
 function clusterView(l){
   if(!window.KHO_VITRI)return '<div class="card"><div class="empty">Thiếu file vi_tri.js (phải nằm cùng thư mục với trang này) nên chưa vẽ được các ô.</div></div>';
   var p=l.split('.'),o=occ(),idx=vtIdx(),cls=[];
   if(p.length>=2)cls=[p[0]+'.'+p[1]]; else cls=Object.keys(idx).filter(function(c){return c.split('.')[0]===p[0]});
   var tf=p.length===3?+p[2]:0;
   if(!cls.length)return '<a class="back" href="#">← Bản đồ kho</a><div class="card"><div class="empty">Không có dãy "'+esc(l)+'" trong danh mục.</div></div>';
-  return '<a class="back" href="#">← Bản đồ kho</a>'+cls.map(function(c){return gridFor(c,o,tf)}).join('');
+  var v3=cls.filter(function(c){return D3.indexOf(c)>=0}).map(function(c){return ' <a class="back" href="khung_3D.html#'+hashOf(c)+'" target="_blank" rel="noopener">🧊 Xem 3D '+c+'</a>'}).join('');
+  return '<a class="back" href="#">← Bản đồ kho</a>'+v3+cls.map(function(c){return gridFor(c,o,tf)}).join('');
 }
 function locView(l){var p=l.split('.');
-  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+boxView(l);
+  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a>':'')+boxView(l);
   return clusterView(l);
 }
 function render(){
