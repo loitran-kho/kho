@@ -109,6 +109,15 @@ details.dup summary{cursor:pointer;font-weight:600}
 details.dup ul{margin:6px 0 2px;padding-left:18px}
 details.dup li{margin:3px 0;line-height:1.45}
 .dtot{margin-top:4px;color:var(--muted,#666);font-size:13px}
+.plan .pl.hss{stroke:#f2b705!important;stroke-width:3.5!important}.plan .pl.hse{stroke:#d32f2f!important;stroke-width:3.5!important}
+.card.hss{border-color:#f2b705;box-shadow:0 0 0 3px rgba(242,183,5,.3)}.card.hse{border-color:#d32f2f;box-shadow:0 0 0 3px rgba(211,47,47,.3)}
+.row.hss{border-left:5px solid #f2b705}.row.hse{border-left:5px solid #d32f2f}
+.pill.hspe{background:#fde3e3;color:#a11}.pill.hsps{background:#fff3c4;color:#7a5b00}
+a.row.hlink{margin:0 0 10px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:16px}
+.hfs{display:flex;flex-wrap:wrap;gap:8px;padding:4px 16px 12px}.hf{font:600 13px var(--sans);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:inherit;cursor:pointer}.hf.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.hrow .n small{display:block;font-weight:400;font-size:12px}
+details.dupbox{margin:0 16px 12px}details.dupbox summary{display:inline-block;cursor:pointer;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--okbg);color:var(--ok);border:1px solid var(--ok)}
+details.dupbox[open] summary{border-radius:12px}details.dupbox ol{margin:8px 0 0;padding:10px 12px 10px 30px;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.5}details.dupbox li{margin:6px 0}
 </style>
 </head><body>
 <div class="wrap">
@@ -130,6 +139,26 @@ function hashOf(loc){return loc.replace(/\./g,'-')}
 function normKK(s){var m=/^kk-?(\d{1,4})$/i.exec(s.trim());return m?'KK-'+('0000'+m[1]).slice(-4):null}
 function normLoc(s){var t=s.trim().toUpperCase().replace(/-/g,'.');return /^F\d+(\.\d+){0,3}$/.test(t)?t:null}
 function badge(h){return h?'<span class="badge" title="Số huy hiệu">'+esc(h)+'</span>':''}
+/* ===== CẬN HẠN DÙNG + viền cảnh báo (vàng <30 ngày, đỏ quá hạn) ===== */
+var HSDF='all';
+function hdays(r){var d=pdate(r.hsd);if(!d)return null;var t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/864e5)}
+function hsdState(match){var st='';DATA.forEach(function(r){if(!match(r))return;var d=hdays(r);if(d==null)return;if(d<0)st='e';else if(d<30&&st!=='e')st='s'});return st}
+function hsCls(st){return st==='e'?' hse':(st==='s'?' hss':'')}
+function hsdOne(r){var d=hdays(r);return d==null?'':(d<0?'e':(d<30?'s':''))}
+function dupBoxHTML(rs){var sh=uniq(rs.filter(skuShared).map(function(r){return r.sku}));if(!sh.length)return '';
+  var li=sh.map(function(s){var here=rs.filter(function(r){return r.sku===s});var ot=skuBoxes(s).filter(function(v){return v!==here[0].vt});
+    return '<li><b>'+esc(s)+'</b> · '+esc(here[0].ten)+' <small>('+here.map(function(r){return '<a href="#'+r.kk+'">'+r.kk+'</a>'}).join(', ')+')</small><br><small>Cũng có ở: '+ot.map(function(v){return '<a href="#'+hashOf(v)+'">'+esc(v)+'</a>'}).join(', ')+'</small></li>'}).join('');
+  return '<details class="dupbox"><summary>🔗 '+sh.length+' SKU có ở box khác (bấm xem)</summary><ol>'+li+'</ol></details>'}
+var HF=[['all','Dưới 6 tháng',183],['90','≤ 3 tháng',90],['30','≤ 1 tháng',30],['14','≤ 2 tuần',14],['7','≤ 1 tuần',7],['exp','Đã quá hạn',-1]];
+function setHF(k){HSDF=k;out.innerHTML=hsdView()}
+function hsdView(){var all=DATA.map(function(r){return {r:r,d:hdays(r)}}).filter(function(x){return x.d!=null}),nHas=DATA.filter(function(r){return (r.hsd||'').trim()}).length;
+  var cur=HF.filter(function(f){return f[0]===HSDF})[0]||HF[0];
+  var ls=all.filter(function(x){return cur[0]==='exp'?x.d<0:x.d<=cur[2]}).sort(function(a,b){return a.d-b.d});
+  var bt='<div class="hfs">'+HF.map(function(f){var n=all.filter(function(x){return f[0]==='exp'?x.d<0:x.d<=f[2]}).length;return '<button type="button" class="hf'+(f[0]===HSDF?' on':'')+'" onclick="setHF(\''+f[0]+'\')">'+f[1]+' <b>'+n+'</b></button>'}).join('')+'</div>';
+  var h='<a class="back" href="#">← Mặt bằng kho</a><div class="card"><div class="head"><div><div class="code">⏳ Cận hạn dùng</div><span class="sub" style="padding:0">Vật tư có HSD: '+nHas+' / '+DATA.length+' phiếu · viền vàng: còn dưới 30 ngày · viền đỏ: đã quá hạn</span></div></div>'+bt+'<div class="list">';
+  if(!ls.length)h+='<div class="empty">'+(nHas?'Không có vật tư nào trong mức này.':'Chưa phiếu nào ghi HSD (cột HSD để trống) nên chưa có gì để cảnh báo. Khi kiểm kê ghi HSD, trang tự liệt kê ở đây.')+'</div>';
+  ls.forEach(function(x){var r=x.r,c=x.d<0?'e':(x.d<30?'s':'');h+='<a class="row hrow'+hsCls(c)+'" href="#'+r.kk+'">'+badge(r.hh)+'<span class="t"><b>'+esc(r.ten)+'</b><small>'+r.kk+' · '+esc(r.vt)+(r.sku?' · '+esc(r.sku):'')+'</small></span><span class="n">HSD '+esc(r.hsd)+'<small>'+(x.d<0?'quá hạn '+(-x.d)+' ngày':'còn '+x.d+' ngày')+'</small></span></a>'});
+  return h+'</div></div>'}
 /* ===== MODULE 1: SKU trùng ở nhiều box (tính động từ cột SKU) ===== */
 var SKUI=null;
 function skuIdx(){if(SKUI)return SKUI;SKUI={};DATA.forEach(function(r){if(!/^[A-Z]{2}-\d{4}$/.test(r.sku||''))return;(SKUI[r.sku]=SKUI[r.sku]||[]).push(r)});return SKUI}
@@ -144,7 +173,7 @@ function dupHTML(r){if(!skuShared(r))return '';var a=skuIdx()[r.sku],bx=skuBoxes
 function row(r){return '<a class="row" href="#'+r.kk+'">'+badge(r.hh)+'<span class="t"><b>'+esc(r.ten)+'</b>'+lnkIcon(r)+'<small>'+r.kk+(r.loai?' (nhập)':'')+' · '+esc(r.vt)+(r.sku?' · '+esc(r.sku):'')+'</small></span><span class="n">'+esc(r.sl)+' '+esc(r.dvt)+'</span></a>'}
 function field(k,v,full){return v?'<div'+(full?' class="full"':'')+'><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>':''}
 function card(r){
-  var h='<div class="card"><div class="head"><div><div class="code">'+r.kk+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a></div>'+badge(r.hh)+'</div>';
+  var hs1=hsdOne(r),h='<div class="card'+hsCls(hs1)+'"><div class="head"><div><div class="code">'+r.kk+(hs1?' <span class="pill hsp'+hs1+'">'+(hs1==='e'?'HSD quá hạn':'HSD dưới 30 ngày')+'</span>':'')+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a></div>'+badge(r.hh)+'</div>';
   h+='<div class="name">'+esc(r.ten)+'</div>';
   var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
@@ -182,7 +211,7 @@ function boxView(loc){
   var rs=DATA.filter(function(r){return r.vt===loc}).sort(function(a,b){return (+a.hh||999)-(+b.hh||999)});
   var cpx=capOf(loc),tn=(cpx.type||'').replace(/\D/g,''),bd=cpx.type?boxDim(cpx.type,loc.split('.')[0]):null,bcap=cpx.type+(bd?' · '+bd.join('×')+' mm':'')+' · ô '+loc;
   var bpic=tn?'<a class="pic boxpic" href="img/box/big/T'+tn+'.jpg" data-big="img/box/big/T'+tn+'.jpg" data-small="img/box/T'+tn+'.jpg" data-cap="'+esc('Ảnh minh hoạ '+bcap)+'" aria-label="Phóng to ảnh '+esc(cpx.type)+'"><img src="img/box/T'+tn+'.jpg" alt="'+esc(cpx.type)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a>':'';
-  var h='<div class="card"><div class="head"><div><div class="code">'+esc(loc)+'</div><span class="sub" style="padding:0">Hộp vật tư tại vị trí này</span></div>'+bpic+'</div>';
+  var h='<div class="card'+hsCls(hsdState(function(r){return r.vt===loc}))+'"><div class="head"><div><div class="code">'+esc(loc)+'</div><span class="sub" style="padding:0">Hộp vật tư tại vị trí này</span></div>'+bpic+'</div>';
   if(!rs.length)return h+galHTML(loc)+'<div class="empty">Hộp đang trống: chưa có nhãn kiểm kê nào ở vị trí này.</div></div>';
   var today=new Date(),n90=new Date(today.getTime()+90*864e5);
   var hsd=rs.filter(function(r){var d=pdate(r.hsd);return d&&d<n90});
@@ -194,8 +223,7 @@ function boxView(loc){
   var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip">'+tot+' đơn vị (cộng chung)</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
   if(hsdQ)chips+='<span class="chip warn">'+hsdQ+' loại quá hạn</span>';else if(hsd.length)chips+='<span class="chip warn">'+hsd.length+' loại sắp hết hạn (90 ngày)</span>';
   if(cx)chips+='<span class="chip warn">'+cx+' loại cần xác nhận</span>';
-  var nd=uniq(rs.filter(skuShared).map(function(r){return r.sku})).length;if(nd)chips+='<span class="chip" title="SKU này cũng có ở box khác">🔗 '+nd+' SKU có ở box khác</span>';
-  h+='<div class="chips">'+chips+'</div>'+capHTML(loc)+galHTML(loc);
+  h+='<div class="chips">'+chips+'</div>'+dupBoxHTML(rs)+capHTML(loc)+galHTML(loc);
   if(!OPENED[loc])return h+'<button class="open" onclick="openBox(\''+loc+'\')">Mở hộp xem bên trong</button></div>';
   var z='';
   if(bp.length||km.length||tb.length)z='<dl class="zone">'+field('Bộ phận sử dụng',bp.join(', '))+field('Khu chuyền / máy',km.join(', '))+field('Mã thiết bị',tb.join(', '))+'</dl>';
@@ -264,11 +292,11 @@ function occ(){var o={};DATA.forEach(function(r){o[r.vt]=(o[r.vt]||0)+1});return
 function planSVG(){
   var cnt={},hl={};DATA.forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var c=p[0]+'.'+p[1];cnt[c]=(cnt[c]||0)+1}});
   Object.keys(HL).forEach(function(v){var p=v.split('.');if(p.length>=2){var c=p[0]+'.'+p[1];hl[c]=(hl[c]||0)+HL[v]}});
-  function rect(c,x,y,w,hh){var cp=cnt[c]?clusterCap(c):null;var cls='pl'+(hl[c]?' hl':(cnt[c]?(cp!=null?' '+capCls(cp):' has'):''));
+  function rect(c,x,y,w,hh){var cp=cnt[c]?clusterCap(c):null;var cls='pl'+(hl[c]?' hl':(cnt[c]?(cp!=null?' '+capCls(cp):' has'):''))+hsCls(hsdState(function(r){return (r.vt||'').indexOf(c+'.')===0}));
     var wt='';if(!hl[c]&&cp!=null){cls+=' w';var id='cp'+c.replace(/\W/g,''),lh=hh*Math.min(100,Math.max(cp,6))/100,H=hh,q=w/4,
       d='M0 0q'+q+' -6 '+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0V'+H+'H0Z';
       wt='<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/></clipPath><g clip-path="url(#'+id+')"><g class="rs" style="--h:'+hh+'px"><g transform="translate('+x+','+(y+hh-lh)+')"><path class="wv '+capCls(cp)+'" style="--w:-'+w+'px;--sp:'+(5+(x%4))+'s" d="'+d+'"/></g></g></g>'}
-    return '<a href="#'+hashOf(c)+'"><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/>'+wt+'<text x="'+(x+w/2)+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+(x+w/2)+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+(hl[c]?hl[c]+' khớp':(cnt[c]?cnt[c]+' nhãn'+(cp!=null?' · '+pf(cp):''):''))+'</text><title>'+c+(cp!=null?' — sức chứa '+pf(cp):'')+'</title></a>'}
+    return '<a href="#'+hashOf(c)+'"><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/>'+wt+'<text x="'+(x+w/2)+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+(x+w/2)+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+(hl[c]?hl[c]+' khớp':(cnt[c]?cnt[c]+' nhãn':''))+'</text>'+(!hl[c]&&cnt[c]&&cp!=null?'<text x="'+(x+w/2)+'" y="'+(y+hh/2+31)+'" text-anchor="middle" class="ps" style="font-weight:600">'+pf(cp)+'</text>':'')+'<text style="display:none"><title>'+c+(cp!=null?' — sức chứa '+pf(cp):'')+'</title></a>'}
   var s='<svg viewBox="0 0 940 390" class="plan" style="min-width:620px" role="img" aria-label="Mặt bằng kho"><text x="10" y="16" class="ps">Mặt bằng kho WH_EN-01 (bấm một cụm để xem các ô)</text>';
   var cols=[11,10,9,8,7,6,5,4,3,2,1];
   cols.forEach(function(d,i){var x=10+i*84;s+=rect('F'+d+'.2',x,26,80,130)+rect('F'+d+'.1',x,160,80,130)});
@@ -286,8 +314,9 @@ function search(t){
 }
 function home(){
   HL={};var locs=occ();
-  var h=planSVG()+'<div class="card"><div class="head"><div><div class="code">'+DATA.length+' phiếu</div><span class="sub" style="padding:0">Gõ từ khóa (VD: que hàn 3.2), hoặc bấm cụm trên bản đồ, hoặc bấm ô bên dưới</span></div></div><div class="list">';
-  Object.keys(locs).sort().forEach(function(l){h+='<a class="row" href="#'+hashOf(l)+'"><span class="t"><b>'+esc(l)+'</b></span><span class="n">'+locs[l]+' dòng</span></a>'});
+  var nh=DATA.filter(function(r){var d=hdays(r);return d!=null&&d<183}).length;
+  var h=planSVG()+'<a class="row hlink" href="#can-han">⏳ <b>Cận hạn dùng</b> <span class="n">'+(nh?nh+' vật tư dưới 6 tháng':'xem danh sách')+'</span></a><div class="card"><div class="head"><div><div class="code">'+DATA.length+' phiếu</div><span class="sub" style="padding:0">Gõ từ khóa (VD: que hàn 3.2), hoặc bấm cụm trên bản đồ, hoặc bấm ô bên dưới</span></div></div><div class="list">';
+  Object.keys(locs).sort().forEach(function(l){h+='<a class="row'+hsCls(hsdState(function(r){return r.vt===l}))+'" href="#'+hashOf(l)+'"><span class="t"><b>'+esc(l)+'</b></span><span class="n">'+locs[l]+' dòng</span></a>'});
   return h+'</div></div>';
 }
 var VT_IDX=null;
@@ -325,7 +354,8 @@ function render(){
   CAPC=null;SKUI=null;
   var h=decodeURIComponent(location.hash.replace(/^#/,''));if(!h){var mq=/[?&]o=([^&]+)/.exec(location.search);if(mq)h=decodeURIComponent(mq[1]);}
   var k=normKK(h), l=h?normLoc(h):null, html;
-  if(k){var r=DATA.filter(function(x){return x.kk===k})[0];
+  if(h==='can-han'){html=hsdView();}
+  else if(k){var r=DATA.filter(function(x){return x.kk===k})[0];
     html=r?card(r):'<div class="card"><div class="head"><div class="code">'+k+'</div></div><div class="empty">Mã này chưa có trong dữ liệu (cập nhật '+UPDATED+'). Có thể nhãn mới kiểm kê sau ngày đó.</div></div>';}
   else if(l){html=locView(l);}
   else if(q.value.trim()){html=search(q.value);}
