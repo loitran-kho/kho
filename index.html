@@ -315,7 +315,7 @@ function search(t){
 function home(){
   HL={};var locs=occ();
   var nh=DATA.filter(function(r){var d=hdays(r);return d!=null&&d<183}).length;
-  var h=planSVG()+'<a class="row hlink" href="#can-han">⏳ <b>Cận hạn dùng</b> <span class="n">'+(nh?nh+' vật tư dưới 6 tháng':'xem danh sách')+'</span></a><div class="card"><div class="head"><div><div class="code">'+DATA.length+' phiếu</div><span class="sub" style="padding:0">Gõ từ khóa (VD: que hàn 3.2), hoặc bấm cụm trên bản đồ, hoặc bấm ô bên dưới</span></div></div><div class="list">';
+  var h=planSVG()+'<a class="row hlink" href="tim_duong.html" target="_blank" rel="noopener">🧭 <b>Tìm vật tư & chỉ đường</b> <span class="n">bản đồ phát sáng · la bàn · khoá mục tiêu</span></a><a class="row hlink" href="kho_3D_toan_kho.html" target="_blank" rel="noopener">🧊 <b>Xem 3D toàn kho</b> <span class="n">xoay, phóng, bấm cụm</span></a><a class="row hlink" href="#can-han">⏳ <b>Cận hạn dùng</b> <span class="n">'+(nh?nh+' vật tư dưới 6 tháng':'xem danh sách')+'</span></a><div class="card"><div class="head"><div><div class="code">'+DATA.length+' phiếu</div><span class="sub" style="padding:0">Gõ từ khóa (VD: que hàn 3.2), hoặc bấm cụm trên bản đồ, hoặc bấm ô bên dưới</span></div></div><div class="list">';
   Object.keys(locs).sort().forEach(function(l){h+='<a class="row'+hsCls(hsdState(function(r){return r.vt===l}))+'" href="#'+hashOf(l)+'"><span class="t"><b>'+esc(l)+'</b></span><span class="n">'+locs[l]+' dòng</span></a>'});
   return h+'</div></div>';
 }
@@ -338,7 +338,7 @@ function gridFor(cl,o,tangFocus){
   });
   return h+'</div>'+legend()+'</div>';
 }
-var D3=['F1.1','F1.2','F2.1','F2.2','F3.1','F3.2'];
+var D3=['F1.1', 'F1.2', 'F2.1', 'F2.2', 'F3.1', 'F3.2', 'F4.1', 'F4.2', 'F5.1', 'F5.2', 'F6.1', 'F6.2', 'F7.1', 'F7.2', 'F8.1', 'F8.2', 'F9.1', 'F9.2', 'F10.1', 'F10.2', 'F11.1', 'F11.2', 'F12.1', 'F12.2', 'F12.3'];
 function clusterView(l){
   if(!window.KHO_VITRI)return '<div class="card"><div class="empty">Thiếu file vi_tri.js (phải nằm cùng thư mục với trang này) nên chưa vẽ được các ô.</div></div>';
   var p=l.split('.'),o=occ(),idx=vtIdx(),cls=[];
@@ -349,7 +349,7 @@ function clusterView(l){
   return '<a class="back" href="#">← Bản đồ kho</a>'+v3+cls.map(function(c){return gridFor(c,o,tf)}).join('');
 }
 function locView(l){var p=l.split('.');
-  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a>':'')+boxView(l);
+  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a> <a class="back" href="tim_duong.html#go='+l+'" target="_blank" rel="noopener">🧭 Chỉ đường tới ô này</a>':'')+boxView(l);
   return clusterView(l);
 }
 function render(){

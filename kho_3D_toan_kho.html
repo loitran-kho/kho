@@ -1,0 +1,133 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mô hình 3D toàn kho</title>
+<style>
+body{margin:0;font:14px system-ui,sans-serif;background:#f5f7fa;color:#223}
+header{padding:10px 14px}header b{font-size:16px}
+#bar{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 8px;align-items:center}
+button{padding:5px 11px;border:1px solid #9ab;background:#fff;border-radius:6px;font:inherit}
+#stage{height:74vh;min-height:520px;perspective:2600px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:grab;touch-action:none}
+#w{position:relative;transform-style:preserve-3d}
+.c,.f{position:absolute;transform-style:preserve-3d}.c>div{position:absolute;box-sizing:border-box}
+.rk>div{border:1px solid #5b6f8e}
+.lbl{position:absolute;display:flex;align-items:center;justify-content:center;font-weight:700;color:#12305f;text-decoration:none;font-size:11px;text-align:center;line-height:1.1}
+.lbl:hover{background:#ffd54a}
+#hit{font-weight:600}#cp{position:absolute;right:16px;top:70px;width:74px;height:74px;border:2px solid #345;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0003;z-index:5}#cp i{position:absolute;left:50%;top:50%;width:0;height:0;margin:-30px 0 0 -9px;border:9px solid transparent;border-bottom:30px solid #d32f2f;border-top:0;transform-origin:9px 30px}#cp b{position:absolute;left:50%;top:1px;margin-left:-4px;font-size:11px;color:#d32f2f}#cp u{position:absolute;bottom:2px;left:0;right:0;text-align:center;font:9px system-ui;color:#456;text-decoration:none}#stage{position:relative}#lg{padding:0 14px 14px;color:#456;font-size:13px}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}.blink{animation:bl .9s infinite}.flbl{position:absolute;display:flex;align-items:center;justify-content:center;color:#5b6b82;font:600 9px system-ui;background:rgba(255,255,255,.4);transform:translateZ(.5px);pointer-events:none;overflow:hidden;text-align:center}.flbl.v{writing-mode:vertical-rl}.rt{position:absolute;background:#ff6d00;transform:translateZ(3px);pointer-events:none;box-shadow:0 0 6px #ff6d00}#kh{padding:0 14px 8px;font-weight:600;color:#b23c00}
+</style></head><body>
+<header><b>Mô hình 3D toàn kho WH-EN-01</b> · vị trí các dãy theo bản vẽ mặt bằng · bấm một cụm để xem chi tiết kệ</header>
+<div id="bar"><button data-v="-55,0">Chéo</button><button data-v="0,0">Nhìn từ trên</button><button data-v="-25,-60">Từ cửa vào</button><button id="rs">Đặt lại</button><label><input type="checkbox" id="ce"> Trần nhà</label><span id="hit">—</span></div>
+<div id="stage"><div id="cp" title="La bàn: mũi đỏ chỉ hướng Bắc (phía trên bản vẽ mặt bằng)"><b>B</b><i id="cpn"></i><u>Bắc</u></div><div id="w"></div></div>
+<div id="lg">Xanh = đã có nhãn kiểm kê · xám = chưa kiểm kê. Số đo (Lợi đo): khe Tây 220, khe Đông 245, hành lang chính dọc F12 1050, kệ cao 3500 (F12 cao 2605), khu tiếp nhận ~2,5×1,5 m (nét đứt cam). Tường, cột, cửa cuốn, bàn, bình chữa cháy, quạt hút tường Bắc, xe thang đọc từ bản vẽ + ảnh (gần đúng); camera 8 cái và đèn: vị trí giả định. Trần nhà (tấm 600×600, đèn LED ống + máng đèn âm trần) bật bằng ô "Trần nhà". Nền dốc 3,6% về cửa: chưa dựng.</div>
+<script src="data.js"></script><script src="kho_geo.js"></script>
+<script>
+/* ===== CẤU HÌNH (mm). x: từ tường trái → phải; y: từ tường Bắc (trên bản vẽ) → Nam ===== */
+var ROOM={W:11530,D:7615,CH:4830};
+var RW=600,RL=2810;                       // mỗi cụm .1/.2: 600 sâu × 2810 dài, cao 3500
+// x trái của từng dãy (đọc từ thước trên bản vẽ: 200|F11 600|675|F10,F9|800|F8,F7|800|F6,F5|800|F4,F3|800|F2|590|F1|245)
+var X={F11:220,F10:1495,F9:2095,F8:3495,F7:4095,F6:5495,F5:6095,F4:7495,F3:8095,F2:9495,F1:10685}; // khe Tây 220, khe Đông 245 (Lợi đo)
+var Y2=50, Y1=Y2+RL+45;                  // .2 phía Bắc (trên), .1 phía Nam (dưới)
+var F12=[['F12.3',220,2820],['F12.2',3040,2880],['F12.1',5920,2295]], F12Y=Y1+RL+1050, H12=2605;  // hành lang chính dọc F12 = 1050; F12 cao 2605
+var S=.052,H=3500;
+/* ============================================================ */
+var w=document.getElementById('w');w.style.width=ROOM.W*S+'px';w.style.height=ROOM.D*S+'px';
+var cnt={};(window.KHO_DATA?KHO_DATA.rows:[]).forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var k=p[0]+'.'+p[1];cnt[k]=(cnt[k]||0)+1}});
+function blk(x,y,wd,dp,h,col,code,plain,zb){ // x,y mặt sàn (mm), wd rộng x, dp dài y
+ var c=document.createElement('div');c.className='c rk';
+ c.style.cssText='left:'+x*S+'px;top:'+y*S+'px;width:'+wd*S+'px;height:dp*0;';
+ c.style.height=dp*S+'px';c.style.transformStyle='preserve-3d';if(zb)c.style.transform='translateZ('+zb*S+'px)';
+ var hh=h*S,fs=[
+  [wd*S,hh,0,'translateZ(0) rotateX(-90deg)',0,(dp*S)-hh/2,'bf'],[wd*S,hh,0,'rotateX(-90deg)',0,-hh/2,'bk'],
+  [wd*S,dp*S,0,'translateZ('+hh+'px)',0,0,'tp'],[dp*S,hh,0,'rotateY(90deg)',0,0,'l'],[dp*S,hh,0,'rotateY(90deg)',0,0,'r']];
+ // mặt trên
+ var t=document.createElement('div');t.style.cssText='width:'+wd*S+'px;height:'+dp*S+'px;left:0;top:0;background:'+col+';transform:translateZ('+hh+'px)';c.appendChild(t);
+ // 4 mặt đứng
+ function side(wp,hp,css){var d=document.createElement('div');d.style.cssText='width:'+wp+'px;height:'+hp+'px;background:'+col+';opacity:.78;'+css;
+  d.style.backgroundImage='repeating-linear-gradient(0deg,transparent 0 '+(hh/7-1.2)+'px,rgba(0,0,0,.35) '+(hh/7-1.2)+'px '+hh/7+'px)';c.appendChild(d)}
+ side(wd*S,hh,'left:0;top:'+(dp*S-hh/2)+'px;transform-origin:50% 50%;transform:translateZ('+0+'px) rotateX(-90deg) translateZ('+hh/2+'px) translateY(0)');
+ sideFix(c,wd*S,dp*S,hh,col,plain);
+ w.appendChild(c);(window.ALLB=window.ALLB||[]).push({c:c,code:code,wd:wd,dp:dp});
+ var it=code.charAt(0)==='*',a=document.createElement(it?'div':'a');a.className='lbl';a.textContent=it?(wd<250?'':code.slice(1)):code;if(!it){a.href='khung_3D.html#'+code.replace(/\./g,'-');a.target='_top'}else a.style.fontSize='8px';
+ a.style.cssText='left:'+x*S+'px;top:'+y*S+'px;width:'+wd*S+'px;height:'+dp*S+'px;transform:translateZ('+(hh+.5+(zb||0)*S)+'px)';
+ a.onmouseenter=function(){document.getElementById('hit').textContent=it?code.slice(1):code+(cnt[code]?' · '+cnt[code]+' nhãn KK':' · chưa kiểm kê')};w.appendChild(a);return c}
+function sideFix(c,wp,dp,hh,col,plain){ // thay 4 mặt đứng bằng cách dựng chuẩn
+ while(c.children.length>1)c.removeChild(c.lastChild);
+ var g=plain?'':'repeating-linear-gradient(0deg,rgba(0,0,0,0) 0 '+(hh/7-1.2)+'px,rgba(0,0,0,.35) '+(hh/7-1.2)+'px '+hh/7+'px)';
+ [['f',wp,hh,'left:0;top:'+(dp-hh)+'px;transform-origin:0 100%;transform:rotateX(-90deg)'],
+  ['b',wp,hh,'left:0;top:'+(-hh)+'px;transform-origin:0 100%;transform:rotateX(-90deg)'],
+  ['l',dp,hh,'left:0;top:'+(-hh)+'px;transform-origin:0 100%;transform:rotateZ(90deg) rotateX(-90deg)'],
+  ['r',dp,hh,'left:'+wp+'px;top:'+(-hh)+'px;transform-origin:0 100%;transform:rotateZ(90deg) rotateX(-90deg)']].forEach(function(s){
+  var d=document.createElement('div');d.style.cssText='width:'+s[1]+'px;height:'+s[2]+'px;background:'+col+' '+g+';opacity:'+(plain?.22:.85)+';border:1px solid #5b6f8e;box-sizing:border-box;'+s[3];c.appendChild(d)})}
+// sàn + tường
+var fl=document.createElement('div');fl.className='f';fl.style.cssText='left:0;top:0;width:'+ROOM.W*S+'px;height:'+ROOM.D*S+'px;background:#e9edf3;border:2px solid #7a8aa0;box-sizing:border-box';w.appendChild(fl);
+var door=document.createElement('div');door.style.cssText='position:absolute;left:'+(ROOM.W-3300-245)*S+'px;top:'+(ROOM.D*S-3)+'px;width:'+3300*S+'px;height:5px;background:#27ae60;transform:translateZ(1px)';w.appendChild(door);
+Object.keys(X).forEach(function(f){['.2','.1'].forEach(function(s){var y=s==='.2'?Y2:Y1,L=RL,code=f+s;if(code==='F6.2'){y=470;L=2380}blk(X[f],y,RW,L,H,cnt[code]?'#7fcf9a':'#c9d3e2',code)})});
+F12.forEach(function(f){blk(f[1],F12Y,f[2],RW,H12,cnt[f[0]]?'#7fcf9a':'#c9d3e2',f[0])});
+/* ===== Tường, cột, thiết bị (đọc từ bản vẽ + ảnh; vị trí gần đúng; * = không bấm được) ===== */
+var CH=ROOM.CH,DX=ROOM.W-3300-245,T=150,WC='#8fa0bd',DH=2690;   // DH = chiều cao cửa cuốn điện (bản vẽ)
+blk(-T,-T,ROOM.W+2*T,T,CH,WC,'*',1);blk(-T,ROOM.D,DX+T,T,CH,WC,'*',1);blk(DX+3300,ROOM.D,ROOM.W-DX-3300+T,T,CH,WC,'*',1);
+blk(DX,ROOM.D,3300,T,CH-DH,WC,'*',1,DH);                                  // mảng tường phía trên cửa
+blk(DX,ROOM.D,3300,80,DH,'#aab2bd','*Cửa cuốn điện');
+blk(-T,0,T,ROOM.D,CH,WC,'*',1);blk(ROOM.W,0,T,ROOM.D,CH,WC,'*',1);
+// cột sát vách, KHÔNG đâm vào kệ: [x,y,cạnh]
+[[5495,0,300,200],[5770,ROOM.D-250,300,250],[0,3400,200,200],[ROOM.W-200,3400,200,200],[ROOM.W-245,ROOM.D-245,245,245]].forEach(function(p){blk(p[0],p[1],p[2],p[3]||p[2],CH,'#b0b7c3','*Cột')});   // N: cách đầu F6.2 270 mm (Lợi); S: giữa F12.1|F12.2; W/E: lệch về F11.1/F1.1; góc ĐN sát cửa
+blk(4745,2900,700,1400,3800,'#2b2b2b','*Xe thang (ước 0,7×1,4×3,8 m)');
+// khu cửa ra vào: bàn sát vách Đông, ghế phía trong; 2 bình chữa cháy sát vách Đông gần F1.1; giá treo nón
+blk(ROOM.W-245-1300,ROOM.D-650,1300,650,750,'#8d6e4a','*Bàn làm việc');blk(ROOM.W-245-1300+450,ROOM.D-650-470,420,420,450,'#4a5568','*Ghế xoay');   // cạnh dài dựa tường Nam, đầu ngắn sát cột góc ĐN (Lợi xác nhận 23/11)
+   // VỊ TRÍ BÀN: GIẢ ĐỊNH, chờ Lợi xác nhận
+// khu tiếp nhận hàng hóa (nét đứt trên bản vẽ) ~2,5 m × 1,5 m, sát cửa
+var ar=document.createElement('div');ar.style.cssText='position:absolute;left:'+8260*S+'px;top:'+(KG.F12Y-1050+0)*S+'px;width:'+2500*S+'px;height:'+1500*S+'px;border:2px dashed #e65100;box-sizing:border-box;transform:translateZ(1px);color:#e65100;font:10px system-ui;display:flex;align-items:flex-start;justify-content:flex-start;padding:2px;pointer-events:none';ar.textContent='Khu tiếp nhận hàng (~2,5×1,5 m)';w.appendChild(ar);
+blk(ROOM.W-245-1200,ROOM.D-208,200,200,600,'#d32f2f','*Bình chữa cháy');blk(ROOM.W-245-950,ROOM.D-208,200,200,600,'#d32f2f','*Bình chữa cháy');   // sau lưng bàn, sát tường Nam
+blk(ROOM.W-80,6400,80,900,400,'#d35400','*Giá treo nón BHLĐ',0,1500);
+// quạt hút gắn TƯỜNG phía Bắc
+[3000,8000].forEach(function(x){blk(x,0,700,160,500,'#7b8699','*Quạt hút (tường Bắc)',0,3600)});
+// màng lọc khí tường Nam (cao hơn nóc F12.2, F12.3: mép trên cách trần 700, mép dưới cách nóc kệ 300 — Lợi ước)
+[1630,4480].forEach(function(cx){blk(cx-750,ROOM.D-60,1500,60,ROOM.CH-700-(2605+300),'#9aa8b8','*Màng lọc khí',0,2605+300)});
+blk(KG.DX+1650-300,ROOM.D-120,600,120,300,'#7e57c2','*Đèn bắt côn trùng',0,2850);
+blk(KG.DX-350,ROOM.D-300,350,300,350,'#455a64','*Motor cửa cuốn',0,2750);
+blk(8240,KG.F12Y+100,450,450,1400,'#37474f','*Quạt đứng',0,0);
+// camera giám sát trên vách (vị trí giả định, 8 cái theo ghi chú)
+// 6 hành lang: 1 camera/hành lang trên vách Bắc, cách trần ~500; hành lang chính F12: 2 camera vách Đông + Tây (Lợi 23/11)
+[1157,3095,5095,7095,9095,10390].forEach(function(x){blk(x-75,0,150,150,150,'#222','*Camera',0,ROOM.CH-500-150)});
+[0,ROOM.W-150].forEach(function(x){blk(x,F12Y-525-75,150,150,150,'#222','*Camera',0,ROOM.CH-500-150)});
+/* Nền dốc i=3,6% hướng về cửa ra vào: GHI NHẬN, CHƯA DỰNG (Lợi: tính sau) */
+var FLOOR_SLOPE={i:.036,huong:'cửa ra vào',dungHinh:false};
+
+/* ===== Trần nhà: tấm thạch cao 600×600 trên khung xương; thấp nhất 4830 (bản vẽ 4830~5535, hướng dốc chưa rõ) =====
+   Đèn theo ảnh: (1) đèn LED ống dài gắn nổi, (2) máng đèn âm trần có chóa lưới. Ghi chú bản vẽ: (1) 12 bóng, (2) 8 bóng.
+   Vị trí từng đèn là GIẢ ĐỊNH (ảnh cho thấy đèn xếp dọc theo hành lang, song song kệ). */
+var CEIL=[];
+var cl=document.createElement('div');cl.style.cssText='position:absolute;left:0;top:0;width:'+ROOM.W*S+'px;height:'+ROOM.D*S+'px;background-color:rgba(235,240,250,.22);background-image:linear-gradient(rgba(90,110,150,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(90,110,150,.35) 1px,transparent 1px);background-size:'+600*S+'px '+600*S+'px;border:2px solid #6b86b8;box-sizing:border-box;transform:translateZ('+ROOM.CH*S+'px);display:none;pointer-events:none';w.appendChild(cl);CEIL.push(cl);
+function lamp(x,y,wd,dp,col,t,bd){var d=document.createElement('div');d.title=t;d.style.cssText='position:absolute;left:'+x*S+'px;top:'+y*S+'px;width:'+wd*S+'px;height:'+dp*S+'px;background:'+col+';border:'+(bd||'1px solid #888')+';box-sizing:border-box;transform:translateZ('+(ROOM.CH*S-1)+'px);display:none;pointer-events:none';w.appendChild(d);CEIL.push(d)}
+// (1) 12 đèn LED ống nổi: 6 hành lang × 2, dài 1200 theo trục Bắc-Nam
+[1157,3085,5085,7085,9085,10380].forEach(function(x){[1500,4000].forEach(function(y){lamp(x-40,y,80,1200,'#ffffff','Đèn LED ống (1)','1px solid #9aa')})});
+// (2) 8 máng đèn âm trần có chóa lưới, 1200×300, dọc hành lang chính phía F12
+[[1500,6000],[4800,6000],[3095,2300],[7095,4300],[9095,1300]].forEach(function(p){lamp(p[0],p[1],1200,300,'repeating-linear-gradient(90deg,#fff 0 6px,#cfd8e6 6px 8px)','Máng đèn âm trần (2) — vị trí ước','2px solid #8a99b0')});   // Lợi: loại bự ít hơn, không xếp song song
+document.getElementById('ce').onchange=function(){CEIL.forEach(function(e){e.style.display=this.checked?'block':'none'},this)};
+var rx=-55,ry=0,z=1,dr=null,st=document.getElementById('stage');
+function ap(){var n=document.getElementById('cpn');if(n)n.style.transform='rotate('+ry+'deg)';w.style.transform='scale('+z+') rotateX('+(-rx)+'deg) rotateZ('+ry+'deg)'}
+
+/* ===== Tên hành lang (Lợi đặt tên được: sửa KG.CN trong kho_geo.js) ===== */
+function flb(x,y,wd,dp,t){var d=document.createElement('div');d.className='flbl'+(dp>wd?' v':'');d.textContent=t;d.style.cssText='left:'+x*S+'px;top:'+y*S+'px;width:'+wd*S+'px;height:'+dp*S+'px';w.appendChild(d);return d}
+var FLB=[];KG.CX.forEach(function(cx,i){FLB.push(flb(cx-300,60,600,5600,KG.CN[i]+' · '+KG.CD[i]))});FLB.push(flb(300,KG.MY-250,10400,500,'HL-G · hành lang chính dọc F12'));
+/* ô sàn hành lang HL-x.nn: vạch chia + số */
+['HL-A','HL-B','HL-C','HL-D','HL-E','HL-F','HL-G'].forEach(function(h){var f=KG.floorCells(h);for(var i=0;i<f.n;i++){var c=(i+.5)*f.h,t=f.vert?flb(f.x-300,f.y0+i*f.h,600,f.h,''):flb(f.x0+i*f.h,f.y-525,f.h,1050,'');t.style.border='1px dashed rgba(90,110,150,.35)';t.style.background='transparent';t.textContent=(i<9?'0':'')+(i+1);t.style.fontSize='7px';t.style.alignItems='flex-end'}});
+/* ===== KHOÁ MỤC TIÊU + CHỈ ĐƯỜNG: kho_3D_toan_kho.html#to=F1.1.1.7,F2.1.3.4&from=x,y (mm, tuyệt đối; mặc định từ tâm cửa O) ===== */
+(function(){var m=location.hash.match(/to=([^&]+)/);if(!m)return;var codes=decodeURIComponent(m[1]).split(','),fr=location.hash.match(/from=(-?\d+),(-?\d+)/),S0=fr?{x:+fr[1],y:+fr[2]}:KG.O,r=KG.route(S0,codes),tg={};
+ r.stops.forEach(function(q){tg[q.cl]=1});
+ (window.ALLB||[]).forEach(function(o){if(o.code.charAt(0)==='*'){if(o.code.length>1)o.c.style.display='none';else o.c.style.opacity=.15}else if(!tg[o.code])o.c.style.opacity=.1;else o.c.classList.add('blink')});
+ document.querySelectorAll('.lbl').forEach(function(l){if(!tg[l.textContent]&&l.className.indexOf('flbl')<0)l.style.display='none'});FLB.forEach(function(f){f.style.opacity=.6});
+ for(var i=1;i<r.pts.length;i++){var a=r.pts[i-1],b=r.pts[i],d=document.createElement('div'),x0=Math.min(a[0],b[0])-60,y0=Math.min(a[1],b[1])-60,wd=Math.abs(a[0]-b[0])+120,dp=Math.abs(a[1]-b[1])+120;d.className='rt';d.style.cssText='left:'+x0*S+'px;top:'+y0*S+'px;width:'+wd*S+'px;height:'+dp*S+'px';w.appendChild(d)}
+ r.stops.forEach(function(q,i){var c=blk(q.fx-100,q.fy-100,200,200,Math.max(q.z+400,q.side==='F'?500:800),'#e53935','*Đích '+(i+1)+' · '+q.code);c.classList.add('blink')});
+ var st0=blk(S0.x-100,S0.y-100,200,200,600,'#2e7d32','*Bạn');
+ var h=document.createElement('div');h.id='kh';h.innerHTML='🎯 KHOÁ MỤC TIÊU: '+r.stops.map(function(q,i){return (i+1)+') '+q.code}).join(' → ')+' · quãng đường ≈ '+(r.len/1000).toFixed(1)+' m · các kết cấu khác đã mờ/ẩn · <a href="kho_3D_toan_kho.html" target="_top">Bỏ khoá, xem cả kho</a>';
+ document.getElementById('stage').before(h);rx=-62;ry=0;ap()})();
+
+function ap(){var n=document.getElementById('cpn');if(n)n.style.transform='rotate('+ry+'deg)';w.style.transform='scale('+z+') rotateX('+(-rx)+'deg) rotateZ('+ry+'deg)'}
+st.onpointerdown=function(e){dr=[e.clientX,e.clientY,rx,ry];st.setPointerCapture(e.pointerId)};
+st.onpointermove=function(e){if(!dr)return;ry=dr[3]+(e.clientX-dr[0])*.3;rx=Math.max(-90,Math.min(0,dr[2]-(e.clientY-dr[1])*.3));ap()};
+st.onpointerup=function(){dr=null};
+st.onwheel=function(e){e.preventDefault();z=Math.max(.4,Math.min(3,z*(e.deltaY<0?1.08:.92)));ap()};
+document.querySelectorAll('button[data-v]').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
+document.getElementById('rs').onclick=function(){rx=-55;ry=0;z=1;ap()};
+ap();
+</script></body></html>

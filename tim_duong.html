@@ -1,0 +1,117 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tìm vật tư & chỉ đường</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--ink:#1d2a44;--mut:#5b6b82;--acc:#e65100;--bd:#cdd6e4}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:12px 14px 4px}header b{font-size:17px}header span{color:var(--mut);font-size:13px}
+#qb{display:flex;gap:6px;padding:6px 14px}#q{flex:1;font:inherit;padding:10px 12px;border:1px solid #8aa;border-radius:8px;min-width:0}
+button,a.bt{font:inherit;padding:8px 12px;border:1px solid #8aa;background:#fff;border-radius:8px;color:var(--ink);text-decoration:none;display:inline-block;cursor:pointer}
+button.pr{background:#1f3a8a;color:#fff;border-color:#1f3a8a}
+#ex{padding:0 14px 6px;font-size:13px;color:var(--mut)}#ex a{margin-right:10px;color:#1f4fb5;cursor:pointer}
+main{display:grid;grid-template-columns:1fr;gap:12px;padding:8px 14px 24px}
+@media(min-width:900px){main{grid-template-columns:minmax(300px,420px) 1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}
+.it{border-bottom:1px solid #e3e9f2;padding:8px 0;display:flex;gap:8px}.it:last-child{border:0}
+.it h4{margin:0 0 2px;font-size:14px}.it small{color:var(--mut)}.it .vt{font-weight:700;color:#1f3a8a}
+#cmp{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#cpw{width:96px;height:96px;border:3px solid #345;border-radius:50%;position:relative;background:#fff;flex:none}
+#cpa{position:absolute;left:50%;top:50%;width:0;height:0;margin:-38px 0 0 -11px;border:11px solid transparent;border-bottom:38px solid #d32f2f;border-top:0;transform-origin:11px 38px;transition:transform .4s}
+#cpw b{position:absolute;left:50%;top:1px;margin-left:-4px;font-size:12px;color:#345}
+ol#st{margin:6px 0 0;padding-left:20px}ol#st li{margin:3px 0}
+svg{width:100%;height:auto;display:block;touch-action:manipulation}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}.blink{animation:bl .9s infinite}
+@keyframes dsh{to{stroke-dashoffset:-400}}.rt{animation:dsh 2.5s linear infinite}
+.cl{fill:#dfe6f1;stroke:#6f86a8;stroke-width:12}.cl.tg{fill:#ffb74d;stroke:#e65100;stroke-width:30}.cl.dim{opacity:.35}
+.t{font:bold 150px system-ui;fill:#2a3f66;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.hl{fill:#eef2f9}.hlt{font:600 120px system-ui;fill:#6b7a90;text-anchor:middle;pointer-events:none}
+.cell{fill:#e6ecf5;stroke:#8da0bd;stroke-width:1}.cell.tg{fill:#ff6d00}.cell.tx{font:10px system-ui;fill:#456;text-anchor:middle}
+#el svg{background:#fff}
+.lock{background:#fff3e0;border:1px dashed var(--acc);padding:6px 8px;border-radius:8px;margin:6px 0;font-size:13px}
+</style></head><body>
+<header><b>🧭 Tìm vật tư & chỉ đường</b> <span>· gõ tên / SKU / mã KK / mã ô → bản đồ 2D phát sáng vị trí → la bàn & đường đi → 3D</span></header>
+<div id="qb"><input id="q" placeholder="Ví dụ: que hàn kiswel · đầu nối khí nén phi 8 ren ngoài 13 · F1.1.1.7" autocomplete="off"><button class="pr" id="go">Tìm</button></div>
+<div id="ex">Thử: <a data-q="que han">que hàn</a><a data-q="kiswel">kiswel</a><a data-q="KK-0043">KK-0043</a><a data-q="F1.1.1.7">F1.1.1.7</a></div>
+<main>
+ <div>
+  <div class="card" id="res"><div style="color:var(--mut)">Chưa tìm. Dữ liệu lấy từ <code>data.js</code> cùng thư mục.</div></div>
+  <div class="card" id="nav" style="margin-top:12px;display:none">
+   <div id="cmp"><div id="cpw"><b>B</b><div id="cpa"></div></div><div id="cpt"></div></div>
+   <ol id="st"></ol>
+   <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="bt" id="l3" target="_top">🧊 Mở 3D toàn kho (khoá mục tiêu)</a><a class="bt" id="lc" target="_top">🎯 3D cụm đang chọn</a><button id="home">Về cửa (O)</button></div>
+  </div>
+ </div>
+ <div>
+  <div class="card"><div style="font-size:13px;color:var(--mut);margin-bottom:4px">Mặt bằng 2D (Bắc ở trên) · <b>chạm vào bản đồ để đặt "Bạn đang ở đây"</b> · gốc toạ độ O = tâm cửa cuốn điện · <span id="pos"></span></div><svg id="map"></svg></div>
+  <div class="card" id="el" style="margin-top:12px;display:none"></div>
+ </div>
+</main>
+<script src="data.js" charset="utf-8"></script><script src="kho_geo.js"></script>
+<script>
+var K=window.KG,R=K.ROOM,ME={x:K.O.x,y:K.O.y},SEL=[],CUR=null,ROUTE=null,H=[];
+function nz(s){return String(s||'').toLowerCase().replace(/ø|ϕ|φ|⌀/g,' phi ').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9.\-]+/g,' ').replace(/\s+/g,' ').trim()}
+var ROWS=(window.KHO_DATA?KHO_DATA.rows:[]).map(function(r){r._h=' '+nz([r.ten,r.sku,r.kk,r.vt,r.hang,r.model,r.loai,r.type,r.gc,r.mtb].join(' '))+' ';return r});
+function match(r,t){if(/^\d+$/.test(t))return new RegExp('(^|[^0-9])'+t+'([^0-9]|$)').test(r._h);return r._h.indexOf(t)>=0}
+function search(q){var T=nz(q).split(' ').filter(Boolean);if(!T.length)return[];var sc=ROWS.map(function(r){var n=0;T.forEach(function(t){if(match(r,t))n++});return{r:r,n:n}}).filter(function(x){return x.n>0});
+ var full=sc.filter(function(x){return x.n===T.length});var use=full.length?full:sc.filter(function(x){return x.n>=Math.ceil(T.length*.6)});use.sort(function(a,b){return b.n-a.n});return{rows:use.map(function(x){return x.r}),all:!!full.length,T:T}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function doSearch(q){var o=search(q),res=document.getElementById('res');if((!o.rows||!o.rows.length)&&K.locate(q)){var LL=K.locate(q);o={all:true,rows:[{vt:LL.code,ten:(LL.side==='F'?'Ô sàn hành lang ':'Ô ')+LL.code,sku:'',kk:'',sl:'',dvt:'',type:'ô trống/tra theo mã'}]}}SEL=[];ROUTE=null;document.getElementById('nav').style.display='none';document.getElementById('el').style.display='none';
+ if(!o.rows||!o.rows.length){res.innerHTML='<div>Không thấy "'+esc(q)+'". Thử gõ ít từ hơn (vd: "đầu nối" hoặc "khí nén").</div>';H=[];draw();return}
+ H=o.rows;var loc={};
+ res.innerHTML=(o.all?'':'<div class="lock">Không có dòng khớp đủ mọi từ — đang hiện các dòng khớp phần lớn từ khoá.</div>')+'<div style="margin-bottom:6px"><b>'+H.length+' kết quả</b> · tick nhiều dòng rồi bấm <button id="rall">Chỉ đường các dòng đã tick</button></div>'+H.map(function(r,i){var L=K.locate(r.vt);
+  return '<div class="it"><input type="checkbox" data-i="'+i+'" '+(L?'':'disabled')+'><div style="flex:1"><h4>'+esc(r.ten||r.sku)+'</h4><small>'+esc(r.sku)+' · '+esc(r.kk)+' · SL '+esc(r.sl)+' '+esc(r.dvt)+' · '+esc(r.type)+'</small><br><span class="vt">'+esc(r.vt)+'</span> '+(L?(L.side==='F'?'<small>(ô sàn '+L.cl+')</small>':'<small>(cụm '+L.cl+', tầng '+L.k+', ô '+L.no+')</small>'):'<small>(chưa có toạ độ)</small>')+'<br>'+(L?'<button data-go="'+i+'">🧭 Chỉ đường</button> ':'')+'<a class="bt" href="index.html#'+esc(r.kk)+'" target="_top">Phiếu</a></div></div>'}).join('');
+ res.querySelectorAll('button[data-go]').forEach(function(b){b.onclick=function(){go([H[+b.dataset.go].vt])}});
+ res.querySelectorAll('input[data-i]').forEach(function(c){c.onchange=function(){SEL=[].map.call(res.querySelectorAll('input[data-i]:checked'),function(x){return H[+x.dataset.i].vt});draw()}});
+ var ra=document.getElementById('rall');if(ra)ra.onclick=function(){if(SEL.length)go(SEL)};draw()}
+function go(codes){codes=codes.filter(function(c,i){return codes.indexOf(c)===i});ROUTE=K.route(ME,codes);CUR=ROUTE.stops[0]||null;SEL=codes;nav();draw()}
+var DIR=function(dx,dy){return Math.abs(dx)>Math.abs(dy)?(dx>0?'Đông':'Tây'):(dy<0?'Bắc':'Nam')};
+function nav(){var n=document.getElementById('nav');if(!ROUTE||!ROUTE.stops.length){n.style.display='none';return}n.style.display='block';
+ var P=ROUTE.pts,steps=[],i,L,sg;
+ for(i=1;i<P.length;i++){L=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);if(L<30)continue;sg=DIR(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);steps.push([sg,L,P[i]])}
+ var html='',acc=null,pts=P,q=ROUTE.stops,sIdx=0;
+ // gộp các đoạn cùng hướng và chèn "đến đích" khi chạm điểm mặt kệ
+ var out=[];steps.forEach(function(s){var l=out[out.length-1];if(l&&l.d===s[0]&&!l.end)l.l+=s[1];else out.push({d:s[0],l:s[1],p:s[2]})});
+ var stopAt=q.map(function(x){return[x.fx,x.fy]}),si=0;
+ out.forEach(function(s){html+='<li>Đi hướng <b>'+s.d+'</b> khoảng <b>'+(s.l/1000).toFixed(1)+' m</b>'+corr(s.p)+'</li>';
+  q.forEach(function(x,k){if(Math.hypot(s.p[0]-x.fx,s.p[1]-x.fy)<40&&!x._s){x._s=1;html+='<li style="color:#b23c00"><b>🎯 Đích '+(k+1)+':</b> '+x.code+(x.side==='F'?' — ô sàn hành lang '+x.cl+', ô số '+x.no+' (đặt/lấy trên sàn)':' — quay mặt vào kệ ')+(x.side==='F'?'':x.cl+', tầng '+x.k+', ô '+x.no+(x.row?' (hàng trên)':'')+', cao ≈ '+(x.z/1000).toFixed(1)+' m'+(x.z>1800?' → cần xe thang/thang':''))+'</li>'}})});
+ q.forEach(function(x){x._s=0});
+ document.getElementById('st').innerHTML=html;
+ var nxt=P.length>1?P[1]:P[0],dx=nxt[0]-ME.x,dy=nxt[1]-ME.y,ang=Math.atan2(dx,-dy)*180/Math.PI;
+ document.getElementById('cpa').style.transform='rotate('+ang+'deg)';
+ var first=q[0];document.getElementById('cpt').innerHTML='Mũi tên đỏ chỉ <b>hướng đi tiếp</b> (lên = Bắc bản vẽ).<br>Tổng quãng đường ≈ <b>'+(ROUTE.len/1000).toFixed(1)+' m</b> · '+q.length+' điểm lấy hàng';
+ var codes=q.map(function(x){return x.code}).join(',');
+ document.getElementById('l3').href='kho_3D_toan_kho.html#to='+codes+'&from='+Math.round(ME.x)+','+Math.round(ME.y);
+ document.getElementById('lc').href='khung_3D.html#'+first.code.replace(/\./g,'-')+'@khoa';
+ elev(first)}
+function corr(p){var c=K.CX.map(function(v,i){return Math.abs(p[0]-v)<2?K.CN[i]:null}).filter(Boolean)[0];if(c)return' (dọc '+c+')';if(Math.abs(p[1]-K.MY)<2)return' (dọc HL-G, hành lang chính F12)';return''}
+function elev(x){var e=document.getElementById('el');e.style.display='block';if(x.side==='F'){e.innerHTML='<div class="lock"><b>🎯 Ô sàn '+x.cl+'.'+(x.no<10?'0':'')+x.no+'</b> nhấp nháy trên mặt bằng (không có mặt kệ).</div>';return}var T=K.TIERS[x.cl],W=520,rowH=30,gap=6,y=0,svg='',lab;
+ for(var k=7;k>=1;k--){var t=T[k-1],n=t[0],rows=t[1],faces=t[2],per=rows*n,cw=W/n,hh=rows*rowH;
+  for(var r=rows-1;r>=0;r--){for(var j=0;j<n;j++){var no=(faces>1?x.face:0)*per+r*n+j+1;
+    var isT=(k===x.k&&no===x.no);var cx=40+j*cw,cy=y+(rows-1-r)*rowH;
+    svg+='<rect class="cell'+(isT?' tg blink':'')+'" x="'+cx+'" y="'+cy+'" width="'+(cw-1)+'" height="'+(rowH-1)+'"/><text class="cell tx" x="'+(cx+cw/2)+'" y="'+(cy+rowH/2+3)+'">'+no+'</text>'}}
+  svg+='<text x="2" y="'+(y+hh/2+4)+'" style="font:bold 12px system-ui;fill:#345">T'+k+'</text>';y+=hh+gap}
+ e.innerHTML='<div class="lock"><b>🎯 Khoá mục tiêu · mặt kệ '+x.cl+'</b> (nhìn từ hành lang '+(x.side==='N'?'HL-G':K.CN[K.CX.indexOf(x.sx)])+'): ô '+x.no+' tầng '+x.k+' nhấp nháy · chỉ số ô đọc từ trái sang phải khi đứng đối diện mặt kệ</div><svg viewBox="0 0 '+(W+44)+' '+y+'">'+svg+'</svg>'}
+/* ===== bản đồ 2D ===== */
+var NS='http://www.w3.org/2000/svg',svgm=document.getElementById('map');
+function E(tag,a,p){var e=document.createElementNS(NS,tag);for(var k in a)e.setAttribute(k,a[k]);(p||svgm).appendChild(e);return e}
+function draw(){svgm.innerHTML='';svgm.setAttribute('viewBox','-120 -120 '+(R.W+240)+' '+(R.D+240));
+ E('rect',{x:0,y:0,width:R.W,height:R.D,fill:'#fff',stroke:'#7a8aa0','stroke-width':40});
+ K.CX.forEach(function(cx,i){E('rect',{class:'hl',x:cx-300,y:40,width:600,height:K.F12Y-40});var t=E('text',{class:'hlt',x:cx,y:900,transform:'rotate(-90 '+cx+' 900)'});t.textContent=K.CN[i]});
+ E('rect',{class:'hl',x:200,y:K.MY-525,width:R.W-400,height:1050});E('text',{class:'hlt',x:R.W/2,y:K.MY+40}).textContent='HL-G · hành lang chính dọc F12';
+ var tg={};(ROUTE?ROUTE.stops.map(function(s){return s.code}):H.map(function(r){return r.vt})).forEach(function(c){var l=K.locate(c);if(l&&l.side!=='F')tg[l.cl]=(tg[l.cl]||0)+1});
+ var any=Object.keys(tg).length;
+ Object.keys(K.TIERS).forEach(function(c){var r=K.rect(c),on=tg[c];var e=E('rect',{class:'cl'+(on?' tg blink':(any?' dim':'')),x:r.x,y:r.y,width:r.w,height:r.h});E('text',{class:'t',x:r.x+r.w/2,y:r.y+r.h/2,transform:r.w>r.h?'':'rotate(-90 '+(r.x+r.w/2)+' '+(r.y+r.h/2)+')'}).textContent=c+(on?' ('+on+')':'')});
+ ['HL-A','HL-B','HL-C','HL-D','HL-E','HL-F','HL-G'].forEach(function(h){var f=K.floorCells(h);for(var i=0;i<f.n;i++){var a=f.vert?f.y0+i*f.h:f.x0+i*f.h;if(f.vert)E('line',{x1:f.x-300,x2:f.x+300,y1:a,y2:a,stroke:'#b8c4d8','stroke-width':8});else E('line',{x1:a,x2:a,y1:f.y-525,y2:f.y+525,stroke:'#b8c4d8','stroke-width':8})}});
+ E('line',{x1:K.DX,y1:R.D,x2:K.DX+3300,y2:R.D,stroke:'#27ae60','stroke-width':90});E('text',{class:'hlt',x:K.DX+1650,y:R.D-120,fill:'#27ae60'}).textContent='Cửa cuốn điện';
+ E('circle',{cx:K.O.x,cy:K.O.y,r:90,fill:'#27ae60'});E('text',{class:'hlt',x:K.O.x+400,y:K.O.y-160}).textContent='O (0,0)';
+ if(ROUTE){E('polyline',{class:'rt',points:ROUTE.pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'#ff6d00','stroke-width':70,'stroke-dasharray':'200 120','stroke-linejoin':'round'});
+  ROUTE.stops.forEach(function(s,i){E('circle',{class:'blink',cx:s.fx,cy:s.fy,r:150,fill:'#e53935'});E('text',{class:'t',x:s.fx,y:s.fy,fill:'#fff',style:'fill:#fff;font-size:170px'}).textContent=i+1})}
+ else H.forEach(function(r){var l=K.locate(r.vt);if(l)E('circle',{class:'blink',cx:l.fx,cy:l.fy,r:110,fill:'#e53935'})});
+ E('circle',{cx:ME.x,cy:ME.y,r:130,fill:'#1565c0',stroke:'#fff','stroke-width':30});
+ var rl=K.rel(ME.x,ME.y);document.getElementById('pos').textContent='Bạn: X='+rl.x+' mm, Y='+rl.y+' mm so với O'}
+svgm.addEventListener('click',function(ev){var pt=svgm.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;var p=pt.matrixTransform(svgm.getScreenCTM().inverse());ME={x:Math.max(0,Math.min(R.W,p.x)),y:Math.max(0,Math.min(R.D,p.y))};if(SEL.length&&ROUTE)go(SEL);else draw()});
+document.getElementById('home').onclick=function(){ME={x:K.O.x,y:K.O.y};if(SEL.length&&ROUTE)go(SEL);else draw()};
+document.getElementById('go').onclick=function(){doSearch(document.getElementById('q').value)};
+document.getElementById('q').onkeydown=function(e){if(e.key==='Enter')document.getElementById('go').click()};
+document.querySelectorAll('#ex a').forEach(function(a){a.onclick=function(){document.getElementById('q').value=a.dataset.q;doSearch(a.dataset.q)}});
+(function(){var m=location.hash.match(/q=([^&]+)/),g=location.hash.match(/go=([^&]+)/);if(m){var q=decodeURIComponent(m[1]);document.getElementById('q').value=q;doSearch(q)}else if(g){var c=decodeURIComponent(g[1]).split(',');doSearch(c[0]);go(c)}else draw()})();
+</script></body></html>
