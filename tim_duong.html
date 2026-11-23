@@ -35,7 +35,7 @@ svg{width:100%;height:auto;display:block;touch-action:manipulation}
  <div>
   <div class="card" id="res"><div style="color:var(--mut)">Chưa tìm. Dữ liệu lấy từ <code>data.js</code> cùng thư mục.</div></div>
   <div class="card" id="nav" style="margin-top:12px;display:none">
-   <div id="cmp"><div id="cpw"><b>B</b><div id="cpa"></div></div><div id="cpt"></div></div>
+   <div id="tabs"></div><div id="cmp"><div id="cpw"><b>B</b><div id="cpa"></div></div><div id="cpt"></div></div>
    <ol id="st"></ol>
    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><a class="bt" id="l3" target="_top">🧊 Mở 3D toàn kho (khoá mục tiêu)</a><a class="bt" id="lc" target="_top">🎯 3D cụm đang chọn</a><button id="home">Về cửa (O)</button></div>
   </div>
@@ -47,22 +47,27 @@ svg{width:100%;height:auto;display:block;touch-action:manipulation}
 </main>
 <script src="data.js" charset="utf-8"></script><script src="kho_geo.js"></script>
 <script>
-var K=window.KG,R=K.ROOM,ME={x:K.O.x,y:K.O.y},SEL=[],CUR=null,ROUTE=null,H=[];
+var K=window.KG,R=K.ROOM,ME={x:K.O.x,y:K.O.y},SEL=[],CUR=null,ROUTE=null,H=[],ALT=[],ACT=0,COL=['#ff6d00','#1565c0','#2e7d32','#8e24aa','#c62828','#00838f'];
 function nz(s){return String(s||'').toLowerCase().replace(/ø|ϕ|φ|⌀/g,' phi ').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9.\-]+/g,' ').replace(/\s+/g,' ').trim()}
 var ROWS=(window.KHO_DATA?KHO_DATA.rows:[]).map(function(r){r._h=' '+nz([r.ten,r.sku,r.kk,r.vt,r.hang,r.model,r.loai,r.type,r.gc,r.mtb].join(' '))+' ';return r});
 function match(r,t){if(/^\d+$/.test(t))return new RegExp('(^|[^0-9])'+t+'([^0-9]|$)').test(r._h);return r._h.indexOf(t)>=0}
 function search(q){var T=nz(q).split(' ').filter(Boolean);if(!T.length)return[];var sc=ROWS.map(function(r){var n=0;T.forEach(function(t){if(match(r,t))n++});return{r:r,n:n}}).filter(function(x){return x.n>0});
  var full=sc.filter(function(x){return x.n===T.length});var use=full.length?full:sc.filter(function(x){return x.n>=Math.ceil(T.length*.6)});use.sort(function(a,b){return b.n-a.n});return{rows:use.map(function(x){return x.r}),all:!!full.length,T:T}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function doSearch(q){var o=search(q),res=document.getElementById('res');if((!o.rows||!o.rows.length)&&K.locate(q)){var LL=K.locate(q);o={all:true,rows:[{vt:LL.code,ten:(LL.side==='F'?'Ô sàn hành lang ':'Ô ')+LL.code,sku:'',kk:'',sl:'',dvt:'',type:'ô trống/tra theo mã'}]}}SEL=[];ROUTE=null;document.getElementById('nav').style.display='none';document.getElementById('el').style.display='none';
+function doSearch(q){ALT=[];ACT=0;var o=search(q),res=document.getElementById('res');if((!o.rows||!o.rows.length)&&K.locate(q)){var LL=K.locate(q);o={all:true,rows:[{vt:LL.code,ten:(LL.side==='F'?'Ô sàn hành lang ':'Ô ')+LL.code,sku:'',kk:'',sl:'',dvt:'',type:'ô trống/tra theo mã'}]}}SEL=[];ROUTE=null;document.getElementById('nav').style.display='none';document.getElementById('el').style.display='none';
  if(!o.rows||!o.rows.length){res.innerHTML='<div>Không thấy "'+esc(q)+'". Thử gõ ít từ hơn (vd: "đầu nối" hoặc "khí nén").</div>';H=[];draw();return}
  H=o.rows;var loc={};
- res.innerHTML=(o.all?'':'<div class="lock">Không có dòng khớp đủ mọi từ — đang hiện các dòng khớp phần lớn từ khoá.</div>')+'<div style="margin-bottom:6px"><b>'+H.length+' kết quả</b> · tick nhiều dòng rồi bấm <button id="rall">Chỉ đường các dòng đã tick</button></div>'+H.map(function(r,i){var L=K.locate(r.vt);
+ res.innerHTML=(o.all?'':'<div class="lock">Không có dòng khớp đủ mọi từ — đang hiện các dòng khớp phần lớn từ khoá.</div>')+'<div style="margin-bottom:6px"><b>'+H.length+' kết quả</b> · tick nhiều dòng rồi bấm <button id="rall">Chỉ đường các dòng đã tick</button> <button id="ralt">Phương án (mỗi dòng 1 đường)</button></div>'+H.map(function(r,i){var L=K.locate(r.vt);
   return '<div class="it"><input type="checkbox" data-i="'+i+'" '+(L?'':'disabled')+'><div style="flex:1"><h4>'+esc(r.ten||r.sku)+'</h4><small>'+esc(r.sku)+' · '+esc(r.kk)+' · SL '+esc(r.sl)+' '+esc(r.dvt)+' · '+esc(r.type)+'</small><br><span class="vt">'+esc(r.vt)+'</span> '+(L?(L.side==='F'?'<small>(ô sàn '+L.cl+')</small>':'<small>(cụm '+L.cl+', tầng '+L.k+', ô '+L.no+')</small>'):'<small>(chưa có toạ độ)</small>')+'<br>'+(L?'<button data-go="'+i+'">🧭 Chỉ đường</button> ':'')+'<a class="bt" href="index.html#'+esc(r.kk)+'" target="_top">Phiếu</a></div></div>'}).join('');
  res.querySelectorAll('button[data-go]').forEach(function(b){b.onclick=function(){go([H[+b.dataset.go].vt])}});
  res.querySelectorAll('input[data-i]').forEach(function(c){c.onchange=function(){SEL=[].map.call(res.querySelectorAll('input[data-i]:checked'),function(x){return H[+x.dataset.i].vt});draw()}});
- var ra=document.getElementById('rall');if(ra)ra.onclick=function(){if(SEL.length)go(SEL)};draw()}
-function go(codes){codes=codes.filter(function(c,i){return codes.indexOf(c)===i});ROUTE=K.route(ME,codes);CUR=ROUTE.stops[0]||null;SEL=codes;nav();draw()}
+ var grp={};H.forEach(function(r){if(r.sku&&K.locate(r.vt)){(grp[r.sku]=grp[r.sku]||[]);if(grp[r.sku].indexOf(r.vt)<0)grp[r.sku].push(r.vt)}});var gs=Object.keys(grp).filter(function(k){return grp[k].length>1});
+ if(gs.length)res.insertAdjacentHTML('afterbegin','<div class="lock">'+gs.map(function(k){return '<div><b>'+esc(k)+'</b> có ở <b>'+grp[k].length+' vị trí</b> ('+grp[k].map(esc).join(', ')+') <button data-alt="'+esc(k)+'">🧭 Chỉ đường các phương án</button></div>'}).join('')+'</div>');
+ res.querySelectorAll('button[data-alt]').forEach(function(b){b.onclick=function(){goAlt(grp[b.dataset.alt])}});
+ var ra=document.getElementById('rall');if(ra)ra.onclick=function(){if(SEL.length)go(SEL)};var rb=document.getElementById('ralt');if(rb)rb.onclick=function(){if(SEL.length>1)goAlt(SEL)};draw()}
+function goAlt(codes){SEL=codes;ALT=K.alts(ME,codes);if(!ALT.length)return;ACT=Math.min(ACT,ALT.length-1);ROUTE=ALT[ACT];CUR=ROUTE.stops[0];nav();draw()}
+function pick(i){ACT=i;ROUTE=ALT[i];CUR=ROUTE.stops[0];nav();draw()}
+function go(codes){ALT=[];ACT=0;codes=codes.filter(function(c,i){return codes.indexOf(c)===i});ROUTE=K.route(ME,codes);CUR=ROUTE.stops[0]||null;SEL=codes;nav();draw()}
 var DIR=function(dx,dy){return Math.abs(dx)>Math.abs(dy)?(dx>0?'Đông':'Tây'):(dy<0?'Bắc':'Nam')};
 function nav(){var n=document.getElementById('nav');if(!ROUTE||!ROUTE.stops.length){n.style.display='none';return}n.style.display='block';
  var P=ROUTE.pts,steps=[],i,L,sg;
@@ -75,6 +80,8 @@ function nav(){var n=document.getElementById('nav');if(!ROUTE||!ROUTE.stops.leng
   q.forEach(function(x,k){if(Math.hypot(s.p[0]-x.fx,s.p[1]-x.fy)<40&&!x._s){x._s=1;html+='<li style="color:#b23c00"><b>🎯 Đích '+(k+1)+':</b> '+x.code+(x.side==='F'?' — ô sàn hành lang '+x.cl+', ô số '+x.no+' (đặt/lấy trên sàn)':' — quay mặt vào kệ ')+(x.side==='F'?'':x.cl+', tầng '+x.k+', ô '+x.no+(x.row?' (hàng trên)':'')+', cao ≈ '+(x.z/1000).toFixed(1)+' m'+(x.z>1800?' → cần xe thang/thang':''))+'</li>'}})});
  q.forEach(function(x){x._s=0});
  document.getElementById('st').innerHTML=html;
+ var tb=document.getElementById('tabs');tb.innerHTML=ALT.length>1?'<div style="margin:4px 0;font-size:13px;color:#5b6b82">Vị trí nào hết hàng thì chọn đường khác:</div>'+ALT.map(function(r,i){return '<button data-t="'+i+'" style="border-left:8px solid '+COL[i%COL.length]+';'+(i===ACT?'background:#fff3e0;font-weight:700':'')+'">Đường '+(i+1)+' → '+r.code+' · '+(r.len/1000).toFixed(1)+' m'+(i===0?' (gần nhất)':'')+'</button>'}).join(' '):'';
+ tb.querySelectorAll('button').forEach(function(b){b.onclick=function(){pick(+b.dataset.t)}});
  var nxt=P.length>1?P[1]:P[0],dx=nxt[0]-ME.x,dy=nxt[1]-ME.y,ang=Math.atan2(dx,-dy)*180/Math.PI;
  document.getElementById('cpa').style.transform='rotate('+ang+'deg)';
  var first=q[0];document.getElementById('cpt').innerHTML='Mũi tên đỏ chỉ <b>hướng đi tiếp</b> (lên = Bắc bản vẽ).<br>Tổng quãng đường ≈ <b>'+(ROUTE.len/1000).toFixed(1)+' m</b> · '+q.length+' điểm lấy hàng';
@@ -97,21 +104,22 @@ function draw(){svgm.innerHTML='';svgm.setAttribute('viewBox','-120 -120 '+(R.W+
  E('rect',{x:0,y:0,width:R.W,height:R.D,fill:'#fff',stroke:'#7a8aa0','stroke-width':40});
  K.CX.forEach(function(cx,i){E('rect',{class:'hl',x:cx-300,y:40,width:600,height:K.F12Y-40});var t=E('text',{class:'hlt',x:cx,y:900,transform:'rotate(-90 '+cx+' 900)'});t.textContent=K.CN[i]});
  E('rect',{class:'hl',x:200,y:K.MY-525,width:R.W-400,height:1050});E('text',{class:'hlt',x:R.W/2,y:K.MY+40}).textContent='HL-G · hành lang chính dọc F12';
- var tg={};(ROUTE?ROUTE.stops.map(function(s){return s.code}):H.map(function(r){return r.vt})).forEach(function(c){var l=K.locate(c);if(l&&l.side!=='F')tg[l.cl]=(tg[l.cl]||0)+1});
+ var tg={};(ALT.length>1?ALT.map(function(r){return r.code}):ROUTE?ROUTE.stops.map(function(s){return s.code}):H.map(function(r){return r.vt})).forEach(function(c){var l=K.locate(c);if(l&&l.side!=='F')tg[l.cl]=(tg[l.cl]||0)+1});
  var any=Object.keys(tg).length;
  Object.keys(K.TIERS).forEach(function(c){var r=K.rect(c),on=tg[c];var e=E('rect',{class:'cl'+(on?' tg blink':(any?' dim':'')),x:r.x,y:r.y,width:r.w,height:r.h});E('text',{class:'t',x:r.x+r.w/2,y:r.y+r.h/2,transform:r.w>r.h?'':'rotate(-90 '+(r.x+r.w/2)+' '+(r.y+r.h/2)+')'}).textContent=c+(on?' ('+on+')':'')});
  ['HL-A','HL-B','HL-C','HL-D','HL-E','HL-F','HL-G'].forEach(function(h){var f=K.floorCells(h);for(var i=0;i<f.n;i++){var a=f.vert?f.y0+i*f.h:f.x0+i*f.h;if(f.vert)E('line',{x1:f.x-300,x2:f.x+300,y1:a,y2:a,stroke:'#b8c4d8','stroke-width':8});else E('line',{x1:a,x2:a,y1:f.y-525,y2:f.y+525,stroke:'#b8c4d8','stroke-width':8})}});
  E('line',{x1:K.DX,y1:R.D,x2:K.DX+3300,y2:R.D,stroke:'#27ae60','stroke-width':90});E('text',{class:'hlt',x:K.DX+1650,y:R.D-120,fill:'#27ae60'}).textContent='Cửa cuốn điện';
  E('circle',{cx:K.O.x,cy:K.O.y,r:90,fill:'#27ae60'});E('text',{class:'hlt',x:K.O.x+400,y:K.O.y-160}).textContent='O (0,0)';
- if(ROUTE){E('polyline',{class:'rt',points:ROUTE.pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'#ff6d00','stroke-width':70,'stroke-dasharray':'200 120','stroke-linejoin':'round'});
+ if(ALT.length>1){ALT.map(function(r,i){return i}).sort(function(a,b){return (a===ACT)-(b===ACT)}).forEach(function(i){var r=ALT[i],c=COL[i%COL.length],on=i===ACT,s=r.stops[0];E('polyline',{class:on?'rt':'',points:r.pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:c,'stroke-width':on?80:45,'stroke-dasharray':on?'200 120':'90 90',opacity:on?1:.75,'stroke-linejoin':'round'});E('circle',{class:on?'blink':'',cx:s.fx,cy:s.fy,r:on?170:130,fill:c,stroke:'#fff','stroke-width':20});E('text',{class:'t',x:s.fx,y:s.fy,style:'fill:#fff;font-size:190px'}).textContent=i+1})}
+ else if(ROUTE){E('polyline',{class:'rt',points:ROUTE.pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'#ff6d00','stroke-width':70,'stroke-dasharray':'200 120','stroke-linejoin':'round'});
   ROUTE.stops.forEach(function(s,i){E('circle',{class:'blink',cx:s.fx,cy:s.fy,r:150,fill:'#e53935'});E('text',{class:'t',x:s.fx,y:s.fy,fill:'#fff',style:'fill:#fff;font-size:170px'}).textContent=i+1})}
  else H.forEach(function(r){var l=K.locate(r.vt);if(l)E('circle',{class:'blink',cx:l.fx,cy:l.fy,r:110,fill:'#e53935'})});
  E('circle',{cx:ME.x,cy:ME.y,r:130,fill:'#1565c0',stroke:'#fff','stroke-width':30});
  var rl=K.rel(ME.x,ME.y);document.getElementById('pos').textContent='Bạn: X='+rl.x+' mm, Y='+rl.y+' mm so với O'}
-svgm.addEventListener('click',function(ev){var pt=svgm.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;var p=pt.matrixTransform(svgm.getScreenCTM().inverse());ME={x:Math.max(0,Math.min(R.W,p.x)),y:Math.max(0,Math.min(R.D,p.y))};if(SEL.length&&ROUTE)go(SEL);else draw()});
-document.getElementById('home').onclick=function(){ME={x:K.O.x,y:K.O.y};if(SEL.length&&ROUTE)go(SEL);else draw()};
+svgm.addEventListener('click',function(ev){var pt=svgm.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;var p=pt.matrixTransform(svgm.getScreenCTM().inverse());ME={x:Math.max(0,Math.min(R.W,p.x)),y:Math.max(0,Math.min(R.D,p.y))};if(SEL.length&&ROUTE)(ALT.length>1?goAlt(SEL):go(SEL));else draw()});
+document.getElementById('home').onclick=function(){ME={x:K.O.x,y:K.O.y};if(SEL.length&&ROUTE)(ALT.length>1?goAlt(SEL):go(SEL));else draw()};
 document.getElementById('go').onclick=function(){doSearch(document.getElementById('q').value)};
 document.getElementById('q').onkeydown=function(e){if(e.key==='Enter')document.getElementById('go').click()};
 document.querySelectorAll('#ex a').forEach(function(a){a.onclick=function(){document.getElementById('q').value=a.dataset.q;doSearch(a.dataset.q)}});
-(function(){var m=location.hash.match(/q=([^&]+)/),g=location.hash.match(/go=([^&]+)/);if(m){var q=decodeURIComponent(m[1]);document.getElementById('q').value=q;doSearch(q)}else if(g){var c=decodeURIComponent(g[1]).split(',');doSearch(c[0]);go(c)}else draw()})();
+(function(){var m=location.hash.match(/q=([^&]+)/),g=location.hash.match(/go=([^&]+)/);if(m){var q=decodeURIComponent(m[1]);document.getElementById('q').value=q;doSearch(q)}else if(g){var c=decodeURIComponent(g[1]).split(',');doSearch(c[0]);go(c)}else if(location.hash.match(/alt=([^&]+)/)){var c2=decodeURIComponent(location.hash.match(/alt=([^&]+)/)[1]).split(',');doSearch(c2[0]);goAlt(c2)}else draw()})();
 </script></body></html>

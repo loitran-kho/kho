@@ -73,49 +73,50 @@ var GD=JSON.parse(JSON.stringify(G));G.height=3500;GD.height=3500;
 var TO={'F11.2':{1:{y:143,z:572},2:{y:795,z:445}}};   // F11.2: bim tầng 2 cao 715 (Lợi 23/11), vùng chứa tầng 1 = 572
 var STACK={'F1.1.5.2':1,'F8.2.3.3':2,'F8.2.3.4':2,'F8.2.3.5':2};   // F8.2.3.3-5: 2 hộp Type 9 chồng (bản vẽ F8)   // ô nào chồng N hộp (mỗi hộp 1 khối riêng). Ví dụ {'F2.1.5.3':2}
 /* ================================================================================ */
-var GAPZ=0,LOCK=false,S=.17,H=3500+450,sh=document.getElementById('shelf'),Z0=G.depth/2,boxes=[],cur,hl='';
+var GAPZ=0,FLAT=true,LOCK=false,S=.17,H=3500+450,sh=document.getElementById('shelf'),Z0=G.depth/2,boxes=[],cur,hl='';
 function tierY(k){return G.floor+G.beam+(k-1)*(G.beam+G.zone)}
 function cub(cls,x,y,zc,w,h,d,col){
  var c=document.createElement('div');c.className='c '+cls;
- c.style.cssText='left:'+x*S+'px;top:'+(H-y-h)*S+'px;width:'+w*S+'px;height:'+h*S+'px;transform:translateZ('+(zc-d/2)*S+'px)';
+ c.style.cssText='left:'+x*S+'px;top:'+(H-y-h)*S+'px;width:'+w*S+'px;height:'+h*S+'px;transform:translateZ('+zc*S+'px)';
  [[w,h,0,0,'translateZ('+d*S/2+'px)'],[w,h,0,0,'rotateY(180deg) translateZ('+d*S/2+'px)'],
   [w,d,0,(h-d)/2,'rotateX(90deg) translateZ('+h*S/2+'px)'],[w,d,0,(h-d)/2,'rotateX(-90deg) translateZ('+h*S/2+'px)'],
   [d,h,(w-d)/2,0,'rotateY(90deg) translateZ('+w*S/2+'px)'],[d,h,(w-d)/2,0,'rotateY(-90deg) translateZ('+w*S/2+'px)']].forEach(function(a){
   var e=document.createElement('div');e.style.cssText='width:'+a[0]*S+'px;height:'+a[1]*S+'px;left:'+a[2]*S+'px;top:'+a[3]*S+'px;transform:'+a[4]+';'+(col?'background:'+col:'');c.appendChild(e)});
  sh.appendChild(c);return c}
 function build(cl){
- cur=cl;G=Object.assign({},GD,GEO[cl]||{});sh.innerHTML='';boxes=[];sh.style.width=G.W*S+'px';sh.style.height=H*S+'px';
+ cur=cl;G=Object.assign({},GD,GEO[cl]||{});sh.innerHTML='';boxes=[];var two=CL[cl][0].faces==2,OX=(two&&FLAT)?G.W+500:0;sh.style.width=(G.W+OX)*S+'px';sh.style.height=H*S+'px';
  var hit=document.getElementById('hit'),cnt=0,used={};
- [0,G.W-G.postW].forEach(function(x){[Z0-15,-Z0+15].forEach(function(z){cub('post',x,0,z,G.postW,G.height,30,'')})});
- for(var k=1;k<=7;k++){var to=(TO[cl]||{})[k],yb=(to?to.y:tierY(k))-G.beam;cub('beam',0,yb,Z0-20,G.W,G.beam,40,'');cub('beam',0,yb,-Z0+20,G.W,G.beam,40,'');cub('beam',G.postW,yb+G.beam-18,0,G.inner,18,G.depth,'')}
+ (OX?[0,OX]:[0]).forEach(function(ox){
+ [0,G.W-G.postW].forEach(function(x){[Z0-15,-Z0+15].forEach(function(z){cub('post',x+ox,0,z,G.postW,G.height,30,'')})});
+ for(var k=1;k<=7;k++){var to=(TO[cl]||{})[k],yb=(to?to.y:tierY(k))-G.beam;cub('beam',ox,yb,Z0-20,G.W,G.beam,40,'');cub('beam',ox,yb,-Z0+20,G.W,G.beam,40,'');cub('beam',ox+G.postW,yb+G.beam-18,0,G.inner,18,G.depth,'')}});
  CL[cl].forEach(function(t,i){var k=i+1,sw=G.inner/t.n,to=(TO[cl]||{})[k],y0=to?to.y:tierY(k),faces=t.faces||1,hz=function(r){return (to&&to.z)||t.h[r]||(k==7&&G.zone<400?450:G.zone)};
   for(var f=0;f<faces;f++)for(var r=0;r<t.rows;r++)for(var j=0;j<t.n;j++){
    var no=f*t.rows*t.n+r*t.n+j+1,code=cl+'.'+k+'.'+no,base=y0+t.base[r],hh=hz(r),a=document.createElement('a');cnt++;
-   var left=G.postW+(f?(t.n-1-j):j)*sw,tid=t.cells?CELL[t.cells.charAt(j)]:t.ty,ty=tid?TY[tid]:null;
+   var left=G.postW+(f&&!OX?(t.n-1-j):j)*sw+(f&&OX?OX:0),tid=t.cells?CELL[t.cells.charAt(j)]:t.ty,ty=tid?TY[tid]:null;
    a.className='slot'+(code===hl?' on':'')+(faces==2?(f?' fb':' fa'):'');if(LOCK&&code!==hl)a.style.opacity=.13;a.id='s'+code;a.href='index.html#'+code.replace(/\./g,'-');a.target='_top';
    a.title=code+(ty?' · '+ty.n:' · ô trống')+(faces==2?(f?' · mặt giáp F3':' · mặt giáp F1'):'');a.textContent=no;
-   a.style.cssText='left:'+left*S+'px;top:'+(H-base-hh)*S+'px;width:'+sw*S+'px;height:'+hh*S+'px;transform:'+(f?'translateZ('+(-(Z0+GAPZ)*S)+'px) rotateY(180deg)':'translateZ('+(Z0+(faces==2?GAPZ:0))*S+'px)');
+   a.style.cssText='left:'+left*S+'px;top:'+(H-base-hh)*S+'px;width:'+sw*S+'px;height:'+hh*S+'px;transform:'+(f&&!OX?'translateZ('+(-(Z0+10)*S)+'px) rotateY(180deg)':'translateZ('+(Z0+10)*S+'px)');
    a.onmouseenter=function(){hit.textContent=this.title};sh.appendChild(a);
    if(ty&&!(LOCK&&code!==hl)){used[tid]=1;var L=STACK[code]||1,lst=ty.stack?ty.stack.map(function(i){return TY[i]}):[];if(!lst.length)for(var q=0;q<L;q++)lst.push(ty);
     var yy=base,MG=!t.cells&&t.n>=18&&!LOCK;   // F2.1: gộp hộp cùng hàng thành 1 khối (giảm lag)
     if(MG&&j>0)continue;
-    lst.forEach(function(u){var zc=faces==2?(f?-1:1)*(Z0-150+GAPZ):Z0-u.b[2]/2;if(faces==1&&u.b[2]>=G.depth)zc=0;
+    lst.forEach(function(u){var zc=faces==2?((f&&!OX)?-1:1)*(Z0-150):Z0-u.b[2]/2;if(faces==1&&u.b[2]>=G.depth)zc=0;
      var bw=Math.min(u.b[0],sw-10),bx=left+(sw-bw)/2,ww=bw,col=(faces==2&&f)?'#e67e22':u.c;
-     if(MG){bx=G.postW+(sw-bw)/2;ww=(t.n-1)*sw+bw;if(f)bx=G.postW+(sw-bw)/2}
+     if(MG){bx=G.postW+(sw-bw)/2+(f&&OX?OX:0);ww=(t.n-1)*sw+bw}else if(f&&OX)bx+=0
      var dsp=document.getElementById('dm').checked?'':'none',b;
      if(u.step){var df=u.step.df,db=u.b[2]-df;   // máng heo: đáy phẳng, MẶT TRƯỚC thấp hơn
-      b=cub('box',bx,yy,zc-u.b[2]/2+db/2,ww,u.b[1],db,col);b.style.display=dsp;boxes.push(b);
+      b=cub('box',bx,yy,zc-u.b[2]/2+(db+12)/2,ww,u.b[1],db+12,col);b.style.display=dsp;boxes.push(b);
       var b2=cub('box',bx,yy,zc+u.b[2]/2-df/2,ww,u.step.hf,df,col);b2.style.display=dsp;boxes.push(b2)}
      else{b=cub('box',bx,yy,zc,ww,u.b[1],u.b[2],col);b.style.display=dsp;boxes.push(b)}yy+=u.b[1]})}
   }});
  document.getElementById('ttl').textContent='Mô hình 3D cụm '+cl;
  document.getElementById('sub').textContent='· '+cnt+' ô · kéo xoay, lăn chuột phóng, bấm ô để tra cứu';
- document.getElementById('lg').innerHTML='Loại hộp trong cụm:'+Object.keys(used).map(function(u){var y=TY[u];return '<i style="background:'+y.c+'"></i>'+y.n+(y.b?' ('+y.b.join('×')+' mm)':'')}).join('')+' · hộp chỉ hiện khi tích "Hộp mẫu"'+(G&&CL[cl][0].faces==2?' · <b style="color:#1f5fbf">■ mặt 1–54 (giáp F1)</b> · <b style="color:#d35400">■ mặt 55–108 (giáp F3)</b> · tích "Tách 2 mặt" để thấy rõ hai mặt đối nhau; hộp cùng hàng được gộp thành 1 khối cho nhẹ':'')+(LOCK?' · 🎯 KHOÁ MỤC TIÊU: chỉ hiện đúng ô cần lấy':'');
+ document.getElementById('lg').innerHTML='Loại hộp trong cụm:'+Object.keys(used).map(function(u){var y=TY[u];return '<i style="background:'+y.c+'"></i>'+y.n+(y.b?' ('+y.b.join('×')+' mm)':'')}).join('')+' · hộp chỉ hiện khi tích "Hộp mẫu"'+(G&&CL[cl][0].faces==2?' · <b style="color:#1f5fbf">■ mặt 1–54 (giáp F1)</b> · <b style="color:#d35400">■ mặt 55–108 (giáp F3)</b> · bỏ tích "Mở phẳng" để xem dạng hai mặt lưng-tựa-lưng; hộp cùng hàng được gộp thành 1 khối cho nhẹ':'')+(LOCK?' · 🎯 KHOÁ MỤC TIÊU: chỉ hiện đúng ô cần lấy':'');
  document.querySelectorAll('a.cl').forEach(function(a){a.className='cl'+(a.dataset.c===cl?' on':'')});
  return cnt}
 var bar=document.getElementById('bar');
 Object.keys(CL).forEach(function(c){var a=document.createElement('a');a.className='cl';a.dataset.c=c;a.textContent=c;a.href='#'+c.replace(/\./g,'-');bar.appendChild(a)});
-bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <label><input type="checkbox" id="xp"> Tách 2 mặt (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
+bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <label><input type="checkbox" id="xp" checked> Mở phẳng 2 mặt cạnh nhau (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
 var rx=-10,ry=-28,z=.78,dr=null,st=document.getElementById('stage');
 function ap(){sh.style.transform='scale('+z+') rotateX('+rx+'deg) rotateY('+ry+'deg)'}
 st.onpointerdown=function(e){dr=[e.clientX,e.clientY,rx,ry];st.setPointerCapture(e.pointerId)};
@@ -123,7 +124,7 @@ st.onpointermove=function(e){if(!dr)return;ry=dr[3]+(e.clientX-dr[0])*.4;rx=Math
 st.onpointerup=function(){dr=null};
 st.onwheel=function(e){e.preventDefault();z=Math.max(.35,Math.min(2.5,z*(e.deltaY<0?1.08:.92)));ap()};
 document.querySelectorAll('button').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
-document.getElementById('xp').onchange=function(){GAPZ=this.checked?900:0;build(cur);if(this.checked){rx=-10;ry=-60;ap()}};
+document.getElementById('xp').onchange=function(){FLAT=this.checked;build(cur);rx=-10;ry=FLAT?0:-60;ap()};
 document.getElementById('lk').onclick=function(){var h=location.hash.replace(/@khoa/i,'');location.hash=LOCK?h:h+'@khoa'};
 document.getElementById('dm').onchange=function(){boxes.forEach(function(b){b.style.display=this.checked?'':'none'},this)};
 function route(){LOCK=/@khoa/i.test(location.hash);var h=location.hash.replace(/@khoa/i,'').replace('#','').replace(/-/g,'.').toUpperCase(),p=h.split('.'),cl=p.length>=2?p[0]+'.'+p[1]:'';

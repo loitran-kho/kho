@@ -23,6 +23,8 @@ function locate(code){var fl=locFloor(code);if(fl)return fl;var p=String(code).t
  return{code:p.join('.'),cl:cl,k:k,no:no,row:r,face:f,side:side,fx:fx,fy:fy,sx:sx,sy:sy,z:FLOOR+BEAM+(k-1)*(BEAM+ZONE)+(r&&rows>1?215:0)+120}}
 function rel(x,y){return{x:Math.round(x-O.x),y:Math.round(O.y-y)}}
 function toMain(P){if(P.y>=Y1+RL-1)return[P.x,MY];var c=CX.reduce(function(a,b){return Math.abs(b-P.x)<Math.abs(a-P.x)?b:a});return[c,P.y,c,MY]}
+/* PHƯƠNG ÁN: mỗi vị trí 1 lộ trình riêng từ S, sắp xếp ngắn → dài (đường 1 = gần nhất) */
+function alts(S,codes){var seen={};return codes.filter(function(c){var l=locate(c);if(!l||seen[l.code])return false;seen[l.code]=1;return true}).map(function(c){var r=route(S,[c]);r.code=locate(c).code;return r}).sort(function(a,b){return a.len-b.len})}
 function d(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
 function route(S,codes){var st=codes.map(locate).filter(Boolean),P={x:S.x,y:S.y},pts=[[P.x,P.y]],legs=[],left=st.slice(),order=[];
  while(left.length){var bi=0,bd=1e9;left.forEach(function(q,i){var dd=d(P,{x:q.sx,y:q.sy});if(dd<bd){bd=dd;bi=i}});var q=left.splice(bi,1)[0];order.push(q);
@@ -32,4 +34,4 @@ function route(S,codes){var st=codes.map(locate).filter(Boolean),P={x:S.x,y:S.y}
  var out=[pts[0]];for(var i=1;i<pts.length;i++){var a=out[out.length-1],b=pts[i];if(Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])>1)out.push(b)}
  var L=0;for(i=1;i<out.length;i++)L+=Math.hypot(out[i][0]-out[i-1][0],out[i][1]-out[i-1][1]);
  return{pts:out,stops:order,len:L}}
-return{ROOM:ROOM,DX:DX,RL:RL,Y1:Y1,Y2:Y2,F12Y:F12Y,MY:MY,O:O,X:X,F12:F12,CX:CX,CN:CN,CD:CD,FACE:FACE,TIERS:TIERS,rect:rect,locate:locate,floorCells:floorCells,route:route,rel:rel}})();
+return{ROOM:ROOM,DX:DX,RL:RL,Y1:Y1,Y2:Y2,F12Y:F12Y,MY:MY,O:O,X:X,F12:F12,CX:CX,CN:CN,CD:CD,FACE:FACE,TIERS:TIERS,rect:rect,locate:locate,floorCells:floorCells,route:route,alts:alts,rel:rel}})();
