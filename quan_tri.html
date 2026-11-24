@@ -1,0 +1,118 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quản trị dữ liệu kho</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#1d2a44;--line:#c9d2e3;--mu:#5b6b85;--ac:#1976d2;--bad:#d32f2f}
+@media(prefers-color-scheme:dark){:root{--bg:#0e141c;--card:#17202b;--ink:#e8edf3;--line:#2c3846;--mu:#9aa6b5;--ac:#8fb0ff;--bad:#ff6b6b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,sans-serif;padding:12px 14px 60px;max-width:980px;margin:0 auto}
+h1{font-size:20px;margin:6px 0 10px}h2{font-size:17px;margin:14px 0 6px}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.b,button{min-height:44px;padding:0 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:600 15px system-ui;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.b.on,button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 10px}
+input,select,textarea{width:100%;padding:9px;margin:4px 0;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+.mu{color:var(--mu);font-size:13px}.bad{color:var(--bad);font-weight:700}.ok{color:#2e7d32}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{border:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}tr.l td{background:#ffebee;color:#7f0000}
+.tw{overflow:auto;max-height:62vh}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1 1 140px}
+.tag{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;background:#fff3cd;color:#664d03}
+.pn{display:none}.pn.on{display:block}
+.img{max-width:140px;border-radius:8px;border:1px solid var(--line)}
+.warn{background:#fff8e1;border:1.5px solid #f9a825;color:#4e3b00;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:13.5px}
+</style>
+<script src="data.js"></script><script src="kho_geo.js"></script><script src="tuong_duong.js"></script>
+</head><body>
+<a class="b" href="index.html">🏠 Trang chủ</a>
+<h1>🗂 Quản trị dữ liệu kho</h1>
+<div class="warn">Dữ liệu các mục dưới đây lưu <b>trên chính trình duyệt/máy này</b> (localStorage). Mỗi mục có nút tải CSV/JSON để gom về máy chủ file. Để nhiều người cùng đóng góp từ máy của họ cần thêm 1 Google Form/Apps Script (đề xuất ở cuối trang).</div>
+<div class="nav" id="nav"></div>
+
+<div class="pn" id="p1">
+ <h2>1 · ĐỐI SOÁT TỒN 3 LỚP</h2>
+ <p class="mu">Cột <b>Sổ sách</b> (data) · <b>Thực tế</b> (nhập tay, hoặc lấy từ nút "Báo kiểm kê lệch" gần nhất) · <b>Không gian 3D</b> (mã ô có tồn tại trong mô hình, có nhãn chưa). Lệch → tô đỏ.</p>
+ <div class="row"><label style="flex:0 0 auto"><input type="checkbox" id="onlyL" style="width:auto"> Chỉ hiện dòng lệch</label><span id="sum1" class="mu"></span><button id="csv1">⬇ Xuất báo cáo đối soát (CSV)</button><button id="push1">🔔 Đẩy tất cả dòng lệch lên chuông</button></div>
+ <div class="tw"><table><thead><tr><th>Mã KK</th><th>Tên</th><th>Mã ô</th><th>Sổ sách</th><th>Thực tế</th><th>Không gian 3D</th><th>Kết luận</th></tr></thead><tbody id="tb1"></tbody></table></div>
+</div>
+
+<div class="pn" id="p2">
+ <h2>2 · VẬT TƯ VÔ DANH (chờ khai báo)</h2>
+ <div class="card"><div class="row"><input id="vdMo" placeholder="Mô tả (hình dạng, chữ trên vỏ, màu, kích thước…)"><input id="vdVt" placeholder="Vị trí tìm thấy (VD F5.1.2.3)"></div>
+ <div class="row"><select id="vdCc"><option value="1">Chắc chắn: 1 ★ (đoán)</option><option value="2">2 ★</option><option value="3" selected>3 ★ (khá chắc)</option><option value="4">4 ★</option><option value="5">5 ★ (chắc chắn)</option></select><input id="vdTen" placeholder="Người khai báo"><input id="vdImg" type="file" accept="image/*" capture="environment"></div>
+ <button id="vdAdd" class="on">➕ Thêm vật tư vô danh</button></div>
+ <div id="vdList"></div><button id="csv2">⬇ Tải CSV vô danh</button>
+</div>
+
+<div class="pn" id="p3">
+ <h2>3 · GÓP Ý &amp; KHAI BÁO · BẢNG XẾP HẠNG</h2>
+ <div class="card"><div class="row"><select id="gpLoai"><option>Khai báo cho vật tư vô danh</option><option>Góp ý chung</option><option>Báo sai dữ liệu</option><option>Đề xuất tính năng</option></select><input id="gpRef" placeholder="Mã liên quan (VD VD-0001, KK-0059) — tuỳ chọn"></div>
+ <textarea id="gpTxt" rows="3" placeholder="Nội dung…"></textarea><input id="gpTen" placeholder="Tên người góp ý">
+ <div class="row"><button id="gpAdd" class="on">💡 Ghi góp ý</button><button id="gpSend">📤 Gửi cho Lợi (copy)</button><a class="b" id="gpZalo" href="#" style="display:none">Zalo</a><a class="b" id="gpMail" href="#" style="display:none">✉ Email</a></div></div>
+ <h2>🏆 Bảng xếp hạng người đóng góp</h2><div class="card" id="lead"></div>
+ <h2>Góp ý đã ghi</h2><div id="gpList"></div><button id="csv3">⬇ Tải CSV góp ý</button>
+</div>
+
+<div class="pn" id="p4">
+ <h2>4 · VẬT TƯ DỰ PHÒNG CỦA THIẾT BỊ</h2>
+ <div class="warn">Dữ liệu này nên trích từ <b>Catalog thiết bị của nhà sản xuất</b>. Rất mong Kỹ thuật viên chung tay đóng góp.</div>
+ <div class="row"><input id="dvTen" placeholder="Tên thiết bị (VD Máy nén khí, Máy CNC…)"><input id="dvNg" placeholder="Người thêm"><button id="dvAdd" class="on">➕ Thêm thiết bị</button></div>
+ <div id="dvTree"></div>
+ <div class="row"><button id="dvExp">⬇ Xuất JSON</button><label class="b">⬆ Nhập JSON<input id="dvImp" type="file" accept=".json" style="display:none"></label></div>
+ <datalist id="dlKK"></datalist>
+</div>
+
+<h2>Đề xuất đóng góp nhiều người (bước sau)</h2>
+<p class="mu">Tạo 1 Google Form (Mô tả · Ảnh · Vị trí · Mức chắc chắn · Tên) → trả vào Google Sheet; trang này đọc lại Sheet đó (giống KK_DATA). Khi anh đồng ý, em viết sẵn form + đoạn đọc.</p>
+<script>
+var $=function(i){return document.getElementById(i)},DATA=(window.KHO_DATA&&KHO_DATA.rows)||[];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function L(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('Bộ nhớ trình duyệt đầy hoặc bị chặn: '+e.message)}}
+function dl(name,text,mime){var b=new Blob(['﻿'+text],{type:mime||'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},400)}
+function csv(rows){return rows.map(function(r){return r.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}).join(',')}).join('\r\n')}
+function now(){var d=new Date(),p=function(x){return('0'+x).slice(-2)};return{d:p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(),t:p(d.getHours())+':'+p(d.getMinutes())}}
+/* tabs */
+var TABS=[['p1','1 · Đối soát 3 lớp'],['p2','2 · Vô danh'],['p3','3 · Góp ý & xếp hạng'],['p4','4 · Thiết bị dự phòng']];
+$('nav').innerHTML=TABS.map(function(t){return '<button data-p="'+t[0]+'">'+t[1]+'</button>'}).join('');
+function go(p){TABS.forEach(function(t){$(t[0]).className='pn'+(t[0]===p?' on':'')});document.querySelectorAll('#nav button').forEach(function(b){b.className=b.dataset.p===p?'on':''});try{sessionStorage.setItem('qt_tab',p)}catch(e){}if(p==='p1')r1();if(p==='p2')r2();if(p==='p3')r3();if(p==='p4')r4()}
+$('nav').onclick=function(e){var b=e.target.closest('button');if(b)go(b.dataset.p)};
+/* ===== 1 · ĐỐI SOÁT ===== */
+function lastLech(kk){var a=L('nhat_ky_xnt',[]).filter(function(e){return e.kk===kk&&e.act==='LECH'});return a.length?a[a.length-1].qty:''}
+function d3(r){var lc=window.KG&&KG.locate(r.vt);if(!lc)return{t:'❌ Mã ô "'+(r.vt||'—')+'" không có trong mô hình 3D',bad:1};if(/^F12\./.test(r.vt))return{t:'⚠ Khu F12 (chờ nhập) · ô '+lc.code,bad:0};return{t:'✅ Có ô 3D '+lc.code+(r.mnh==='Có'?' · mất nhãn gốc':' · có nhãn'),bad:0}}
+function recon(){var tt=L('qt_thucte',{});return DATA.map(function(r){var v=tt[r.kk]!==undefined?tt[r.kk]:lastLech(r.kk),sb=parseFloat(r.sl)||0,th=v===''||v==null?null:parseFloat(v),x=d3(r),lech=th!==null&&th!==sb;return{r:r,sb:sb,th:th,v:v,x:x,lech:lech,bad:lech||x.bad}})}
+function r1(){var a=recon(),only=$('onlyL').checked,nl=a.filter(function(x){return x.lech}).length,n3=a.filter(function(x){return x.x.bad}).length;$('sum1').innerHTML='<b>'+a.length+'</b> dòng · <span class="bad">'+nl+' lệch tồn</span> · <span class="bad">'+n3+' lệch 3D</span>';
+ $('tb1').innerHTML=a.filter(function(x){return!only||x.bad}).map(function(x){var k=x.lech?'Sổ '+x.sb+' ≠ Thực tế '+x.th+' (chênh '+(x.th-x.sb)+')':(x.th===null?'Chưa kiểm thực tế':'Khớp');return '<tr class="'+(x.bad?'l':'')+'"><td><a href="index.html#'+x.r.kk+'">'+x.r.kk+'</a></td><td>'+esc(x.r.ten)+'</td><td>'+esc(x.r.vt)+'</td><td>'+x.sb+' '+esc(x.r.dvt)+'</td><td><input data-k="'+x.r.kk+'" class="tt" type="number" value="'+esc(x.v)+'" style="width:84px"></td><td>'+esc(x.x.t)+'</td><td>'+k+'</td></tr>'}).join('')}
+$('tb1').addEventListener('change',function(e){if(!e.target.classList.contains('tt'))return;var m=L('qt_thucte',{});m[e.target.dataset.k]=e.target.value;S('qt_thucte',m);r1()});
+$('onlyL').onchange=r1;
+$('csv1').onclick=function(){dl('Doi_soat_3_lop_'+new Date().toISOString().slice(0,10)+'.csv',csv([['Mã KK','Tên','Mã ô','Sổ sách','Thực tế','Chênh','Không gian 3D','Kết luận']].concat(recon().map(function(x){return[x.r.kk,x.r.ten,x.r.vt,x.sb,x.th===null?'':x.th,x.th===null?'':x.th-x.sb,x.x.t,x.lech?'LỆCH TỒN':(x.x.bad?'LỆCH 3D':(x.th===null?'Chưa kiểm':'Khớp'))]})))) };
+$('push1').onclick=function(){var q=recon().filter(function(x){return x.lech}),log=L('nhat_ky_xnt',[]),n=now(),add=0,who=(localStorage.getItem('kho_who')||'Đối soát');q.forEach(function(x){if(log.some(function(e){return e.act==='LECH'&&e.kk===x.r.kk&&String(e.qty)===String(x.th)}))return;log.push({d:n.d,t:n.t,who:who,act:'LECH',kk:x.r.kk,sku:x.r.sku||'',vt:x.r.vt,qty:String(x.th),so:x.r.sl,dvt:x.r.dvt||''});add++});S('nhat_ky_xnt',log);alert('Đã đẩy '+add+' dòng lệch mới lên 🔔 (mở trang chủ để xem chuông đỏ).')};
+/* ===== 2 · VÔ DANH ===== */
+function shrink(file,cb){var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,480/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.6))};im.src=fr.result};fr.readAsDataURL(file)}
+$('vdAdd').onclick=function(){var go=function(img){var a=L('qt_vodanh',[]),id='VD-'+('0000'+(a.length+1)).slice(-4),n=now();a.push({id:id,mo:$('vdMo').value,vt:$('vdVt').value,cc:$('vdCc').value,ten:$('vdTen').value||'Ẩn danh',img:img||'',st:'Chờ khai báo',d:n.d+' '+n.t,nd:[]});S('qt_vodanh',a);$('vdMo').value='';$('vdVt').value='';$('vdImg').value='';r2()};if(!$('vdMo').value.trim()){alert('Nhập mô tả.');return}var f=$('vdImg').files[0];f?shrink(f,go):go('')};
+function r2(){var a=L('qt_vodanh',[]);$('vdList').innerHTML=a.length?a.slice().reverse().map(function(x){return '<div class="card"><b>'+x.id+'</b> <span class="tag">'+esc(x.st)+'</span> · '+'★'.repeat(+x.cc)+' · '+esc(x.d)+'<div>'+esc(x.mo)+'</div><div class="mu">Vị trí: '+(x.vt?'<a href="index.html#'+esc(x.vt.replace(/\./g,'-'))+'">'+esc(x.vt)+'</a>':'—')+' · Người khai: '+esc(x.ten)+'</div>'+(x.img?'<img class="img" src="'+x.img+'">':'')+(x.nd.length?'<div class="mu">Ý kiến: '+x.nd.map(function(n){return esc(n.ten)+': '+esc(n.nd)}).join(' | ')+'</div>':'')+'<div class="row"><button data-vd="'+x.id+'" data-a="nd">💬 Thêm nhận diện</button><button data-vd="'+x.id+'" data-a="ok">✅ Đã nhận diện</button><button data-vd="'+x.id+'" data-a="del">🗑</button></div></div>'}).join(''):'<p class="mu">Chưa có vật tư vô danh.</p>'}
+$('vdList').onclick=function(e){var b=e.target.closest('button');if(!b)return;var a=L('qt_vodanh',[]),i=a.findIndex(function(x){return x.id===b.dataset.vd});if(i<0)return;
+ if(b.dataset.a==='del'){if(confirm('Xoá '+a[i].id+'?'))a.splice(i,1)}
+ else if(b.dataset.a==='ok'){a[i].st=a[i].st==='Chờ khai báo'?'Đã nhận diện':'Chờ khai báo'}
+ else{var n=prompt('Bạn nghĩ đây là gì? (tên / mã KK / thiết bị dùng)');if(!n)return;var t=prompt('Tên người đóng góp:')||'Ẩn danh';a[i].nd.push({nd:n,ten:t});a[i].st='Có ý kiến'}
+ S('qt_vodanh',a);r2()};
+$('csv2').onclick=function(){dl('Vat_tu_vo_danh.csv',csv([['Mã','Trạng thái','Mô tả','Vị trí','Chắc chắn','Người khai','Ngày','Ý kiến nhận diện']].concat(L('qt_vodanh',[]).map(function(x){return[x.id,x.st,x.mo,x.vt,x.cc,x.ten,x.d,x.nd.map(function(n){return n.ten+': '+n.nd}).join(' | ')]}))))};
+/* ===== 3 · GÓP Ý + XẾP HẠNG ===== */
+var LOI_ZALO='',LOI_MAIL='';   /* ← Lợi điền: số Zalo (VD 0901234567) / email để nút gửi hoạt động */
+if(LOI_ZALO){$('gpZalo').style.display='';$('gpZalo').href='https://zalo.me/'+LOI_ZALO}if(LOI_MAIL)$('gpMail').style.display='';
+$('gpAdd').onclick=function(){var t=$('gpTxt').value.trim();if(!t){alert('Nhập nội dung.');return}var a=L('qt_gopy',[]),n=now();a.push({loai:$('gpLoai').value,ref:$('gpRef').value,nd:t,ten:$('gpTen').value||'Ẩn danh',d:n.d+' '+n.t});S('qt_gopy',a);$('gpTxt').value='';r3()};
+function gpText(){var a=L('qt_gopy',[]).slice(-5);return 'GÓP Ý KHO\n'+a.map(function(x){return '['+x.loai+'] '+x.ten+(x.ref?' ('+x.ref+')':'')+': '+x.nd}).join('\n')}
+$('gpSend').onclick=function(){var t=$('gpTxt').value.trim()?('['+$('gpLoai').value+'] '+$('gpTen').value+': '+$('gpTxt').value):gpText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){alert('Đã copy — dán vào Zalo/Email gửi Lợi.')},function(){prompt('Copy thủ công:',t)});if(LOI_MAIL)window.open('mailto:'+LOI_MAIL+'?subject=Gop%20y%20kho&body='+encodeURIComponent(t))};
+function r3(){var pt={};function add(n,p){n=(n||'Ẩn danh').trim()||'Ẩn danh';pt[n]=(pt[n]||0)+p}L('qt_vodanh',[]).forEach(function(x){add(x.ten,3);x.nd.forEach(function(n){add(n.ten,2)})});L('qt_gopy',[]).forEach(function(x){add(x.ten,1)});(L('qt_thietbi',[])).forEach(function(d){add(d.ng,2);d.cum.forEach(function(c){c.vt.forEach(function(v){add(v.ng||d.ng,1)})})});
+ var s=Object.keys(pt).sort(function(a,b){return pt[b]-pt[a]});$('lead').innerHTML=s.length?'<ol style="margin:0;padding-left:22px">'+s.map(function(n,i){return '<li>'+(['🥇','🥈','🥉'][i]||'')+' <b>'+esc(n)+'</b> — '+pt[n]+' điểm</li>'}).join('')+'</ol><div class="mu">Điểm: khai báo vô danh 3 · ý kiến nhận diện 2 · thêm thiết bị 2 · thêm vật tư dự phòng 1 · góp ý 1 (hình thức, vui là chính).</div>':'<span class="mu">Chưa có đóng góp.</span>';
+ $('gpList').innerHTML=L('qt_gopy',[]).slice().reverse().map(function(x){return '<div class="card"><span class="tag">'+esc(x.loai)+'</span> '+esc(x.ten)+' · '+esc(x.d)+(x.ref?' · '+esc(x.ref):'')+'<div>'+esc(x.nd)+'</div></div>'}).join('')||'<p class="mu">Chưa có góp ý.</p>'}
+$('csv3').onclick=function(){dl('Gop_y.csv',csv([['Ngày','Loại','Người','Mã liên quan','Nội dung']].concat(L('qt_gopy',[]).map(function(x){return[x.d,x.loai,x.ten,x.ref,x.nd]}))))};
+/* ===== 4 · THIẾT BỊ DỰ PHÒNG ===== */
+$('dlKK').innerHTML=DATA.map(function(r){return '<option value="'+r.kk+'">'+esc(r.ten)+'</option>'}).join('');
+function sv(d){S('qt_thietbi',d);r4()}
+$('dvAdd').onclick=function(){var t=$('dvTen').value.trim();if(!t)return;var d=L('qt_thietbi',[]);d.push({ten:t,ng:$('dvNg').value||'Ẩn danh',cum:[]});$('dvTen').value='';sv(d)};
+function r4(){var d=L('qt_thietbi',[]);$('dvTree').innerHTML=d.length?d.map(function(x,i){return '<div class="card"><b>⚙️ '+esc(x.ten)+'</b> <span class="mu">· '+esc(x.ng)+'</span> <button data-a="dc" data-i="'+i+'">➕ Thêm cụm chi tiết</button> <button data-a="dd" data-i="'+i+'">🗑</button>'+x.cum.map(function(c,j){return '<div class="card" style="margin:8px 0 0 12px"><b>🔩 '+esc(c.ten)+'</b> <button data-a="dv" data-i="'+i+'" data-j="'+j+'">➕ Thêm vật tư dự phòng cho máy này</button> <button data-a="dcx" data-i="'+i+'" data-j="'+j+'">🗑</button><ul>'+c.vt.map(function(v,k){var r=DATA.filter(function(q){return q.kk===v.kk})[0];return '<li>'+(r?'<a href="index.html#'+r.kk+'">'+r.kk+'</a> '+esc(r.ten)+' · tồn <b>'+esc(r.sl)+' '+esc(r.dvt)+'</b> · ô '+esc(r.vt):esc(v.kk)+' <i class="mu">(chưa có trong kho — cần mua?)</i>')+(v.sl?' · cần dự phòng '+esc(v.sl):'')+' <button data-a="dvx" data-i="'+i+'" data-j="'+j+'" data-k="'+k+'" style="min-height:28px">✕</button></li>'}).join('')+'</ul></div>'}).join('')+'</div>'}).join(''):'<p class="mu">Chưa có thiết bị. Dữ liệu ban đầu để trống.</p>'}
+$('dvTree').onclick=function(e){var b=e.target.closest('button');if(!b)return;var d=L('qt_thietbi',[]),i=+b.dataset.i,j=+b.dataset.j,k=+b.dataset.k,a=b.dataset.a;
+ if(a==='dd'){if(confirm('Xoá thiết bị?'))d.splice(i,1)}else if(a==='dc'){var t=prompt('Tên cụm chi tiết (VD Đầu nén, Bộ lọc khí):');if(!t)return;d[i].cum.push({ten:t,vt:[]})}else if(a==='dcx'){d[i].cum.splice(j,1)}
+ else if(a==='dv'){var kk=prompt('Mã KK của vật tư (VD KK-0059) hoặc tên nếu chưa có trong kho:');if(!kk)return;var sl=prompt('Số lượng cần dự phòng (có thể bỏ trống):')||'';d[i].cum[j].vt.push({kk:kk.trim(),sl:sl,ng:d[i].ng})}else if(a==='dvx'){d[i].cum[j].vt.splice(k,1)}
+ sv(d)};
+$('dvExp').onclick=function(){dl('Thiet_bi_du_phong.json',JSON.stringify(L('qt_thietbi',[]),null,1),'application/json')};
+$('dvImp').onchange=function(e){var f=e.target.files[0];if(!f)return;var fr=new FileReader();fr.onload=function(){try{var j=JSON.parse(fr.result.replace(/^﻿/,''));if(!Array.isArray(j))throw Error('không phải mảng');if(confirm('Nhập '+j.length+' thiết bị (ghi đè dữ liệu hiện có)?'))sv(j)}catch(x){alert('File lỗi: '+x.message)}};fr.readAsText(f)};
+var t0='p1';try{t0=sessionStorage.getItem('qt_tab')||'p1'}catch(e){}if(/gopy/.test(location.hash))t0='p3';go(t0);
+</script></body></html>

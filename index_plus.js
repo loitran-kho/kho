@@ -22,7 +22,7 @@
  if(window.LT){var sel=document.createElement('select');sel.id='gov';sel.setAttribute('aria-label','Góc nhìn Thống đốc');sel.style.cssText='font:13px var(--sans);margin-left:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;padding:3px 6px;max-width:100%';
   sel.innerHTML='<option value="">🏛 Toàn kho (Tổng quản)</option>'+Object.keys(LT.DEPTS).filter(function(d){return LT.RULES.some(function(r){return r.dept===d})}).map(function(d){return '<option value="'+d+'">Xem bản đồ: '+d+'</option>'}).join('');
   sel.onchange=function(){GOV=sel.value;if(location.hash&&location.hash!=='#'){location.hash=''}else render();window.scrollTo(0,0)};$('dstat').parentNode.insertBefore(sel,$('dstat').nextSibling)}
- hb.innerHTML='<button id="bAl" type="button" aria-label="Cảnh báo">🔔</button><button id="bDb" type="button" aria-label="Tổng quan kho">📊</button><button id="bQr" type="button" aria-label="Quét mã QR">📷</button>';
+ hb.innerHTML='<button id="bAl" type="button" aria-label="Cảnh báo">🔔</button><button id="bDb" type="button" aria-label="Tổng quan kho">📊</button><button id="bQr" type="button" aria-label="Quét mã QR">📷</button><button id="bQt" type="button" aria-label="Quản trị dữ liệu" title="Quản trị dữ liệu / Góp ý">🗂</button>';
  function stopCam(){if(scanT){clearInterval(scanT);scanT=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
  function show(h){stopCam();pop.innerHTML=h;pop.hidden=false;var x=pop.querySelector('.cls');if(x)x.onclick=hide}
  function hide(){stopCam();pop.hidden=true}
@@ -52,16 +52,19 @@
   pop.querySelectorAll('.nkd').forEach(function(b){b.onclick=function(){var x=nkAll();x.splice(+b.dataset.i,1);nkSave(x);nkView()}})}
  window.NK.view=nkView;
  /* ---- phân tích cảnh báo ---- */
- function analyse(){var A={xn:[],hs:[],vol:[],wt:[],hi:[],frag:[],nokt:[],cf:(window.LT?LT.conflicts():[]),lech:lechList()},T=window.TT,seen={};
+function kyNhauList(){var out=[];((window.TD&&TD.ky_nhau)||[]).forEach(function(p){var a=DATA.filter(function(x){return x.kk===p[0]})[0],b=DATA.filter(function(x){return x.kk===p[1]})[0];if(a&&b&&a.vt&&b.vt&&a.vt.split('.').slice(0,2).join('.')===b.vt.split('.').slice(0,2).join('.'))out.push({a:a,b:b,why:p[2]||''})});return out}
+ function analyse(){var A={xn:[],hs:[],vol:[],wt:[],hi:[],frag:[],nokt:[],cf:(window.LT?LT.conflicts():[]),lech:lechList(),kn:kyNhauList()},T=window.TT,seen={};
   DATA.forEach(function(r){if(r.ai==='Cần xác nhận')A.xn.push(r);var h=hsdOne(r);if(h)A.hs.push([r,h])});
   DATA.forEach(function(r){if(!r.vt||seen[r.vt])return;seen[r.vt]=1;var c=capOf(r.vt);
    if(c.pct!=null&&c.pct>100)A.vol.push([r.vt,c.pct]);if(c.miss.length)A.nokt.push([r.vt,c.miss.length]);
    if(T){var t=T.cell(r.vt,c.rs,c.type);t.warn.forEach(function(w){var k=/Quá tải|Gần đầy/.test(w)?'wt':(/cao/.test(w)?'hi':'frag');A[k].push([r.vt,w])})}});
   return A}
  function li(loc,txt){return '<li><a href="#'+hashOf(loc)+'">'+esc(loc)+'</a> — '+txt+'</li>'}
- $('bAl').onclick=function(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length+A.lech.length;
+ $('bQt').onclick=function(){location.href='quan_tri.html'};
+ $('bAl').onclick=function(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length+A.lech.length+A.kn.length;
   function grp(ic,t,arr,fn){return arr.length?'<details><summary>'+ic+' '+t+' ('+arr.length+')</summary><ul>'+arr.slice(0,40).map(fn).join('')+(arr.length>40?'<li>… và '+(arr.length-40)+' mục nữa</li>':'')+'</ul></details>':''}
   show(H3('🔔 Cảnh báo')+(n?'':'<p>Không có cảnh báo nóng. ✅</p>')+
+   grp('⛔','Vật tư KỴ NHAU đang để cùng dãy kệ',A.kn,function(c){return '<li>🔴 <a href="#'+c.a.kk+'">'+c.a.kk+'</a> (<a href="#'+hashOf(c.a.vt)+'">'+esc(c.a.vt)+'</a>) ⛔ <a href="#'+c.b.kk+'">'+c.b.kk+'</a> (<a href="#'+hashOf(c.b.vt)+'">'+esc(c.b.vt)+'</a>)'+(c.why?' — '+esc(c.why):'')+'</li>'})+
    grp('🔴','Lệch kiểm kê do người dùng báo',A.lech,function(e){return '<li><a href="#'+esc(e.kk)+'">'+esc(e.kk)+'</a> lệch: Sổ '+esc(e.so)+', Thực tế '+esc(e.qty)+', Người báo: '+esc(e.who||'?')+' ('+esc(e.d+' '+e.t)+')</li>'})+
    grp('🏛','Tranh chấp lãnh thổ (2 bộ phận cùng 1 vị trí)',A.cf,function(c){return '<li><a href="#'+c.cl+'">'+c.cl+'</a> — '+esc(c.msg)+' → cần Tổng quản phân xử</li>'})+
    grp('⚖️','Quá tải / gần đầy tải hộp (kg)',A.wt,function(a){return li(a[0],a[1])})+
@@ -72,7 +75,8 @@
    grp('📅','HSD quá hạn / dưới 30 ngày',A.hs,function(a){return '<li><a href="#'+a[0].kk+'">'+a[0].kk+'</a> — '+(a[1]==='e'?'quá hạn':'dưới 30 ngày')+'</li>'})+
    '<details><summary>ℹ️ Chưa tính được ('+A.nokt.length+' ô thiếu kích thước)</summary><ul>'+A.nokt.slice(0,30).map(function(a){return li(a[0],a[1]+' dòng thiếu kích thước')}).join('')+'</ul></details>');
   var d=$('bAl').querySelector('.dot');};
- (function badge(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;if(n){var d=document.createElement('span');d.className='dot';d.textContent=n>99?'99+':n;$('bAl').appendChild(d)}refreshNk();try{if(typeof render==='function')render()}catch(e){}
+ (function badge(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;if(n){var d=document.createElement('span');d.className='dot';d.textContent=n>99?'99+':n;$('bAl').appendChild(d)}refreshNk();refreshNk();
+try{if(typeof render==='function')render()}catch(e){}
 })();
  /* ---- tổng quan ---- */
  $('bDb').onclick=function(){var T=window.TT,sk={},cells={},vp=[],wp=[],kg=0,kn=0;
@@ -149,5 +153,6 @@
  nk.onclick=function(){nkView()};
  var nkOld=function(){
   show(H3('📖 Nhật ký Xuất – Nhập – Tồn')+'<p>Chưa gắn link sổ. Làm 1 lần (≈10 phút), sau đó nút này mở thẳng sổ:</p><ol style="padding-left:20px;font-size:14px"><li>Vào <b>Google Sheets</b> → tạo file <b>KHO_NHAT_KY</b>. Import <b>Nhat_ky_XNT_mau.csv</b> thành tab <b>NHAT_KY</b>, và <b>Ton_kho_mau.csv</b> thành tab <b>TON</b> (tab TON import để mặc định, có tick Convert).</li><li>Mỗi lần xuất/nhập: thêm 1 dòng ở NHAT_KY (Loại = NHAP / XUAT / DIEUCHINH). Tab TON tự tính: <b>Tồn = SL kiểm kê + Nhập − Xuất ± Điều chỉnh</b>.</li><li>(Nhập nhanh trên điện thoại) Google Form → Responses liên kết vào tab NHAT_KY, hoặc dùng app Google Sheets.</li><li>Share → "Anyone with the link: Editor" (hoặc chỉ nhóm thủ kho) → copy link, dán vào dòng <code>NHATKY_URL</code> đầu file <b>index_plus.js</b>, up lên GitHub.</li></ol><p style="font-size:12.5px;color:var(--mute)">Giai đoạn 1: trang này vẫn chỉ để tra cứu; sổ nằm ở Google Sheets. Giai đoạn 2 mới có nút +/− trực tiếp (cần cơ sở dữ liệu).</p>')};
+refreshNk();
 try{if(typeof render==='function')render()}catch(e){}
 })();
