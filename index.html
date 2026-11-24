@@ -63,6 +63,7 @@ a{color:var(--ink)}
 .legend.dl{margin:10px 0 0}.legend.dl b{width:100%;font-weight:600}.legend.dl i{width:16px;height:10px;border-radius:2px}
 .list .row{border:1.5px solid var(--line);border-radius:10px;margin:0 0 8px;background:var(--card)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.chips button{border:1.5px solid var(--line);background:var(--card);color:inherit;border-radius:999px;padding:7px 13px;font:inherit;font-size:14px}.chips button.on{background:#1976d2;border-color:#1976d2;color:#fff}
+.crumb{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px;font-size:13px;color:var(--mute)}.crumb span{border:1.5px solid var(--line);border-radius:8px;padding:4px 9px;background:var(--card)}.crumb b{color:inherit}
 .q3{float:right;border:1.5px solid #1976d2;background:var(--card);color:#1976d2;border-radius:10px;padding:8px 12px;font:inherit;font-weight:600;font-size:14px}
 .m3{margin:10px 0}.m3 iframe{width:100%;height:420px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
 .qa{display:flex;gap:8px;margin:10px 0}.qa button{flex:1;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:inherit;padding:10px;font:inherit;font-weight:600}
@@ -182,7 +183,7 @@ function wtRow(r){var T=window.TT;if(!T)return '';var e=T.est(r);if(!e||e.kg==nu
 function field(k,v,full){return v?'<div'+(full?' class="full"':'')+'><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>':''}
 function card(r){
   var hs1=hsdOne(r),h='<div class="card'+hsCls(hs1)+'"><div class="head"><div><div class="code">'+r.kk+(hs1?' <span class="pill hsp'+hs1+'">'+(hs1==='e'?'HSD quá hạn':'HSD dưới 30 ngày')+'</span>':'')+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a> <a class="loc" style="margin-left:10px" href="tim_duong.html#go='+encodeURIComponent(r.vt)+'" target="_blank" rel="noopener">🧭 Chỉ đường</a></div>'+badge(r.hh)+'</div>';
-  h+='<div class="name">'+esc(r.ten)+'</div>';
+  h+=crumb(r.vt)+'<div class="name">'+esc(r.ten)+'</div>';
   var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
   h+=dupHTML(r);
@@ -347,7 +348,7 @@ function search(t){
   HL={};rs.forEach(function(r){HL[r.vt]=(HL[r.vt]||0)+1});
   if(!all.length)return '<div class="card"><div class="empty">Không thấy "'+esc(t)+'" trong dữ liệu. (Tìm được cả theo tên, SKU, mã lô, hãng/model, tên thiết bị trong ghi chú.)</div></div>';
   var locs=Object.keys(HL).length,to=Object.keys(HL).join(',');
-  return chipsHTML(all)+planSVG()+'<div class="card"><div class="head"><div>'+(locs?'<button type="button" class="q3" id="b3">🧭 Đường đi 3D</button>':'')+'<div class="code">'+rs.length+' kết quả</div><span class="sub" style="padding:0">ở '+locs+' ô (đã tô cam trên bản đồ)</span></div></div><div class="m3" id="m3" hidden data-to="'+esc(to)+'"></div><div class="list">'+rs.slice(0,50).map(row).join('')+'</div></div>';
+  return chipsHTML(all)+planSVG()+'<div class="card"><div class="head"><div>'+(locs?'<button type="button" class="q3" id="b3">🧭 Đường đi 3D</button><a class="q3" style="margin-right:6px" target="_blank" rel="noopener" href="kho_3D_toan_kho.html#to='+to+'&walk=1">🚶 Đi bộ</a>':'')+'<div class="code">'+rs.length+' kết quả</div><span class="sub" style="padding:0">ở '+locs+' ô (đã tô cam trên bản đồ)</span></div></div><div class="m3" id="m3" hidden data-to="'+esc(to)+'"></div><div class="list">'+rs.slice(0,50).map(row).join('')+'</div></div>';
 }
 function home(){
   HL={};var locs=occ();
@@ -385,8 +386,9 @@ function clusterView(l){
   var v3=cls.filter(function(c){return D3.indexOf(c)>=0}).map(function(c){return ' <a class="back" href="khung_3D.html#'+hashOf(c)+'" target="_blank" rel="noopener">🧊 Xem 3D '+c+'</a>'}).join('');
   return '<a class="back" href="#">← Bản đồ kho</a>'+v3+cls.map(function(c){return gridFor(c,o,tf)}).join('');
 }
+function crumb(l){var p=l.split('.');if(p.length<4)return '';return '<div class="crumb"><span>Kệ <b>'+p[0]+'</b></span>›<span>Mặt/Khoang <b>.'+p[1]+'</b></span>›<span>Tầng <b>'+p[2]+'</b></span>›<span>Box/ô <b>'+p[3]+'</b></span></div>'}
 function locView(l){var p=l.split('.');
-  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a> <a class="back" href="tim_duong.html#go='+l+'" target="_blank" rel="noopener">🧭 Chỉ đường tới ô này</a>':'')+boxView(l);
+  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a> <a class="back" href="tim_duong.html#go='+l+'" target="_blank" rel="noopener">🧭 Chỉ đường tới ô này</a>':'')+crumb(l)+boxView(l);
   return clusterView(l);
 }
 function render(){
@@ -399,9 +401,11 @@ function render(){
   else if(l){html=locView(l);}
   else if(q.value.trim()){html=search(q.value);}
   else html=home();
+  if(h&&html.indexOf('class="back hm"')<0)html='<a class="back hm" href="#">🏠 Trang chủ</a>'+html;
   out.innerHTML=html; window.scrollTo(0,0);
 }
 out.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-st]');if(b){STAT=b.getAttribute('data-st');render();return}
+ var hm=e.target.closest&&e.target.closest('.hm');if(hm){q.value='';STAT=''}
  if(e.target.id==='b3'){var m=document.getElementById('m3');if(m.hidden){m.hidden=false;m.innerHTML='<iframe loading="lazy" src="kho_3D_toan_kho.html#to='+m.getAttribute('data-to')+'"></iframe><a class="back" href="kho_3D_toan_kho.html#to='+m.getAttribute('data-to')+'" target="_blank" rel="noopener">⤢ Mở toàn màn hình</a>';e.target.textContent='✖ Ẩn 3D'}else{m.hidden=true;m.innerHTML='';e.target.textContent='🧭 Đường đi 3D'}return}
  var qa=e.target.closest&&e.target.closest('[data-qa]');if(qa)quick(qa.getAttribute('data-qa'),qa.getAttribute('data-kk'))});
 function quick(kind,kk){var r=DATA.filter(function(x){return x.kk===kk})[0];if(!r)return;var lab=kind==='X'?'XUẤT':'KIỂM KÊ LỆCH (số đếm thực tế)';var v=prompt(lab+' — '+kk+' · '+r.ten+'\nSố lượng ('+r.dvt+'):');if(v===null||v==='')return;

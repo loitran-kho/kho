@@ -13,7 +13,8 @@ button{padding:5px 11px;border:1px solid #9ab;background:#fff;border-radius:6px;
 .lbl:hover{background:#ffd54a}
 #hit{font-weight:600}#cp{position:absolute;right:16px;top:70px;width:74px;height:74px;border:2px solid #345;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0003;z-index:5}#cp i{position:absolute;left:50%;top:50%;width:0;height:0;margin:-30px 0 0 -9px;border:9px solid transparent;border-bottom:30px solid #d32f2f;border-top:0;transform-origin:9px 30px}#cp b{position:absolute;left:50%;top:1px;margin-left:-4px;font-size:11px;color:#d32f2f}#cp u{position:absolute;bottom:2px;left:0;right:0;text-align:center;font:9px system-ui;color:#456;text-decoration:none}#stage{position:relative}#lg{padding:0 14px 14px;color:#456;font-size:13px}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}.blink{animation:bl .9s infinite}.flbl{position:absolute;display:flex;align-items:center;justify-content:center;color:#5b6b82;font:600 9px system-ui;background:rgba(255,255,255,.4);transform:translateZ(.5px);pointer-events:none;overflow:hidden;text-align:center}.flbl.v{writing-mode:vertical-rl}.rt{position:absolute;background:#ff6d00;transform:translateZ(3px);pointer-events:none;box-shadow:0 0 6px #ff6d00}#kh{padding:0 14px 8px;font-weight:600;color:#b23c00}
-.home{display:inline-block;margin-right:10px;padding:4px 10px;border:1px solid #8aa;border-radius:8px;background:#fff;color:#1d2a44;text-decoration:none;font:600 13px system-ui;white-space:nowrap}</style></head><body>
+.home{display:inline-block;margin-right:10px;padding:4px 10px;border:1px solid #8aa;border-radius:8px;background:#fff;color:#1d2a44;text-decoration:none;font:600 13px system-ui;white-space:nowrap}#wk{position:absolute;inset:0;pointer-events:none;z-index:9;font:13px system-ui}#wk .wm{position:absolute;left:10px;top:8px;right:10px;background:#fffd;border-radius:10px;padding:6px 10px;color:#1d2a44}#wk button{pointer-events:auto;width:54px;height:54px;margin:3px;border:1.5px solid #345;border-radius:12px;background:#fffe;font-size:20px;touch-action:none}#wk .wp{position:absolute;left:10px;bottom:10px;text-align:center}#wk .wg{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}#wk .wg button{width:auto;height:auto;padding:10px 12px;font-size:14px;font-weight:600}#wkb{font-weight:700;border-color:#e65100!important}
+</style></head><body>
 <header><a class="home" href="index.html" target="_top">🏠 Về trang Tra cứu</a><header><b>Mô hình 3D toàn kho WH-EN-01</b> · vị trí các dãy theo bản vẽ mặt bằng · bấm một cụm để xem chi tiết kệ</header>
 <div id="bar"><button data-v="-55,0">Chéo</button><button data-v="0,0">Nhìn từ trên</button><button data-v="-25,-60">Từ cửa vào</button><button id="rs">Đặt lại</button><label><input type="checkbox" id="ce"> Trần nhà</label><span id="hit">—</span></div>
 <div id="stage"><div id="cp" title="La bàn: mũi đỏ chỉ hướng Bắc (phía trên bản vẽ mặt bằng)"><b>B</b><i id="cpn"></i><u>Bắc</u></div><div id="w"></div></div>
@@ -81,7 +82,7 @@ blk(DX,ROOM.D,3300,80,DH,'#aab2bd','*Cửa cuốn điện');
 blk(-T,0,T,ROOM.D,CH,WC,'*',1);blk(ROOM.W,0,T,ROOM.D,CH,WC,'*',1);
 // cột sát vách, KHÔNG đâm vào kệ: [x,y,cạnh]
 [[5495,0,300,200],[5770,ROOM.D-250,300,250],[0,3400,200,200],[ROOM.W-200,3400,200,200],[ROOM.W-245,ROOM.D-245,245,245]].forEach(function(p){blk(p[0],p[1],p[2],p[3]||p[2],CH,'#b0b7c3','*Cột')});   // N: cách đầu F6.2 270 mm (Lợi); S: giữa F12.1|F12.2; W/E: lệch về F11.1/F1.1; góc ĐN sát cửa
-blk(4745,2900,700,1400,3800,'#2b2b2b','*Xe thang (ước 0,7×1,4×3,8 m)');
+blk(4745,2900,700,1400,3400,'#2b2b2b','*Xe thang (cao 3,4 m < thanh liên kết 3,48 m để chạy qua được)');
 // khu cửa ra vào: bàn sát vách Đông, ghế phía trong; 2 bình chữa cháy sát vách Đông gần F1.1; giá treo nón
 blk(ROOM.W-245-1300,ROOM.D-650,1300,650,750,'#8d6e4a','*Bàn làm việc');blk(ROOM.W-245-1300+450,ROOM.D-650-470,420,420,450,'#4a5568','*Ghế xoay');   // cạnh dài dựa tường Nam, đầu ngắn sát cột góc ĐN (Lợi xác nhận 23/11)
    // VỊ TRÍ BÀN: GIẢ ĐỊNH, chờ Lợi xác nhận
@@ -143,4 +144,51 @@ st.onwheel=function(e){e.preventDefault();z=Math.max(.4,Math.min(3,z*(e.deltaY<0
 document.querySelectorAll('button[data-v]').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
 document.getElementById('rs').onclick=function(){rx=-55;ry=0;z=Math.min(1,(st.clientWidth-16)/(ROOM.W*S+30));ap()};
 z=Math.min(1,(st.clientWidth-16)/(ROOM.W*S+30));ap();
+/* ===== 🚶 CHẾ ĐỘ ĐI BỘ (góc nhìn thứ nhất, "đột kích") — CSS 3D, offline, không cần thư viện ngoài =====
+   Mắt cao 1600 mm; kéo chuột/ngón tay để nhìn quanh; W A S D / mũi tên hoặc nút trên màn hình để đi; ▶ Dẫn đường = tự đi tới mục tiêu nhấp nháy. */
+(function(){
+var EYE=1600,R=230,SP=1500,TURN=80,on=false,px=0,py=0,yaw=0,pit=0,keys={},auto=null,raf=0,last=0,saved=null,tgt=null,ui=null;
+var rects=Object.keys(KG.TIERS).map(function(c){return KG.rect(c)});
+function hit(x,y){if(x<200||y<150||x>KG.ROOM.W-200||y>KG.ROOM.D-150)return true;
+ for(var i=0;i<rects.length;i++){var a=rects[i];if(x>a.x-R&&x<a.x+a.w+R&&y>a.y-R&&y<a.y+a.h+R)return true}return false}
+function mv(dx,dy){if(!hit(px+dx,py))px+=dx;if(!hit(px,py+dy))py+=dy}
+function cam(){var d=Math.max(300,st.clientHeight*.8);st.style.perspective=d+'px';
+ w.style.transform='translateZ('+d+'px) rotateX('+(90+pit)+'deg) rotateZ('+(-yaw)+'deg) translate3d('+(-px*S)+'px,'+(-py*S)+'px,'+(-EYE*S)+'px)'}
+function route(){var m=location.hash.match(/to=([^&]+)/);if(!m)return null;var r=KG.route({x:KG.O.x,y:KG.O.y-350},decodeURIComponent(m[1]).split(','));return r&&r.stops.length?r:null}
+function face(x,y,z){var dx=x-px,dy=y-py;return{yaw:Math.atan2(dx,-dy)*180/Math.PI,pit:Math.atan2((z||EYE)-EYE,Math.hypot(dx,dy))*180/Math.PI}}
+function dAng(a,b){return ((b-a+540)%360)-180}
+function tick(t){if(!on)return;var dt=Math.min(.05,(t-last)/1000||0);last=t;
+ var f=(keys.w||keys.up?1:0)-(keys.s||keys.down?1:0),s=(keys.d?1:0)-(keys.a?1:0),tr=(keys.right?1:0)-(keys.left?1:0),sp=SP*(keys.shift?2:1)*dt;
+ if(f||s||tr){auto=null;yaw+=tr*TURN*dt;var q=yaw*Math.PI/180;mv((Math.sin(q)*f+Math.cos(q)*s)*sp,(-Math.cos(q)*f+Math.sin(q)*s)*sp)}
+ if(auto){var p=auto.pts[auto.i];if(p){var dx=p[0]-px,dy=p[1]-py,dd=Math.hypot(dx,dy),stp=1800*dt;
+   if(dd<=stp+1){px=p[0];py=p[1];auto.i++}else{px+=dx/dd*stp;py+=dy/dd*stp}
+   if(dd>50){var h=Math.atan2(dx,-dy)*180/Math.PI;yaw+=dAng(yaw,h)*Math.min(1,dt*4);pit+=(0-pit)*Math.min(1,dt*3)}}
+  else{var fc=face(auto.t.fx,auto.t.fy,auto.t.z+150);yaw+=dAng(yaw,fc.yaw)*Math.min(1,dt*3);pit+=(Math.max(-30,Math.min(30,fc.pit))-pit)*Math.min(1,dt*3);if(Math.abs(dAng(yaw,fc.yaw))<1){auto=null;ui.msg.textContent='🎯 Đã tới nơi — ô nhấp nháy đỏ trước mặt.'}}}
+ cam();hud();raf=requestAnimationFrame(tick)}
+function hud(){if(!ui)return;var c=KG.CD,near='';var best=1e9;KG.CX.forEach(function(x,i){var d=Math.abs(px-x);if(d<best){best=d;near=KG.CN[i]+' · '+KG.CD[i]}});ui.pos.textContent=(best<900?'Đang ở hành lang '+near:'Khu vực chung')+' · x='+Math.round(px)+' y='+Math.round(py)+' mm'}
+function enter(){if(on)return;on=true;saved={w:w.style.cssText,p:st.style.cssText,h:[st.onpointerdown,st.onpointermove,st.onpointerup,st.onpointercancel,st.onwheel],ap:ap};
+ ap=function(){};var cp=document.getElementById('cp');if(cp)cp.style.display='none';
+ st.style.position='relative';st.style.cursor='crosshair';w.style.position='absolute';w.style.left='50%';w.style.top='50%';w.style.transformOrigin='0 0';
+ px=KG.O.x;py=KG.O.y-350;yaw=0;pit=0;
+ (window.ALLB||[]).forEach(function(o){if(o.c.style.opacity==='0.1')o.c.style.opacity=.6});
+ var dr=null;st.onwheel=function(e){e.preventDefault();var q=yaw*Math.PI/180,k=(e.deltaY<0?1:-1)*260;mv(Math.sin(q)*k,-Math.cos(q)*k)};
+ st.onpointerdown=function(e){dr=[e.clientX,e.clientY,yaw,pit];try{st.setPointerCapture(e.pointerId)}catch(_){}};
+ st.onpointermove=function(e){if(!dr)return;yaw=dr[2]-(e.clientX-dr[0])*.25;pit=Math.max(-55,Math.min(55,dr[3]+(e.clientY-dr[1])*.25));auto=null};
+ st.onpointerup=st.onpointercancel=function(){dr=null};
+ ui=document.createElement('div');ui.id='wk';ui.innerHTML='<div class="wm"><span id="wkm">🚶 Chế độ đi bộ: kéo để nhìn quanh · W A S D / mũi tên để đi</span><br><small id="wkp"></small></div><div class="wp"><button data-k="left">⟲</button><button data-k="w">▲</button><button data-k="right">⟳</button><br><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div><div class="wg"><button id="wkg">▶ Dẫn đường tới đích</button><button id="wkx">✖ Thoát đi bộ</button></div>';
+ st.appendChild(ui);ui.msg=ui.querySelector('#wkm');ui.pos=ui.querySelector('#wkp');
+ ui.querySelectorAll('[data-k]').forEach(function(b){var k=b.dataset.k;b.onpointerdown=function(e){e.stopPropagation();keys[k]=1;try{b.setPointerCapture(e.pointerId)}catch(_){}};b.onpointerup=b.onpointercancel=function(){keys[k]=0}});
+ var r=route();tgt=r;var g=ui.querySelector('#wkg');if(!r)g.style.display='none';
+ g.onclick=function(e){e.stopPropagation();var rr=route();if(!rr)return;var pts=rr.pts.slice(1).map(function(p){return[p[0],p[1]]});auto={pts:pts.slice(0,-1),i:0,t:rr.stops[rr.stops.length-1]};
+  if(!auto.pts.length)auto.pts=[[px,py]];ui.msg.textContent='🧭 Đang tự đi tới '+rr.stops.map(function(q){return q.code}).join(' → ')+' …'};
+ ui.querySelector('#wkx').onclick=function(e){e.stopPropagation();leave()};
+ last=performance.now();raf=requestAnimationFrame(tick);
+ if(r){var f0=r.stops[0];var fc=face(f0.fx,f0.fy,f0.z);ui.msg.textContent='🎯 Có mục tiêu nhấp nháy đỏ — bấm "Dẫn đường" hoặc tự đi.'}}
+function leave(){if(!on)return;on=false;cancelAnimationFrame(raf);ap=saved.ap;w.style.cssText=saved.w;st.style.cssText=saved.p;st.onpointerdown=saved.h[0];st.onpointermove=saved.h[1];st.onpointerup=saved.h[2];st.onpointercancel=saved.h[3];st.onwheel=saved.h[4];
+ var cp=document.getElementById('cp');if(cp)cp.style.display='';if(ui){ui.remove();ui=null}keys={};ap()}
+window.addEventListener('keydown',function(e){if(!on)return;var m={w:'w',a:'a',s:'s',d:'d',ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Shift:'shift'}[e.key.length===1?e.key.toLowerCase():e.key];if(m){keys[m]=1;e.preventDefault()}});
+window.addEventListener('keyup',function(e){var m={w:'w',a:'a',s:'s',d:'d',ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',Shift:'shift'}[e.key.length===1?e.key.toLowerCase():e.key];if(m)keys[m]=0});
+var bt=document.createElement('button');bt.id='wkb';bt.textContent='🚶 Đi bộ trong kho';bt.onclick=function(){on?leave():enter()};document.getElementById('bar').insertBefore(bt,document.getElementById('bar').firstChild);
+window.WALK={enter:enter,leave:leave,state:function(){return{px:px,py:py,yaw:yaw,pit:pit,on:on}}};
+if(/walk=1/.test(location.hash))setTimeout(enter,300)})();
 </script></body></html>

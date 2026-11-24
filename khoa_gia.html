@@ -1,0 +1,15 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Khoá giá / NCC bằng mật khẩu</title>
+<style>body{font:16px system-ui;max-width:640px;margin:0 auto;padding:16px;background:#f5f7fb;color:#1d2a44}textarea,input{width:100%;box-sizing:border-box;padding:10px;margin:6px 0;font:inherit;border:1.5px solid #c5cde0;border-radius:10px}button{padding:11px 16px;margin:4px 6px 4px 0;border:1.5px solid #1976d2;background:#fff;color:#1976d2;border-radius:10px;font:600 15px system-ui}a{color:#1976d2}.o{background:#fff;border:1.5px solid #c5cde0;border-radius:10px;padding:10px;word-break:break-all;min-height:40px}</style></head><body>
+<a href="index.html">🏠 Về trang Tra cứu</a><h2>🔐 Khoá giá / nhà cung cấp</h2>
+<p>Mã hoá AES-256-GCM ngay trên trình duyệt (khoá sinh từ mật khẩu bằng PBKDF2 200.000 vòng). Không gửi gì lên mạng. <b>Mất mật khẩu = mất dữ liệu.</b></p>
+<input id="pw" type="password" placeholder="Mật khẩu (chỉ mình bạn biết)"><textarea id="tx" rows="4" placeholder="Nội dung cần khoá (VD: KK-0042 | Hùng Phát | 125.000đ) — hoặc dán chuỗi đã mã hoá để mở"></textarea>
+<button id="en">🔒 Mã hoá</button><button id="de">🔓 Giải mã</button><button id="cp">📋 Chép kết quả</button><div class="o" id="o"></div>
+<p><small>Dán chuỗi đã mã hoá vào Google Sheet / data.js được; người không có mật khẩu chỉ thấy chuỗi ký tự vô nghĩa.</small></p>
+<script>
+var E=new TextEncoder(),D=new TextDecoder(),$=function(i){return document.getElementById(i)};
+function b64(u){var s='';u.forEach(function(c){s+=String.fromCharCode(c)});return btoa(s)}function ub(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
+async function key(pw,salt){var m=await crypto.subtle.importKey('raw',E.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:200000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+$('en').onclick=async function(){try{var s=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await key($('pw').value,s),c=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},k,E.encode($('tx').value)));$('o').textContent='AES1:'+b64(s)+':'+b64(iv)+':'+b64(c)}catch(e){$('o').textContent='Lỗi: '+e.message}};
+$('de').onclick=async function(){try{var p=$('tx').value.trim().split(':');if(p[0]!=='AES1')throw Error('Chuỗi không đúng định dạng AES1:…');var k=await key($('pw').value,ub(p[1]));$('o').textContent=D.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(p[2])},k,ub(p[3])))}catch(e){$('o').textContent='Sai mật khẩu hoặc chuỗi hỏng.'}};
+$('cp').onclick=function(){navigator.clipboard&&navigator.clipboard.writeText($('o').textContent)};
+</script></body></html>
