@@ -16,7 +16,7 @@ button{padding:5px 11px;border:1px solid #9ab;background:#fff;border-radius:6px;
 .home{display:inline-block;margin-right:10px;padding:4px 10px;border:1px solid #8aa;border-radius:8px;background:#fff;color:#1d2a44;text-decoration:none;font:600 13px system-ui;white-space:nowrap}#wk{position:absolute;inset:0;pointer-events:none;z-index:9;font:13px system-ui}#wk .wm{position:absolute;left:10px;top:8px;right:10px;background:#fffd;border-radius:10px;padding:6px 10px;color:#1d2a44}#wk button{pointer-events:auto;width:54px;height:54px;margin:3px;border:1.5px solid #345;border-radius:12px;background:#fffe;font-size:20px;touch-action:none}#wk .wp{position:absolute;left:10px;bottom:10px;text-align:center}#wk .wg{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}#wk .wg button{width:auto;height:auto;padding:10px 12px;font-size:14px;font-weight:600}#wkb{font-weight:700;border-color:#e65100!important}
 </style></head><body>
 <header><a class="home" href="index.html" target="_top">🏠 Về trang Tra cứu</a><header><b>Mô hình 3D toàn kho WH-EN-01</b> · vị trí các dãy theo bản vẽ mặt bằng · bấm một cụm để xem chi tiết kệ</header>
-<div id="bar"><button data-v="-55,0">Chéo</button><button data-v="0,0">Nhìn từ trên</button><button data-v="-25,-60">Từ cửa vào</button><button id="rs">Đặt lại</button><label><input type="checkbox" id="ce"> Trần nhà</label><span id="hit">—</span></div>
+<div id="bar"><a class="home" style="border-color:#e65100" id="n3" href="kho_3D_three.html">✨ Bản Three.js (mới, mượt hơn)</a><button data-v="-55,0">Chéo</button><button data-v="0,0">Nhìn từ trên</button><button data-v="-25,-60">Từ cửa vào</button><button id="rs">Đặt lại</button><label><input type="checkbox" id="ce"> Trần nhà</label><span id="hit">—</span></div>
 <div id="stage"><div id="cp" title="La bàn: mũi đỏ chỉ hướng Bắc (phía trên bản vẽ mặt bằng)"><b>B</b><i id="cpn"></i><u>Bắc</u></div><div id="w"></div></div>
 <div id="lg">Xanh = đã có nhãn kiểm kê · xám = chưa kiểm kê. Số đo (Lợi đo): khe Tây 220, khe Đông 245, hành lang chính dọc F12 1050, kệ cao 3500 (F12 cao 2605), khu tiếp nhận ~2,5×1,5 m (nét đứt cam). Tường, cột, cửa cuốn, bàn, bình chữa cháy, quạt hút tường Bắc, xe thang đọc từ bản vẽ + ảnh (gần đúng); camera 8 cái và đèn: vị trí giả định. Trần nhà (tấm 600×600, đèn LED ống + máng đèn âm trần) bật bằng ô "Trần nhà". Nền dốc 3,6% về cửa: chưa dựng.</div>
 <script src="data.js"></script><script src="kho_geo.js"></script>
@@ -144,6 +144,14 @@ st.onwheel=function(e){e.preventDefault();z=Math.max(.4,Math.min(3,z*(e.deltaY<0
 document.querySelectorAll('button[data-v]').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
 document.getElementById('rs').onclick=function(){rx=-55;ry=0;z=Math.min(1,(st.clientWidth-16)/(ROOM.W*S+30));ap()};
 z=Math.min(1,(st.clientWidth-16)/(ROOM.W*S+30));ap();
+
+/* ===== 🕳 BÍ ẨN THẾ GIỚI NGẦM: gầm 150 mm dưới mỗi dãy kệ (bật/tắt) ===== */
+var NGB=[];(function(){var n0=w.children.length;
+ Object.keys(X).forEach(function(f){['.2','.1'].forEach(function(sd){var y=sd==='.2'?Y2:Y1,L=RL,code=f+sd;if(code==='F6.2'){y=470;L=2380}blk(X[f]-25,y-25,RW+50,L+50,150,'#8e24aa','*Gầm '+code+' (≈150 mm, khoảng chứa đồ không chính quy)')})});
+ F12.forEach(function(g){blk(g[1]-25,F12Y-25,g[2]+50,RW+50,150,'#8e24aa','*Gầm '+g[0]+' (≈150 mm)')});
+ for(var i=n0;i<w.children.length;i++){w.children[i].style.display='none';NGB.push(w.children[i])}})();
+var ngl=document.createElement('label');ngl.innerHTML='<input type="checkbox" id="ngt"> 🕳 Bí ẩn thế giới ngầm';ngl.style.cssText='margin-left:10px;font:600 13px system-ui';document.getElementById('bar').insertBefore(ngl,document.getElementById('hit'));
+document.getElementById('ngt').onchange=function(){var on=this.checked;NGB.forEach(function(e){e.style.display=on?'':'none'})};
 /* ===== 🚶 CHẾ ĐỘ ĐI BỘ (góc nhìn thứ nhất, "đột kích") — CSS 3D, offline, không cần thư viện ngoài =====
    Mắt cao 1600 mm; kéo chuột/ngón tay để nhìn quanh; W A S D / mũi tên hoặc nút trên màn hình để đi; ▶ Dẫn đường = tự đi tới mục tiêu nhấp nháy. */
 (function(){
@@ -191,4 +199,4 @@ window.addEventListener('keyup',function(e){var m={w:'w',a:'a',s:'s',d:'d',Arrow
 var bt=document.createElement('button');bt.id='wkb';bt.textContent='🚶 Đi bộ trong kho';bt.onclick=function(){on?leave():enter()};document.getElementById('bar').insertBefore(bt,document.getElementById('bar').firstChild);
 window.WALK={enter:enter,leave:leave,state:function(){return{px:px,py:py,yaw:yaw,pit:pit,on:on}}};
 if(/walk=1/.test(location.hash))setTimeout(enter,300)})();
-</script></body></html>
+document.getElementById('n3').href='kho_3D_three.html'+location.hash;addEventListener('hashchange',function(){document.getElementById('n3').href='kho_3D_three.html'+location.hash});</script></body></html>
