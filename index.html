@@ -312,9 +312,12 @@ function occ(){var o={};DATA.forEach(function(r){o[r.vt]=(o[r.vt]||0)+1});return
 var GOV='';
 function govDim(c){return GOV&&window.LT&&LT.clusterOwners(c).indexOf(GOV)<0}
 function stripes(c,x,y,w,hh){if(!window.LT)return '';var st=LT.stripes(c),o='',hs=hh/7,vert=hh>=70;
-  st.forEach(function(d,i){if(!d)return;var col=LT.DEPTS[d[0]]||'#888',k=i+1;
-    if(vert)o+='<rect x="'+(x+1.5)+'" y="'+(y+hh-k*hs+.5)+'" width="5" height="'+(hs-1)+'" fill="'+col+'" opacity="'+(GOV&&d.indexOf(GOV)<0?.25:1)+'"'+(d.length>1?' stroke="#000" stroke-dasharray="2 1"':'')+'/>';
-    else{var ws=w/7;o+='<rect x="'+(x+(k-1)*ws+.5)+'" y="'+(y+hh-6)+'" width="'+(ws-1)+'" height="4" fill="'+col+'"/>'}});return o}
+  st.forEach(function(d,i){if(!d)return;var k=i+1,dim=GOV&&d.indexOf(GOV)<0?.25:1,n=d.length,tip='<title>'+c+' tầng '+k+': '+d.join(' + ')+(n>1?' (dùng chung)':'')+'</title>';
+    if(vert){var sw=5,pw=sw/n;o+='<g opacity="'+dim+'">'+tip;d.forEach(function(dp,j){o+='<rect x="'+(x+1.5+j*pw)+'" y="'+(y+hh-k*hs+.5)+'" width="'+pw+'" height="'+(hs-1)+'" fill="'+(LT.DEPTS[dp]||'#888')+'"/>'});
+      if(n>1)o+='<rect x="'+(x+1.5)+'" y="'+(y+hh-k*hs+.5)+'" width="'+sw+'" height="'+(hs-1)+'" fill="none" stroke="#000" stroke-dasharray="2 1"/>';o+='</g>'}
+    else{var ws=w/7,pw2=(ws-1)/n;o+='<g opacity="'+dim+'">'+tip;d.forEach(function(dp,j){o+='<rect x="'+(x+(k-1)*ws+.5+j*pw2)+'" y="'+(y+hh-6)+'" width="'+pw2+'" height="4" fill="'+(LT.DEPTS[dp]||'#888')+'"/>'});o+='</g>'}});
+  var co=LT.clusterOwners(c);if(co.length>1&&vert)o+='<text x="'+(x+w-4)+'" y="'+(y+hh-5)+'" text-anchor="end" style="font-size:9px;fill:#555">'+co.map(function(d){return d.replace(/^Tổng quản.*/,'TQ').replace('TIEN-ICH','TI')}).join('+')+'</text>';
+  return o}
 function bar(x,y,w,p){var c=TW()?TW().cls(p):capCls(p);return '<rect class="bk" x="'+x+'" y="'+y+'" width="'+w+'" height="5" rx="2.5"/><rect class="bf '+c+'" x="'+x+'" y="'+y+'" width="'+(w*Math.min(100,Math.max(p,3))/100)+'" height="5" rx="2.5"/>'}
 function lbl(c,x,y,w,hh,hlc,n,cp){var cx=x+w/2,T=TW();
   if(hlc)return '<text x="'+cx+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+cx+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+hlc+' khớp</text>';
@@ -408,13 +411,12 @@ out.addEventListener('click',function(e){var b=e.target.closest&&e.target.closes
  var hm=e.target.closest&&e.target.closest('.hm');if(hm){q.value='';STAT=''}
  if(e.target.id==='b3'){var m=document.getElementById('m3');if(m.hidden){m.hidden=false;m.innerHTML='<iframe loading="lazy" src="kho_3D_toan_kho.html#to='+m.getAttribute('data-to')+'"></iframe><a class="back" href="kho_3D_toan_kho.html#to='+m.getAttribute('data-to')+'" target="_blank" rel="noopener">⤢ Mở toàn màn hình</a>';e.target.textContent='✖ Ẩn 3D'}else{m.hidden=true;m.innerHTML='';e.target.textContent='🧭 Đường đi 3D'}return}
  var qa=e.target.closest&&e.target.closest('[data-qa]');if(qa)quick(qa.getAttribute('data-qa'),qa.getAttribute('data-kk'))});
-function quick(kind,kk){var r=DATA.filter(function(x){return x.kk===kk})[0];if(!r)return;var lab=kind==='X'?'XUẤT':'KIỂM KÊ LỆCH (số đếm thực tế)';var v=prompt(lab+' — '+kk+' · '+r.ten+'\nSố lượng ('+r.dvt+'):');if(v===null||v==='')return;
- var who=''; try{who=localStorage.getItem('kho_who')||''}catch(_){} var n=prompt('Người thực hiện:',who);if(n===null)return;try{localStorage.setItem('kho_who',n)}catch(_){}
- var d=new Date(),p=function(x){return ('0'+x).slice(-2)},ts=p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
- var line=[ts,kind==='X'?'XUAT':'DIEUCHINH',r.kk,r.sku||'',r.vt,v,r.dvt||'',n,'',kind==='X'?'':'Kiểm kê lệch: sổ '+r.sl].join('\t');
- var q=[];try{q=JSON.parse(localStorage.getItem('kho_q')||'[]')}catch(_){} q.push(line);try{localStorage.setItem('kho_q',JSON.stringify(q))}catch(_){}
- var all=q.join('\n');var ok=function(){alert('Đã chép dòng nhật ký ('+q.length+' dòng chờ). Cuối ngày dán vào Nhat_ky_XNT.')};
- if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(all).then(ok,function(){prompt('Chép thủ công:',all)});else prompt('Chép thủ công:',all)}
+function quick(kind,kk){var r=DATA.filter(function(x){return x.kk===kk})[0];if(!r)return;var lab=kind==='X'?'XUẤT':'KIỂM KÊ LỆCH — nhập số đếm THỰC TẾ (sổ đang là '+r.sl+')';var v=prompt(lab+' — '+kk+' · '+r.ten+'\nSố lượng ('+r.dvt+'):');if(v===null||v==='')return;
+ var who='';try{who=localStorage.getItem('kho_who')||''}catch(_){}var n=prompt('Người thao tác:',who);if(n===null)return;try{localStorage.setItem('kho_who',n)}catch(_){}
+ var d=new Date(),p=function(x){return ('0'+x).slice(-2)};
+ var e={d:p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(),t:p(d.getHours())+':'+p(d.getMinutes()),who:n,act:kind==='X'?'XUAT':'LECH',kk:r.kk,sku:r.sku||'',vt:r.vt,qty:v,so:r.sl,dvt:r.dvt||''};
+ if(window.NK)NK.add(e);
+ alert(kind==='X'?'Đã ghi nhật ký xuất '+v+' '+(r.dvt||'')+' · '+kk+'.\nXem/tải CSV ở nút 📖 Nhật ký.':'Đã ghi LỆCH '+kk+': Sổ '+r.sl+', Thực tế '+v+'. Có cảnh báo đỏ ở 🔔.')}
 document.getElementById('f').addEventListener('submit',function(e){e.preventDefault();STAT='';var v=q.value.trim();var k=normKK(v),l=normLoc(v);
   if(k||l){location.hash=k||hashOf(l);}else if(location.hash){location.hash='';}else{render();}});
 q.addEventListener('input',function(){if(location.hash){location.hash='';}else{render();}});
@@ -471,7 +473,7 @@ loadSheet();
 (function(){
   var b=document.createElement('button');b.id='faqb';b.type='button';b.textContent='❗ Cẩm nang';b.setAttribute('aria-label','Cẩm nang sử dụng kho');
   var m=document.createElement('div');m.id='faq';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Cẩm nang sử dụng kho');
-  m.innerHTML='<div class="fq"><button id="faqx" type="button" aria-label="Đóng">×</button><h2>Cẩm nang sử dụng kho</h2><div class="tabs"><button type="button" class="tb on" data-t="a">Về sức chứa</button><button type="button" class="tb" data-t="b">Tra cứu &amp; Lấy đồ</button><button type="button" class="tb" data-t="c">🧭 Tìm &amp; Chỉ đường</button></div><div class="pn on" id="pna">'
+  m.innerHTML='<div class="fq"><button id="faqx" type="button" aria-label="Đóng">×</button><h2>Cẩm nang sử dụng kho</h2><p style="margin:0 0 10px"><button type="button" id="faqnk" style="min-height:44px;padding:0 14px;border:1.5px solid #1d3fa8;border-radius:10px;background:transparent;color:inherit;font:600 15px var(--sans)">📖 Ghi chép thao tác: bấm vào đây để mở Nhật ký</button></p><div class="tabs"><button type="button" class="tb on" data-t="a">Về sức chứa</button><button type="button" class="tb" data-t="b">Tra cứu &amp; Lấy đồ</button><button type="button" class="tb" data-t="c">🧭 Tìm &amp; Chỉ đường</button></div><div class="pn on" id="pna">'
   +'<h3>0. Con số % được tính thế nào?</h3><p>% = thể tích tất cả vật tư trong ô ÷ (thể tích lòng box × 0,8). Thể tích mỗi vật tư lấy từ kích thước ghi trong dữ liệu, nhân với số lượng. Hệ số 0,8 là ngưỡng an toàn (nguyên lý 80/20): 100% nghĩa là vật tư đã chiếm 80% lòng box.</p>'
   +'<h3>1. Tại sao hệ thống báo, ví dụ 59%, mà nhìn thấy còn trống nhiều?</h3><p>Vì hệ thống tính theo thể tích hình học (dài × rộng × cao). Khi xếp vật tư, góc hộp và khoảng trên nóc box có chỗ trống mà hệ thống không tính tới. Nhìn thấy ít hơn con số trên màn hình là bình thường.</p>'
   +'<h3>2. Tại sao hệ thống báo 59% mà nhét không vô?</h3><p>Vì vật tư (túi nilon, đầu nối…) có hình dạng lộn xộn, và túi, hộp con, bao bì chiếm thêm chỗ mà dữ liệu không đo. Hệ thống đã trừ sẵn 20% (nguyên lý 80/20) làm ngưỡng an toàn để lấy đồ dễ và không làm hỏng vật tư; phần còn lại là khoảng hở thực tế.</p>'
@@ -500,6 +502,7 @@ loadSheet();
   function close(){m.className='';document.body.style.overflow='';b.focus()}
   m.addEventListener('click',function(e){var t=e.target.getAttribute&&e.target.getAttribute('data-t');if(t){['a','b','c'].forEach(function(k){document.getElementById('pn'+k).className='pn'+(k===t?' on':'')});Array.prototype.forEach.call(m.querySelectorAll('.tb'),function(x){x.className='tb'+(x.getAttribute('data-t')===t?' on':'')});m.querySelector('.fq').scrollTop=0}});
   b.addEventListener('click',open);
+  document.getElementById('faqnk').addEventListener('click',function(){close();var n=document.getElementById('nkb');if(n)n.click()});
   m.addEventListener('click',function(e){if(e.target===m||e.target.id==='faqx')close()});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&m.className==='on')close()});
 })();

@@ -14,8 +14,12 @@ window.LT=(function(){
   {dept:'R02',cl:'F5.1',t:[1,7],mix:true,note:'sheet: F5 = KTBT-B2 + R02, chưa chia tầng'}
  ];
  ['F6.1','F6.2','F7.1','F7.2','F8.1','F8.2'].forEach(function(c){RULES.push({dept:'KTBT-B1',cl:c,t:[1,7],note:'sheet BO_PHAN: F6–F8 = KTBT-B1'})});
- ['F10.1','F10.2'].forEach(function(c){RULES.push({dept:'TIEN-ICH',cl:c,t:[1,7],mix:true,note:'sheet: F10 = Tiện ích + R01, chưa chia'});RULES.push({dept:'R01',cl:c,t:[1,7],mix:true,note:'sheet: F10 = Tiện ích + R01, chưa chia'})});
- ['F1.1','F1.2','F2.1','F2.2','F4.1','F4.2','F11.1','F11.2','F12.1','F12.2','F12.3'].forEach(function(c){RULES.push({dept:'Tổng quản (Lợi)',cl:c,t:[1,7],note:'Lợi quản trực tiếp (F1,F2,F4,F11,F12)'})});
+ /* F10 (Lợi 24/11): F10.2 + F10.1 tầng 1–3 = Tiện ích; F10.1 tầng 4–6 = R01 */
+ RULES.push({dept:'TIEN-ICH',cl:'F10.2',t:[1,7],note:'F10.2 toàn bộ: Tiện ích'},{dept:'TIEN-ICH',cl:'F10.1',t:[1,3],note:'F10.1 tầng 1–3: Tiện ích'},{dept:'R01',cl:'F10.1',t:[4,6],note:'F10.1 tầng 4–6: R01'});
+ /* F3 (chờ cập nhật chi tiết): F3.1 = KTBT-B1; F3.2 chủ yếu KTBT-B1, tầng 4 có ~4 box R02 và ~6 box KTBT-B2 (chưa chia ô → mix) */
+ RULES.push({dept:'KTBT-B1',cl:'F3.1',t:[1,7],note:'F3.1 toàn bộ KTBT-B1'},{dept:'KTBT-B1',cl:'F3.2',t:[1,7],mix:true,note:'F3.2 phần lớn KTBT-B1'},{dept:'R02',cl:'F3.2',t:[4,4],mix:true,note:'F3.2.4 ~4 box R02 (chưa rõ ô)'},{dept:'KTBT-B2',cl:'F3.2',t:[4,4],mix:true,note:'F3.2.4 ~6 box KTBT-B2 (chưa rõ ô)'});
+ ['F1.1','F1.2','F2.1','F2.2','F4.1','F4.2','F11.1','F11.2','F12.2','F12.3'].forEach(function(c){RULES.push({dept:'Tổng quản (Lợi)',cl:c,t:[1,7],note:'Lợi quản trực tiếp (F1,F2,F4,F11,F12)'})});
+ RULES.push({dept:'Tổng quản (Lợi)',cl:'F12.1',t:[1,4],note:'F12.1 tầng 1–4: kho quản'},{dept:'R02',cl:'F12.1',t:[5,7],note:'F12.1 tầng 5–7: R02'});
  function ov(a,b){return a[0]<=b[1]&&b[0]<=a[1]}
  function owners(loc){var p=loc.split('.'),cl=p[0]+'.'+p[1],t=+p[2],o=+p[3],r=[];
   RULES.forEach(function(x){if(x.cl===cl&&(!p[2]||(t>=x.t[0]&&t<=x.t[1]))&&(!x.o||!p[3]||(o>=x.o[0]&&o<=x.o[1])))if(r.indexOf(x.dept)<0)r.push(x.dept)});return r}

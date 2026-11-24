@@ -8,6 +8,7 @@
  '.hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap}.hdr h1{margin:0;flex:1 1 auto;min-width:0}'+
  '.hbt{display:flex;gap:6px;flex:none}.hbt button{position:relative;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:19px;line-height:1;padding:0;cursor:pointer;color:inherit}'+
  '.hbt .dot{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#d32f2f;color:#fff;font:700 11px/18px var(--sans);text-align:center;padding:0 4px}'+
+ '.nkl{list-style:none;padding:0;margin:8px 0;font-size:13.5px}.nkl li{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 6px}.nkd{float:right;border:0;background:transparent;font-size:16px}'+
  '.dstat{font-size:12.5px;color:var(--mute);margin:2px 0 8px}'+
  '.hpop{position:fixed;left:50%;transform:translateX(-50%);top:64px;width:min(94vw,430px);max-height:72vh;overflow:auto;z-index:120;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.35);padding:12px 14px}'+
  '.hpop h3{margin:0 0 8px;font-size:16px;display:flex;justify-content:space-between;align-items:center}.hpop h3 button{border:0;background:none;font-size:22px;color:inherit;cursor:pointer}'+
@@ -25,22 +26,43 @@
  function stopCam(){if(scanT){clearInterval(scanT);scanT=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
  function show(h){stopCam();pop.innerHTML=h;pop.hidden=false;var x=pop.querySelector('.cls');if(x)x.onclick=hide}
  function hide(){stopCam();pop.hidden=true}
- document.addEventListener('click',function(e){if(!pop.hidden&&e.target.isConnected&&!pop.contains(e.target)&&!hb.contains(e.target)&&e.target.id!=='nkb')hide();var a=e.target.closest&&e.target.closest('.hpop a[href^="#"]');if(a)hide()});
+ document.addEventListener('click',function(e){if(!pop.hidden&&e.target.isConnected&&!pop.contains(e.target)&&!hb.contains(e.target)&&e.target.id!=='nkb'&&e.target.id!=='faqnk')hide();var a=e.target.closest&&e.target.closest('.hpop a[href^="#"]');if(a)hide()});
  var H3=function(t){return '<h3>'+t+'<button class="cls" type="button" aria-label="Đóng">×</button></h3>'};
  /* ---- trạng thái dữ liệu ---- */
  function stat(){var on=navigator.onLine!==false;$('dstat').innerHTML=(on?'🟢':'🟠')+' '+DATA.length+' dòng · Cập nhật: '+esc(String(UPDATED).split(' (')[0])+(on?'':' · đang offline (dùng dữ liệu đã tải)')}
  stat();try{new MutationObserver(stat).observe($('foot'),{childList:true,characterData:true,subtree:true})}catch(e){}addEventListener('online',stat);addEventListener('offline',stat);
+/* ---- NHẬT KÝ THAO TÁC (localStorage "nhat_ky_xnt"): Xuất nhanh / Báo kiểm kê lệch ---- */
+ var NKEY='nhat_ky_xnt';
+ function nkAll(){try{return JSON.parse(localStorage.getItem(NKEY)||'[]')}catch(e){return []}}
+ function nkSave(a){try{localStorage.setItem(NKEY,JSON.stringify(a))}catch(e){}refreshNk()}
+ window.NK={all:nkAll,add:function(e){var a=nkAll();a.push(e);nkSave(a)},clear:function(){nkSave([])}};
+ function csvEsc(v){v=String(v==null?'':v);return '"'+v.replace(/"/g,'""')+'"'}
+ function nkCSV(){var a=nkAll(),rows=[['Ngày','Giờ','Người thao tác','Hành động','Mã KK','Số lượng','Mã ô','SKU','ĐVT','Ghi chú']].concat(a.slice().reverse().reverse().map(function(e){return [e.d,e.t,e.who,e.act,e.kk,e.qty,e.vt,e.sku,e.dvt,e.act==='LECH'?'Sổ '+e.so+' / Thực tế '+e.qty:'']}));
+  var b=new Blob(['\ufeff'+rows.map(function(r){return r.map(csvEsc).join(',')}).join('\r\n')],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='Nhat_ky_XNT_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(l);l.click();setTimeout(function(){l.remove();URL.revokeObjectURL(u)},500)}
+ function lechList(){return nkAll().filter(function(e){return e.act==='LECH'})}
+ function refreshNk(){var n=nkAll().length,b=$('nkb');if(b)b.textContent='📖 Nhật ký'+(n?' ('+n+')':'');var al=$('bAl');if(al){var d=al.querySelector('.dot'),c=lechList().length;if(c){if(!d){d=document.createElement('span');d.className='dot';al.appendChild(d)}d.textContent=c}else if(d)d.remove()}}
+ function nkView(){var a=nkAll().slice().reverse();
+  show(H3('📖 Nhật ký thao tác (lưu trên máy này)')+'<p style="font-size:13px;margin:0 0 8px;color:var(--mute)">Mỗi lần bấm <b>➖ Xuất nhanh</b> / <b>➕ Báo kiểm kê lệch</b> ở thẻ vật tư, 1 dòng được ghi vào đây (còn khi tắt trình duyệt). Cuối ngày bấm <b>Tải CSV</b>, dán vào file Master, rồi bấm <b>Đã lưu xong</b>. Xoá lịch sử trình duyệt sẽ mất nhật ký — nhớ tải CSV mỗi ngày.</p>'+
+  '<div class="rw"><button type="button" id="nkcsv">⬇ Tải nhật ký về máy (CSV)</button><button type="button" id="nkdone">✅ Đã lưu xong – Xoá nhật ký tạm</button><button type="button" id="nkall">🗑 Xoá toàn bộ</button></div>'+
+  (a.length?'<ul class="nkl">'+a.map(function(e,i){var ix=a.length-1-i;return '<li><b>'+esc(e.d+' '+e.t)+'</b> · '+(e.act==='LECH'?'⚠️ Lệch':'➖ Xuất')+' · <a href="#'+esc(e.kk)+'">'+esc(e.kk)+'</a> · '+(e.act==='LECH'?'Sổ '+esc(e.so)+' → Thực tế '+esc(e.qty):'SL '+esc(e.qty))+' '+esc(e.dvt||'')+' · '+esc(e.who||'?')+' <button type="button" class="nkd" data-i="'+ix+'" aria-label="Xoá dòng">🗑</button></li>'}).join('')+'</ul>':'<p>Chưa có thao tác nào.</p>')+
+  (NHATKY_URL?'<p><a href="'+NHATKY_URL+'" target="_blank" rel="noopener">Mở sổ Google Sheets ↗</a></p>':''));
+  $('nkcsv').onclick=nkCSV;
+  $('nkdone').onclick=function(){if(confirm('Đã lưu CSV xong? Xoá '+nkAll().length+' dòng nhật ký tạm trên máy này.')){nkSave([]);nkView()}};
+  $('nkall').onclick=function(){if(nkAll().length&&confirm('Xoá TOÀN BỘ nhật ký trên máy này?')){nkSave([]);nkView()}};
+  pop.querySelectorAll('.nkd').forEach(function(b){b.onclick=function(){var x=nkAll();x.splice(+b.dataset.i,1);nkSave(x);nkView()}})}
+ window.NK.view=nkView;
  /* ---- phân tích cảnh báo ---- */
- function analyse(){var A={xn:[],hs:[],vol:[],wt:[],hi:[],frag:[],nokt:[],cf:(window.LT?LT.conflicts():[])},T=window.TT,seen={};
+ function analyse(){var A={xn:[],hs:[],vol:[],wt:[],hi:[],frag:[],nokt:[],cf:(window.LT?LT.conflicts():[]),lech:lechList()},T=window.TT,seen={};
   DATA.forEach(function(r){if(r.ai==='Cần xác nhận')A.xn.push(r);var h=hsdOne(r);if(h)A.hs.push([r,h])});
   DATA.forEach(function(r){if(!r.vt||seen[r.vt])return;seen[r.vt]=1;var c=capOf(r.vt);
    if(c.pct!=null&&c.pct>100)A.vol.push([r.vt,c.pct]);if(c.miss.length)A.nokt.push([r.vt,c.miss.length]);
    if(T){var t=T.cell(r.vt,c.rs,c.type);t.warn.forEach(function(w){var k=/Quá tải|Gần đầy/.test(w)?'wt':(/cao/.test(w)?'hi':'frag');A[k].push([r.vt,w])})}});
   return A}
  function li(loc,txt){return '<li><a href="#'+hashOf(loc)+'">'+esc(loc)+'</a> — '+txt+'</li>'}
- $('bAl').onclick=function(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;
+ $('bAl').onclick=function(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length+A.lech.length;
   function grp(ic,t,arr,fn){return arr.length?'<details><summary>'+ic+' '+t+' ('+arr.length+')</summary><ul>'+arr.slice(0,40).map(fn).join('')+(arr.length>40?'<li>… và '+(arr.length-40)+' mục nữa</li>':'')+'</ul></details>':''}
   show(H3('🔔 Cảnh báo')+(n?'':'<p>Không có cảnh báo nóng. ✅</p>')+
+   grp('🔴','Lệch kiểm kê do người dùng báo',A.lech,function(e){return '<li><a href="#'+esc(e.kk)+'">'+esc(e.kk)+'</a> lệch: Sổ '+esc(e.so)+', Thực tế '+esc(e.qty)+', Người báo: '+esc(e.who||'?')+' ('+esc(e.d+' '+e.t)+')</li>'})+
    grp('🏛','Tranh chấp lãnh thổ (2 bộ phận cùng 1 vị trí)',A.cf,function(c){return '<li><a href="#'+c.cl+'">'+c.cl+'</a> — '+esc(c.msg)+' → cần Tổng quản phân xử</li>'})+
    grp('⚖️','Quá tải / gần đầy tải hộp (kg)',A.wt,function(a){return li(a[0],a[1])})+
    grp('⚖️','Đồ nặng ở tầng cao',A.hi,function(a){return li(a[0],a[1])})+
@@ -50,7 +72,7 @@
    grp('📅','HSD quá hạn / dưới 30 ngày',A.hs,function(a){return '<li><a href="#'+a[0].kk+'">'+a[0].kk+'</a> — '+(a[1]==='e'?'quá hạn':'dưới 30 ngày')+'</li>'})+
    '<details><summary>ℹ️ Chưa tính được ('+A.nokt.length+' ô thiếu kích thước)</summary><ul>'+A.nokt.slice(0,30).map(function(a){return li(a[0],a[1]+' dòng thiếu kích thước')}).join('')+'</ul></details>');
   var d=$('bAl').querySelector('.dot');};
- (function badge(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;if(n){var d=document.createElement('span');d.className='dot';d.textContent=n>99?'99+':n;$('bAl').appendChild(d)}try{if(typeof render==='function')render()}catch(e){}
+ (function badge(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;if(n){var d=document.createElement('span');d.className='dot';d.textContent=n>99?'99+':n;$('bAl').appendChild(d)}refreshNk();try{if(typeof render==='function')render()}catch(e){}
 })();
  /* ---- tổng quan ---- */
  $('bDb').onclick=function(){var T=window.TT,sk={},cells={},vp=[],wp=[],kg=0,kn=0;
@@ -124,7 +146,8 @@
   $('kkcsv').onclick=dlCSV};
  /* ---- nút nổi 📖 Nhật ký ---- */
  var nk=document.createElement('button');nk.id='nkb';nk.type='button';nk.textContent='📖 Nhật ký';nk.setAttribute('aria-label','Nhật ký xuất nhập tồn');document.body.appendChild(nk);
- nk.onclick=function(){if(NHATKY_URL){window.open(NHATKY_URL,'_blank','noopener');return}
+ nk.onclick=function(){nkView()};
+ var nkOld=function(){
   show(H3('📖 Nhật ký Xuất – Nhập – Tồn')+'<p>Chưa gắn link sổ. Làm 1 lần (≈10 phút), sau đó nút này mở thẳng sổ:</p><ol style="padding-left:20px;font-size:14px"><li>Vào <b>Google Sheets</b> → tạo file <b>KHO_NHAT_KY</b>. Import <b>Nhat_ky_XNT_mau.csv</b> thành tab <b>NHAT_KY</b>, và <b>Ton_kho_mau.csv</b> thành tab <b>TON</b> (tab TON import để mặc định, có tick Convert).</li><li>Mỗi lần xuất/nhập: thêm 1 dòng ở NHAT_KY (Loại = NHAP / XUAT / DIEUCHINH). Tab TON tự tính: <b>Tồn = SL kiểm kê + Nhập − Xuất ± Điều chỉnh</b>.</li><li>(Nhập nhanh trên điện thoại) Google Form → Responses liên kết vào tab NHAT_KY, hoặc dùng app Google Sheets.</li><li>Share → "Anyone with the link: Editor" (hoặc chỉ nhóm thủ kho) → copy link, dán vào dòng <code>NHATKY_URL</code> đầu file <b>index_plus.js</b>, up lên GitHub.</li></ol><p style="font-size:12.5px;color:var(--mute)">Giai đoạn 1: trang này vẫn chỉ để tra cứu; sổ nằm ở Google Sheets. Giai đoạn 2 mới có nút +/− trực tiếp (cần cơ sở dữ liệu).</p>')};
 try{if(typeof render==='function')render()}catch(e){}
 })();
