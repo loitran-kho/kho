@@ -1,0 +1,69 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Hộp máng heo 3D</title>
+<style>
+:root{--bg:#111722;--card:#1c2330;--bd:#34415a;--ink:#e8edf6;--mut:#9fb0cc;--ac:#6d8cff}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px system-ui,sans-serif;overflow:hidden}
+#top{padding:8px 12px;background:var(--card);border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#top a{color:var(--ink);text-decoration:none;border:1px solid var(--ac);border-radius:8px;padding:7px 10px;background:#243050}
+#top b{font-size:15px;flex:1;min-width:140px}
+#panel{padding:6px 12px 8px;background:var(--card);display:flex;gap:10px;flex-wrap:wrap;max-height:34vh;overflow:auto}
+fieldset{border:1px solid var(--bd);border-radius:10px;margin:0;padding:4px 8px 8px;flex:1 1 260px}legend{font-weight:700;padding:0 6px}
+.g{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}label{font-size:12px;color:var(--mut)}input[type=number]{width:100%;font:inherit;padding:6px;border-radius:7px;border:1px solid var(--bd);background:#0f141d;color:var(--ink)}
+button{font:inherit;color:var(--ac);background:transparent;border:1px solid var(--ac);border-radius:8px;padding:7px 11px;cursor:pointer}
+#bar{padding:6px 12px;display:flex;gap:8px;flex-wrap:wrap;background:var(--card)}
+#cv{display:block;width:100%;height:calc(100% - var(--h,300px));touch-action:none;cursor:grab}
+#info{position:absolute;left:8px;right:8px;bottom:8px;background:rgba(28,35,48,.92);border:1px solid var(--bd);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--mut);pointer-events:none}
+</style></head><body>
+<div id="top"><a href="index.html" target="_top">🏠 Về trang Tra cứu</a><b>Hộp máng heo 3D · đáy phẳng · thành sau cao · thành trước thấp</b></div>
+<div id="panel">
+ <fieldset><legend>Type 4 · bé box mini (mm)</legend><div class="g" data-b="0"><div><label>Rộng</label><input type="number" data-k="w" value="105"></div><div><label>Sâu</label><input type="number" data-k="d" value="170"></div><div><label>Cao sau</label><input type="number" data-k="hb" value="80"></div><div><label>Cao trước</label><input type="number" data-k="hf" value="40"></div><div><label>Dày vách</label><input type="number" data-k="t" value="3"></div></div></fieldset>
+ <fieldset><legend>Type 1 · máng heo kỹ thuật (mm)</legend><div class="g" data-b="1"><div><label>Rộng</label><input type="number" data-k="w" value="150"></div><div><label>Sâu</label><input type="number" data-k="d" value="235"></div><div><label>Cao sau</label><input type="number" data-k="hb" value="125"></div><div><label>Cao trước</label><input type="number" data-k="hf" value="65"></div><div><label>Dày vách</label><input type="number" data-k="t" value="3"></div></div></fieldset>
+</div>
+<div id="bar"><button id="bl">🏷️ Bật/tắt nhãn trắng</button><button id="bw">▦ Bật/tắt khung dây</button><button id="br">↺ Đặt lại góc nhìn</button></div>
+<canvas id="cv"></canvas>
+<div id="info"></div>
+<script>
+/* Máng heo: đáy phẳng, thành sau cao Hb, thành trước thấp Hf, hai thành bên dốc từ sau ra trước, vách dày t. Tự vẽ bằng canvas 2D (không thư viện, ~5 KB) → nhẹ, chạy offline. */
+var cv=document.getElementById('cv'),cx=cv.getContext('2d'),DPR=Math.min(2,window.devicePixelRatio||1);
+var P=[{w:105,d:170,hb:80,hf:40,t:3,c:[47,91,234]},{w:150,d:235,hb:125,hf:65,t:3,c:[58,134,168]}],SHOWL=true,WIRE=false,yaw=-.6,pit=.5,zoom=1;
+function cuboid(x0,x1,y0,y1,z0,z1){var v=[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];return[[v[4],v[5],v[6],v[7]],[v[1],v[0],v[3],v[2]],[v[0],v[4],v[7],v[3]],[v[5],v[1],v[2],v[6]],[v[3],v[7],v[6],v[2]],[v[0],v[1],v[5],v[4]]]}
+function prism(poly,x0,x1){ // poly = [[z,y],...] ngược chiều kim đồng hồ khi nhìn từ +x; đùn theo x
+ var f=[],n=poly.length,a=poly.map(function(p){return[x0,p[1],p[0]]}),b=poly.map(function(p){return[x1,p[1],p[0]]});
+ f.push(a.slice().reverse());f.push(b);for(var i=0;i<n;i++){var j=(i+1)%n;f.push([a[i],a[j],b[j],b[i]])}return f}
+function build(B){var w=B.w,d=B.d,hb=B.hb,hf=Math.min(B.hf,B.hb),t=B.t,F=[],X=w/2,Z=d/2;
+ F=F.concat(cuboid(-X,X,0,t,-Z,Z));                         // đáy phẳng
+ F=F.concat(cuboid(-X,X,t,hb,-Z,-Z+t));                     // thành sau cao
+ F=F.concat(cuboid(-X+t,X-t,t,hf,Z-t,Z));                   // thành trước thấp
+ var poly=[[-Z,t],[Z,t],[Z,hf],[-Z,hb]];                     // thành bên: dốc từ sau (cao) ra trước (thấp)
+ F=F.concat(prism(poly,-X,-X+t)).concat(prism(poly,X-t,X));
+ return F}
+function rot(p,cy,sy,cp,sp){var x=p[0]*cy+p[2]*sy,z=-p[0]*sy+p[2]*cy,y=p[1];var y2=y*cp-z*sp,z2=y*sp+z*cp;return[x,y2,z2]}
+function draw(){var W=cv.clientWidth,H=cv.clientHeight;if(cv.width!==W*DPR||cv.height!==H*DPR){cv.width=W*DPR;cv.height=H*DPR}
+ cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,W,H);
+ // nền lưới
+ var cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit),sc=Math.min(W/430,H/230)*zoom*.95,fl=900;
+ function proj(p){var r=rot(p,cy,sy,cp,sp),k=fl/(fl-r[2]);return[W/2+r[0]*sc*k,H*.56-r[1]*sc*k,r[2]]}
+ cx.strokeStyle='rgba(120,140,180,.25)';cx.lineWidth=1;for(var g=-200;g<=200;g+=20){[[ [g,0,-200],[g,0,200] ],[ [-200,0,g],[200,0,g] ]].forEach(function(s){var a=proj(s[0]),b=proj(s[1]);cx.beginPath();cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);cx.stroke()})}
+ var faces=[];
+ var off=[-(P[0].w/2+P[1].w/2+14)/2*0-1,0];var xs=[-(P[1].w/2+16)-0,(P[0].w/2+16)];xs=[-(P[0].w/2+18),(P[1].w/2+18)];
+ P.forEach(function(B,i){var F=build(B),dx=xs[i],dz=0;
+  F.forEach(function(q){var pts=q.map(function(v){return[v[0]+dx,v[1],v[2]+dz]});faces.push({pts:pts,c:B.c})});
+  if(SHOWL){var lw=B.w*.62,lh=Math.min(B.hf*.55,B.hf-6),y0=B.t+Math.max(1,(B.hf-B.t-lh)/2)-0,z=B.d/2+.15;faces.push({pts:[[-lw/2+dx,y0,z],[lw/2+dx,y0,z],[lw/2+dx,y0+lh,z],[-lw/2+dx,y0+lh,z]],c:[255,255,255],label:true})}});
+ var L=[];faces.forEach(function(f){var pr=f.pts.map(proj),r=f.pts.map(function(p){return rot(p,cy,sy,cp,sp)});
+  var a=[r[1][0]-r[0][0],r[1][1]-r[0][1],r[1][2]-r[0][2]],b=[r[2][0]-r[0][0],r[2][1]-r[0][1],r[2][2]-r[0][2]],n=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nl=Math.hypot(n[0],n[1],n[2])||1;
+  var dz=0;pr.forEach(function(p){dz+=p[2]});dz/=pr.length;var cull=n[2]/nl<-0.0001&&!f.label?false:true; // giữ mặt hướng về camera; vì có vách mỏng, vẽ cả hai chiều nhưng tối hơn khi quay lưng
+  var sh=.55+.45*Math.abs(n[1]/nl*.7+n[2]/nl*.7);L.push({pr:pr,z:dz,c:f.c,sh:n[2]/nl>0?sh:sh*.55,label:f.label})});
+ L.sort(function(a,b){return a.z-b.z});
+ L.forEach(function(f){cx.beginPath();f.pr.forEach(function(p,i){i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1])});cx.closePath();
+  var s=f.label?1:f.sh;cx.fillStyle='rgb('+Math.round(f.c[0]*s)+','+Math.round(f.c[1]*s)+','+Math.round(f.c[2]*s)+')';if(!WIRE||f.label)cx.fill();cx.strokeStyle=WIRE?'rgba(200,220,255,.8)':'rgba(10,15,25,.55)';cx.lineWidth=WIRE?1:.6;cx.stroke()});
+ document.getElementById('info').innerHTML='Type 4: '+P[0].w+'×'+P[0].d+' (R×S) · cao sau '+P[0].hb+' · cao trước '+P[0].hf+' &nbsp;|&nbsp; Type 1: '+P[1].w+'×'+P[1].d+' · cao sau '+P[1].hb+' · cao trước '+P[1].hf+' · vách '+P[0].t+' mm (đơn vị mm)'}
+var PT={},PD=0,PZ=1,last=null;
+cv.addEventListener('pointerdown',function(e){PT[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(PT);if(k.length===2){var a=PT[k[0]],b=PT[k[1]];PD=Math.hypot(a[0]-b[0],a[1]-b[1]);PZ=zoom}cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing'});
+cv.addEventListener('pointermove',function(e){var o=PT[e.pointerId];if(!o)return;var k=Object.keys(PT);if(k.length===2&&PD){PT[e.pointerId]=[e.clientX,e.clientY];var a=PT[k[0]],b=PT[k[1]];zoom=Math.max(.3,Math.min(6,PZ*Math.hypot(a[0]-b[0],a[1]-b[1])/PD))}else{yaw+=(e.clientX-o[0])*.01;pit=Math.max(-.2,Math.min(1.5,pit+(e.clientY-o[1])*.01));PT[e.pointerId]=[e.clientX,e.clientY]}draw()});
+function up(e){delete PT[e.pointerId];PD=0;cv.style.cursor='grab'}cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',function(e){e.preventDefault();zoom=Math.max(.3,Math.min(6,zoom*(e.deltaY<0?1.1:.9)));draw()},{passive:false});
+document.querySelectorAll('.g').forEach(function(g){g.querySelectorAll('input').forEach(function(i){i.oninput=function(){var b=P[+g.dataset.b],v=parseFloat(i.value);if(v>0)b[i.dataset.k]=v;draw()}})});
+document.getElementById('bl').onclick=function(){SHOWL=!SHOWL;draw()};document.getElementById('bw').onclick=function(){WIRE=!WIRE;draw()};document.getElementById('br').onclick=function(){yaw=-.6;pit=.5;zoom=1;draw()};
+function lay(){var h=document.getElementById('top').offsetHeight+document.getElementById('panel').offsetHeight+document.getElementById('bar').offsetHeight;cv.style.height='calc(100% - '+h+'px)';draw()}
+window.addEventListener('resize',lay);lay();
+</script></body></html>

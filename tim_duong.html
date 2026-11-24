@@ -24,11 +24,11 @@ svg{width:100%;height:auto;display:block;touch-action:manipulation}
 .cl{fill:#dfe6f1;stroke:#6f86a8;stroke-width:12}.cl.tg{fill:#ffb74d;stroke:#e65100;stroke-width:30}.cl.dim{opacity:.35}
 .t{font:bold 150px system-ui;fill:#2a3f66;text-anchor:middle;dominant-baseline:central;pointer-events:none}
 .hl{fill:#eef2f9}.hlt{font:600 120px system-ui;fill:#6b7a90;text-anchor:middle;pointer-events:none}
-.cell{fill:#e6ecf5;stroke:#8da0bd;stroke-width:1}.cell.tg{fill:#ff6d00}.cell.tx{font:10px system-ui;fill:#456;text-anchor:middle}
+.cell{fill:#e6ecf5;stroke:#8da0bd;stroke-width:1}.cell.tg{fill:#ff6d00;stroke:#b33f00;stroke-width:2}.cell.tx{font:10px system-ui;fill:#456;text-anchor:middle}
 #el svg{background:#fff}
 .lock{background:#fff3e0;border:1px dashed var(--acc);padding:6px 8px;border-radius:8px;margin:6px 0;font-size:13px}
 </style></head><body>
-<header><b>🧭 Tìm vật tư & chỉ đường</b> <span>· gõ tên / SKU / mã KK / mã ô → bản đồ 2D phát sáng vị trí → la bàn & đường đi → 3D</span></header>
+<header><a class="bt home" href="index.html" target="_top" style="padding:5px 10px;margin-right:8px;font-size:13px">🏠 Về trang Tra cứu</a><b>🧭 Tìm vật tư & chỉ đường</b> <span>· gõ tên / SKU / mã KK / mã ô → bản đồ 2D phát sáng vị trí → la bàn & đường đi → 3D</span></header>
 <div id="qb"><input id="q" placeholder="Ví dụ: que hàn kiswel · đầu nối khí nén phi 8 ren ngoài 13 · F1.1.1.7" autocomplete="off"><button class="pr" id="go">Tìm</button></div>
 <div id="ex">Thử: <a data-q="que han">que hàn</a><a data-q="kiswel">kiswel</a><a data-q="KK-0043">KK-0043</a><a data-q="F1.1.1.7">F1.1.1.7</a></div>
 <main>
@@ -89,15 +89,21 @@ function nav(){var n=document.getElementById('nav');if(!ROUTE||!ROUTE.stops.leng
  var codes=q.map(function(x){return x.code}).join(',');
  document.getElementById('l3').href='kho_3D_toan_kho.html#to='+codes+'&from='+Math.round(ME.x)+','+Math.round(ME.y);
  document.getElementById('lc').href='khung_3D.html#'+first.code.replace(/\./g,'-')+'@khoa';
- elev(first)}
+ elev(ALT.length>1?[first]:q)}
 function corr(p){var c=K.CX.map(function(v,i){return Math.abs(p[0]-v)<2?K.CN[i]:null}).filter(Boolean)[0];if(c)return' (dọc '+c+')';if(Math.abs(p[1]-K.MY)<2)return' (dọc HL-G, hành lang chính F12)';return''}
-function elev(x){var e=document.getElementById('el');e.style.display='block';if(x.side==='F'){e.innerHTML='<div class="lock"><b>🎯 Ô sàn '+x.cl+'.'+(x.no<10?'0':'')+x.no+'</b> nhấp nháy trên mặt bằng (không có mặt kệ).</div>';return}var T=K.TIERS[x.cl],W=520,rowH=30,gap=6,y=0,svg='',lab;
- for(var k=7;k>=1;k--){var t=T[k-1],n=t[0],rows=t[1],faces=t[2],per=rows*n,cw=W/n,hh=rows*rowH;
-  for(var r=rows-1;r>=0;r--){for(var j=0;j<n;j++){var no=(faces>1?x.face:0)*per+r*n+j+1;
-    var isT=(k===x.k&&no===x.no);var cx=40+j*cw,cy=y+(rows-1-r)*rowH;
+function elev(xs){if(!xs.push)xs=[xs];var e=document.getElementById('el');e.style.display='block';
+ var fl=xs.filter(function(x){return x.side==='F'}),sh=xs.filter(function(x){return x.side!=='F'}),html='';
+ if(fl.length)html+='<div class="lock"><b>🎯 Ô sàn '+fl.map(function(x){return x.cl+'.'+(x.no<10?'0':'')+x.no}).join(', ')+'</b> nhấp nháy trên mặt bằng (không có mặt kệ).</div>';
+ var G={},ord=[];sh.forEach(function(x){var key=x.cl+'|'+(x.face||0)+'|'+x.side;if(!G[key]){G[key]={x:x,t:{}};ord.push(key)}G[key].t[x.k+'_'+x.no]=1});
+ ord.forEach(function(key){var x=G[key].x,tg=G[key].t,T=K.TIERS[x.cl],W=520,rowH=30,gap=6,y=0,svg='',cnt=0;
+  for(var k=7;k>=1;k--){var t=T[k-1],n=t[0],rows=t[1],faces=t[2],per=rows*n,cw=W/n,hh=rows*rowH;
+   for(var r=rows-1;r>=0;r--){for(var j=0;j<n;j++){var no=(faces>1?x.face:0)*per+r*n+j+1;
+    var isT=!!tg[k+'_'+no];if(isT)cnt++;var cx=40+j*cw,cy=y+(rows-1-r)*rowH;
     svg+='<rect class="cell'+(isT?' tg blink':'')+'" x="'+cx+'" y="'+cy+'" width="'+(cw-1)+'" height="'+(rowH-1)+'"/><text class="cell tx" x="'+(cx+cw/2)+'" y="'+(cy+rowH/2+3)+'">'+no+'</text>'}}
-  svg+='<text x="2" y="'+(y+hh/2+4)+'" style="font:bold 12px system-ui;fill:#345">T'+k+'</text>';y+=hh+gap}
- e.innerHTML='<div class="lock"><b>🎯 Khoá mục tiêu · mặt kệ '+x.cl+'</b> (nhìn từ hành lang '+(x.side==='N'?'HL-G':K.CN[K.CX.indexOf(x.sx)])+'): ô '+x.no+' tầng '+x.k+' nhấp nháy · chỉ số ô đọc từ trái sang phải khi đứng đối diện mặt kệ</div><svg viewBox="0 0 '+(W+44)+' '+y+'">'+svg+'</svg>'}
+   svg+='<text x="2" y="'+(y+hh/2+4)+'" style="font:bold 12px system-ui;fill:#345">T'+k+'</text>';y+=hh+gap}
+  var lst=Object.keys(tg).map(function(z){var a=z.split('_');return 'ô '+a[1]+' T'+a[0]}).join(', ');
+  html+='<div class="lock"><b>🎯 Khoá mục tiêu · mặt kệ '+x.cl+'</b> (nhìn từ hành lang '+(x.side==='N'?'HL-G':K.CN[K.CX.indexOf(x.sx)])+'): '+cnt+' ô nhấp nháy cam ('+lst+') · chỉ số ô đọc từ trái sang phải khi đứng đối diện mặt kệ</div><svg viewBox="0 0 '+(W+44)+' '+y+'">'+svg+'</svg>'});
+ e.innerHTML=html}
 /* ===== bản đồ 2D ===== */
 var NS='http://www.w3.org/2000/svg',svgm=document.getElementById('map');
 function E(tag,a,p){var e=document.createElementNS(NS,tag);for(var k in a)e.setAttribute(k,a[k]);(p||svgm).appendChild(e);return e}
