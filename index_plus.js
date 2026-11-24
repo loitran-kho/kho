@@ -18,9 +18,9 @@
  '.hpop pre{white-space:pre-wrap;font:12.5px var(--mono);background:rgba(128,128,128,.14);padding:8px;border-radius:8px;overflow:auto}';
  document.head.appendChild(css);
  var hb=$('hbt'),pop=$('hpop'),stream=null,scanT=null;
- if(window.LT){var sel=document.createElement('select');sel.id='gov';sel.setAttribute('aria-label','Góc nhìn Thống đốc');sel.style.cssText='font:13px var(--sans);margin-left:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;padding:3px 6px;max-width:48%';
+ if(window.LT){var sel=document.createElement('select');sel.id='gov';sel.setAttribute('aria-label','Góc nhìn Thống đốc');sel.style.cssText='font:13px var(--sans);margin-left:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;padding:3px 6px;max-width:100%';
   sel.innerHTML='<option value="">🏛 Toàn kho (Tổng quản)</option>'+Object.keys(LT.DEPTS).filter(function(d){return LT.RULES.some(function(r){return r.dept===d})}).map(function(d){return '<option value="'+d+'">Xem bản đồ: '+d+'</option>'}).join('');
-  sel.onchange=function(){GOV=sel.value;render()};$('dstat').parentNode.insertBefore(sel,$('dstat').nextSibling)}
+  sel.onchange=function(){GOV=sel.value;if(location.hash&&location.hash!=='#'){location.hash=''}else render();window.scrollTo(0,0)};$('dstat').parentNode.insertBefore(sel,$('dstat').nextSibling)}
  hb.innerHTML='<button id="bAl" type="button" aria-label="Cảnh báo">🔔</button><button id="bDb" type="button" aria-label="Tổng quan kho">📊</button><button id="bQr" type="button" aria-label="Quét mã QR">📷</button>';
  function stopCam(){if(scanT){clearInterval(scanT);scanT=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
  function show(h){stopCam();pop.innerHTML=h;pop.hidden=false;var x=pop.querySelector('.cls');if(x)x.onclick=hide}
@@ -50,13 +50,14 @@
    grp('📅','HSD quá hạn / dưới 30 ngày',A.hs,function(a){return '<li><a href="#'+a[0].kk+'">'+a[0].kk+'</a> — '+(a[1]==='e'?'quá hạn':'dưới 30 ngày')+'</li>'})+
    '<details><summary>ℹ️ Chưa tính được ('+A.nokt.length+' ô thiếu kích thước)</summary><ul>'+A.nokt.slice(0,30).map(function(a){return li(a[0],a[1]+' dòng thiếu kích thước')}).join('')+'</ul></details>');
   var d=$('bAl').querySelector('.dot');};
- (function badge(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;if(n){var d=document.createElement('span');d.className='dot';d.textContent=n>99?'99+':n;$('bAl').appendChild(d)}})();
+ (function badge(){var A=analyse(),n=A.xn.length+A.hs.length+A.vol.length+A.wt.length+A.hi.length+A.frag.length+A.cf.length;if(n){var d=document.createElement('span');d.className='dot';d.textContent=n>99?'99+':n;$('bAl').appendChild(d)}try{if(typeof render==='function')render()}catch(e){}
+})();
  /* ---- tổng quan ---- */
  $('bDb').onclick=function(){var T=window.TT,sk={},cells={},vp=[],wp=[],kg=0,kn=0;
   DATA.forEach(function(r){if(r.sku)sk[r.sku]=1;if(r.vt)cells[r.vt]=1;if(T){var e=T.est(r);if(e&&e.kg!=null){kg+=e.kg;kn++}}});
   Object.keys(cells).forEach(function(l){var c=capOf(l);if(c.pct!=null)vp.push(c.pct);if(T){var t=T.cell(l,c.rs,c.type);if(t.pct!=null)wp.push(t.pct)}});
   var av=function(a){return a.length?Math.round(a.reduce(function(x,y){return x+y},0)/a.length)+'%':'—'};
-  show(H3('📊 Tổng quan kho')+'<div class="kpi"><div><b>'+DATA.length+'</b><span>dòng kiểm kê</span></div><div><b>'+Object.keys(sk).length+'</b><span>SKU khác nhau</span></div><div><b>'+Object.keys(cells).length+'</b><span>ô/box đang có nhãn</span></div><div><b>'+av(vp)+'</b><span>📦 thể tích TB (trên '+vp.length+' ô tính được)</span></div><div><b>'+av(wp)+'</b><span>⚖️ tải trọng hộp TB ('+wp.length+' ô)</span></div><div><b>≈ '+(T?T.fmt(kg):'—')+' kg</b><span>tổng khối lượng ước tính ('+kn+'/'+DATA.length+' dòng có số)</span></div></div><p style="font-size:12.5px;color:var(--mute)">Cập nhật dữ liệu: '+esc(UPDATED)+'. Khối lượng là ƯỚC TÍNH (sai số ±40%) cho tới khi ghi số thật vào trong_luong.js.</p>')};
+  show(H3('📊 Tổng quan kho')+'<div class="kpi"><div><b>'+DATA.length+'</b><span>dòng kiểm kê</span></div><div><b>'+Object.keys(sk).length+'</b><span>SKU khác nhau</span></div><div><b>'+Object.keys(cells).length+'</b><span>ô/box đang có nhãn</span></div><div><b>'+av(vp)+'</b><span>📦 thể tích TB (trên '+vp.length+' ô tính được)</span></div><div><b>'+av(wp)+'</b><span>⚖️ tải trọng hộp TB ('+wp.length+' ô)</span></div><div><b>≈ '+(T?T.fmt(kg):'—')+' kg</b><span>tổng khối lượng ước tính ('+kn+'/'+DATA.length+' dòng có số)</span></div></div><p style="font-size:12.5px;color:var(--mute)">Cập nhật dữ liệu: '+esc(UPDATED)+'. Khối lượng là ƯỚC TÍNH (sai số ±40%) cho tới khi ghi số thật vào trong_luong.js.</p><div class="rw"><button type="button" id="kkgo">🩺 Khám toàn kho</button></div>');$('kkgo').onclick=window.khamKho};
  /* ---- quét QR ---- */
  function fill(txt){var m=/KK-\d{3,4}/i.exec(txt)||/F\d{1,2}[.\-]\d(?:[.\-]\d+){0,2}/i.exec(txt),v=m?m[0].toUpperCase().replace(/-/g,function(x,i,s){return /^KK/.test(s)?'-':'.'}):txt.trim();hide();$('q').value=v;$('f').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))}
  function loadJsQR(cb){if(window.jsQR)return cb();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';s.onload=cb;s.onerror=function(){$('qrm').textContent='Không tải được thư viện quét (cần mạng lần đầu). Có thể dùng camera điện thoại quét mã rồi bấm vào liên kết.'};document.head.appendChild(s)}
@@ -66,8 +67,64 @@
    var done=function(t){fill(t)},bd=window.BarcodeDetector?new BarcodeDetector({formats:['qr_code']}):null,cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
    function tick(){if(!stream||v.videoWidth===0)return;if(bd){bd.detect(v).then(function(r){if(r.length)done(r[0].rawValue)}).catch(function(){})}else if(window.jsQR){cv.width=v.videoWidth;cv.height=v.videoHeight;cx.drawImage(v,0,0);var d=cx.getImageData(0,0,cv.width,cv.height),c=jsQR(d.data,d.width,d.height);if(c&&c.data)done(c.data)}}
    (bd?function(f){f()}:loadJsQR)(function(){scanT=setInterval(tick,300)})}).catch(function(e){$('qrm').textContent='Không mở được camera: '+(e&&e.name==='NotAllowedError'?'bạn chưa cho phép camera.':(e&&e.message||e))})};
+
+ /* ================= 🩺 BÁC SĨ KHÁM BOX — kết luận từng box + tổng kết toàn kho (phục vụ GĐ2: tái sắp xếp kho) ================= */
+ var SKUMAP=null;
+ function skuMap(){if(SKUMAP)return SKUMAP;SKUMAP={};DATA.forEach(function(r){if(r.sku){(SKUMAP[r.sku]=SKUMAP[r.sku]||{})[r.vt]=1}});return SKUMAP}
+ function freeBoxes(loc){var p=loc.split('.'),cl=p[0]+'.'+p[1],es=(window.KHO_VITRI&&vtIdx()[cl])||[],o=[];
+  es.forEach(function(e){if(e[0]===loc)return;var c=capOf(e[0]),pc=c.rs.length?c.pct:0;if((pc==null||pc<50)&&+e[0].split('.')[2]<=4)o.push([e[0],pc==null?0:pc])});
+  o.sort(function(a,b){return a[1]-b[1]});return o.slice(0,2).map(function(x){return x[0]})}
+ window.diagnose=function(loc){var c=capOf(loc),rs=c.rs;if(!rs.length)return null;var T=window.TT,t=T?T.cell(loc,rs,c.type):{warn:[],kg:0,n:0,pct:null,cap:null},tags=[],F=[],S=[],sev=0,tang=+loc.split('.')[2];
+  var xn=rs.filter(function(r){return r.ai==='Cần xác nhận'}),hs=rs.filter(function(r){return hsdOne(r)}),hse=rs.filter(function(r){return hsdOne(r)==='e'});
+  var nosku=rs.filter(function(r){return !r.sku}),nohang=rs.filter(function(r){return !r.hang&&!r.model}),mnh=rs.filter(function(r){return r.mnh==='Có'});
+  var dup=[];rs.forEach(function(r){if(!r.sku)return;var o=Object.keys(skuMap()[r.sku]||{}).filter(function(v){return v!==loc});if(o.length)dup.push([r,o])});
+  var dupSku={};dup.forEach(function(d){dupSku[d[0].sku]=d[1]});var nd=Object.keys(dupSku).length;
+  if(c.pct!=null&&c.pct>100){F.push('📦 Quá tải thể tích '+Math.round(c.pct)+'% (vượt ngưỡng 80% an toàn)');tags.push('QUA_TAI_THE_TICH');sev+=3}
+  else if(c.pct!=null&&c.pct>=CAP_HI){F.push('📦 Sắp đầy: '+Math.round(c.pct)+'%');tags.push('SAP_DAY');sev+=2}
+  t.warn.forEach(function(w){F.push(w);if(/Quá tải/.test(w)){tags.push('QUA_TAI_KG');sev+=3}else if(/Gần đầy/.test(w)){tags.push('GAN_DAY_KG');sev+=1}else if(/cao/.test(w)){tags.push('NANG_O_TREN');sev+=2}else{tags.push('DE_VO_CHUNG_NANG');sev+=2}});
+  if(c.miss.length){F.push('📏 '+c.miss.length+' dòng thiếu kích thước (nên % có thể thấp hơn thực tế): '+c.miss.slice(0,6).join(', '));tags.push('THIEU_KICH_THUOC');sev+=1}
+  if(xn.length){F.push('❓ '+xn.length+' dòng "Cần xác nhận": '+xn.slice(0,6).map(function(r){return r.kk}).join(', '));tags.push('CAN_XAC_NHAN');sev+=1}
+  if(hse.length){F.push('📅 '+hse.length+' món HSD quá hạn');tags.push('HSD_QUA_HAN');sev+=3}
+  if(hs.length-hse.length>0){F.push('📅 '+(hs.length-hse.length)+' món HSD dưới 30 ngày');tags.push('HSD_SAP_HET');sev+=1}
+  if(nosku.length){F.push('🏷 '+nosku.length+' dòng chưa có SKU');tags.push('THIEU_SKU');sev+=1}
+  if(nohang.length>rs.length*.3){F.push('🏭 '+nohang.length+'/'+rs.length+' dòng chưa có hãng/model');tags.push('THIEU_HANG')}
+  if(mnh.length){F.push('🧾 '+mnh.length+' dòng mất nhãn gốc');tags.push('MAT_NHAN_GOC')}
+  if(nd){F.push('🔗 '+nd+' SKU cũng nằm ở box khác (phân tán)');tags.push('SKU_PHAN_TAN')}
+  if(rs.length>40){F.push('🧩 Quá nhiều loại trong 1 box ('+rs.length+' dòng) — khó lấy, dễ nhầm');tags.push('QUA_NHIEU_LOAI');sev+=1}
+  if(t.n<rs.length*.5){F.push('⚖️ Mới ước được kg cho '+t.n+'/'+rs.length+' dòng — tải trọng chưa đáng tin');tags.push('THIEU_KG')}
+  /* đề xuất */
+  var fb=freeBoxes(loc);
+  if(c.pct!=null&&c.pct>=CAP_HI)S.push('Chuyển bớt đồ ít dùng/ít lấy sang box còn trống cùng cụm'+(fb.length?': '+fb.join(', '):'')+'.');
+  if(tags.indexOf('NANG_O_TREN')>=0)S.push('Hạ các món nặng (≥2 kg/cái) xuống tầng 1–3; tầng '+tang+' chỉ để đồ nhẹ.');
+  if(tags.indexOf('DE_VO_CHUNG_NANG')>=0||tags.indexOf('QUA_NHIEU_LOAI')>=0)S.push('Chia ngăn Box-trong-Box: -A đồ nặng (dưới) / -B đồ thường / -C đồ dễ vỡ (trên).');
+  if(tags.indexOf('QUA_TAI_KG')>=0)S.push('Giảm tải: chuyển ≥'+Math.max(1,Math.ceil(t.kg-t.cap))+' kg sang box khác hoặc dùng box lớn hơn.');
+  if(nd)S.push('Gom SKU trùng về 1 box chính (xem danh sách "SKU có ở box khác"): '+Object.keys(dupSku).slice(0,4).map(function(k){return k+'→'+dupSku[k][0]}).join('; ')+'.');
+  if(hs.length)S.push('Ưu tiên xuất/dùng các món sắp hoặc đã hết HSD; đã quá hạn thì lập phiếu xử lý.');
+  if(xn.length||c.miss.length||nosku.length)S.push('Bổ sung dữ liệu còn thiếu (xác nhận, kích thước, SKU) rồi khám lại.');
+  if(t.n<rs.length*.5)S.push('Ghi kg thật/cảm nhận vào trong_luong.js để tải trọng chính xác hơn.');
+  if(!S.length)S.push('Không cần can thiệp; giữ nguyên.');
+  var grade=sev>=5?['🔴','Cần xử lý'] :(sev>=2?['🟡','Cần theo dõi']:['🟢','Khoẻ']);
+  return {loc:loc,grade:grade,sev:sev,F:F,S:S,tags:tags,vol:c.pct,kg:t.kg,kgp:t.pct,n:rs.length,type:c.type}};
+ window.docHTML=function(loc){var d=window.diagnose(loc);if(!d)return '';
+  return '<details class="cap doc" open><summary style="cursor:pointer;font-size:15px"><b>🩺 Kết luận khám box '+esc(loc)+': '+d.grade[0]+' '+d.grade[1]+'</b></summary>'+
+   '<div class="capt" style="margin-top:6px"><b>Chỉ số:</b> 📦 '+(d.vol!=null?Math.round(d.vol)+'%':'chưa tính') +' · ⚖️ '+(d.kg?'≈'+(window.TT?TT.fmt(d.kg):d.kg)+' kg':'chưa có')+(d.kgp!=null?' ('+Math.round(d.kgp)+'% tải hộp)':'')+' · '+d.n+' dòng · hộp '+esc(d.type)+'</div>'+
+   '<div class="capt"><b>Phát hiện:</b></div>'+(d.F.length?'<ul style="margin:2px 0 4px;padding-left:20px">'+d.F.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'<div class="capt">Không phát hiện vấn đề.</div>')+
+   '<div class="capt"><b>Đề xuất (dữ liệu cho GĐ2 — tái sắp xếp):</b></div><ul style="margin:2px 0 4px;padding-left:20px">'+d.S.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'+
+   '<small>Thẻ phân loại: '+(d.tags.join(' · ')||'—')+'. Kết luận tự động từ dữ liệu hiện có (kg là ước tính); không thay cho kiểm tra thực tế.</small></details>'};
+ function allDiag(){var seen={},o=[];DATA.forEach(function(r){if(r.vt&&!seen[r.vt]){seen[r.vt]=1;var d=window.diagnose(r.vt);if(d)o.push(d)}});o.sort(function(a,b){return b.sev-a.sev});return o}
+ function csvq(x){return '"'+String(x==null?'':x).replace(/"/g,'""')+'"'}
+ function dlCSV(){var ds=allDiag(),L=[['Mã ô','Mức','Điểm nặng','Thể tích %','Ước kg','Tải hộp %','Số dòng','Loại hộp','Phát hiện','Đề xuất','Thẻ']].concat(ds.map(function(d){return [d.loc,d.grade[1],d.sev,d.vol!=null?Math.round(d.vol):'',d.kg?Math.round(d.kg*10)/10:'',d.kgp!=null?Math.round(d.kgp):'',d.n,d.type,d.F.join(' | '),d.S.join(' | '),d.tags.join(' ')]})),
+   txt='﻿'+L.map(function(r){return r.map(csvq).join(',')}).join('\n'),b=new Blob([txt],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Kham_kho_'+(new Date().toISOString().slice(0,10))+'.csv';document.body.appendChild(a);a.click();a.remove()}
+ window.khamKho=function(){var ds=allDiag(),tg={};ds.forEach(function(d){d.tags.forEach(function(t){tg[t]=(tg[t]||0)+1})});
+  var g=[0,0,0];ds.forEach(function(d){g[d.sev>=5?2:(d.sev>=2?1:0)]++});
+  show(H3('🩺 Khám toàn kho')+'<p style="margin:0 0 6px">Đã khám <b>'+ds.length+'</b> box có nhãn: 🟢 '+g[0]+' khoẻ · 🟡 '+g[1]+' theo dõi · 🔴 '+g[2]+' cần xử lý.</p>'+
+   '<details open><summary>Box cần ưu tiên</summary><ul>'+ds.slice(0,8).map(function(d){return '<li><a href="#'+hashOf(d.loc)+'">'+d.loc+'</a> '+d.grade[0]+' — '+esc((d.F[0]||'—'))+'</a></li>'}).join('')+'</ul></details>'+
+   '<details><summary>Bệnh phổ biến toàn kho</summary><ul>'+Object.keys(tg).sort(function(a,b){return tg[b]-tg[a]}).map(function(k){return '<li>'+k+': '+tg[k]+' box</li>'}).join('')+'</ul></details>'+
+   '<div class="rw"><button type="button" id="kkcsv">⬇ Tải báo cáo khám (CSV)</button></div><p style="font-size:12.5px;color:var(--mute)">CSV dùng làm cơ sở Giai đoạn 2: tái sắp xếp cấu trúc kho. Càng nạp thêm box, báo cáo càng đầy đủ.</p>');
+  $('kkcsv').onclick=dlCSV};
  /* ---- nút nổi 📖 Nhật ký ---- */
  var nk=document.createElement('button');nk.id='nkb';nk.type='button';nk.textContent='📖 Nhật ký';nk.setAttribute('aria-label','Nhật ký xuất nhập tồn');document.body.appendChild(nk);
  nk.onclick=function(){if(NHATKY_URL){window.open(NHATKY_URL,'_blank','noopener');return}
   show(H3('📖 Nhật ký Xuất – Nhập – Tồn')+'<p>Chưa gắn link sổ. Làm 1 lần (≈10 phút), sau đó nút này mở thẳng sổ:</p><ol style="padding-left:20px;font-size:14px"><li>Vào <b>Google Sheets</b> → tạo file <b>KHO_NHAT_KY</b>. Import <b>Nhat_ky_XNT_mau.csv</b> thành tab <b>NHAT_KY</b>, và <b>Ton_kho_mau.csv</b> thành tab <b>TON</b> (tab TON import để mặc định, có tick Convert).</li><li>Mỗi lần xuất/nhập: thêm 1 dòng ở NHAT_KY (Loại = NHAP / XUAT / DIEUCHINH). Tab TON tự tính: <b>Tồn = SL kiểm kê + Nhập − Xuất ± Điều chỉnh</b>.</li><li>(Nhập nhanh trên điện thoại) Google Form → Responses liên kết vào tab NHAT_KY, hoặc dùng app Google Sheets.</li><li>Share → "Anyone with the link: Editor" (hoặc chỉ nhóm thủ kho) → copy link, dán vào dòng <code>NHATKY_URL</code> đầu file <b>index_plus.js</b>, up lên GitHub.</li></ol><p style="font-size:12.5px;color:var(--mute)">Giai đoạn 1: trang này vẫn chỉ để tra cứu; sổ nằm ở Google Sheets. Giai đoạn 2 mới có nút +/− trực tiếp (cần cơ sở dữ liệu).</p>')};
+try{if(typeof render==='function')render()}catch(e){}
 })();

@@ -73,7 +73,7 @@ var GD=JSON.parse(JSON.stringify(G));G.height=3500;GD.height=3500;
 var TO={'F11.2':{1:{y:143,z:572},2:{y:795,z:445}}};   // F11.2: bim tầng 2 cao 715 (Lợi 23/11), vùng chứa tầng 1 = 572
 var STACK={'F1.1.5.2':1,'F8.2.3.3':2,'F8.2.3.4':2,'F8.2.3.5':2};   // F8.2.3.3-5: 2 hộp Type 9 chồng (bản vẽ F8)   // ô nào chồng N hộp (mỗi hộp 1 khối riêng). Ví dụ {'F2.1.5.3':2}
 /* ================================================================================ */
-var GAPZ=0,FLAT=true,LOCK=false,S=.17,H=3500+450,sh=document.getElementById('shelf'),Z0=G.depth/2,boxes=[],cur,hl='';
+var GAPZ=0,FLAT=true,LOCK=false,S=.17,H=3500+450,sh=document.getElementById('shelf'),Z0=G.depth/2,boxes=[],cur,hl='',HLS={};
 function tierY(k){return G.floor+G.beam+(k-1)*(G.beam+G.zone)}
 function cub(cls,x,y,zc,w,h,d,col){
  var c=document.createElement('div');c.className='c '+cls;
@@ -93,11 +93,11 @@ function build(cl){
   for(var f=0;f<faces;f++)for(var r=0;r<t.rows;r++)for(var j=0;j<t.n;j++){
    var no=f*t.rows*t.n+r*t.n+j+1,code=cl+'.'+k+'.'+no,base=y0+t.base[r],hh=hz(r),a=document.createElement('a');cnt++;
    var left=G.postW+(f&&!OX?(t.n-1-j):j)*sw+(f&&OX?OX:0),tid=t.cells?CELL[t.cells.charAt(j)]:t.ty,ty=tid?TY[tid]:null;
-   a.className='slot'+(code===hl?' on':'')+(faces==2?(f?' fb':' fa'):'');if(LOCK&&code!==hl)a.style.opacity=.13;a.id='s'+code;a.href='index.html#'+code.replace(/\./g,'-');a.target='_top';
+   a.className='slot'+(HLS[code]?' on':'')+(faces==2?(f?' fb':' fa'):'');if(LOCK&&!HLS[code])a.style.opacity=.13;a.id='s'+code;a.href='index.html#'+code.replace(/\./g,'-');a.target='_top';
    a.title=code+(ty?' · '+ty.n:' · ô trống')+(faces==2?(f?' · mặt giáp F3':' · mặt giáp F1'):'');a.textContent=no;
    a.style.cssText='left:'+left*S+'px;top:'+(H-base-hh)*S+'px;width:'+sw*S+'px;height:'+hh*S+'px;transform:'+(f&&!OX?'translateZ('+(-(Z0+10)*S)+'px) rotateY(180deg)':'translateZ('+(Z0+10)*S+'px)');
    a.onmouseenter=function(){hit.textContent=this.title};sh.appendChild(a);
-   if(ty&&!(LOCK&&code!==hl)){used[tid]=1;var L=STACK[code]||1,lst=ty.stack?ty.stack.map(function(i){return TY[i]}):[];if(!lst.length)for(var q=0;q<L;q++)lst.push(ty);
+   if(ty&&!(LOCK&&!HLS[code])){used[tid]=1;var L=STACK[code]||1,lst=ty.stack?ty.stack.map(function(i){return TY[i]}):[];if(!lst.length)for(var q=0;q<L;q++)lst.push(ty);
     var yy=base,MG=!t.cells&&t.n>=18&&!LOCK;   // F2.1: gộp hộp cùng hàng thành 1 khối (giảm lag)
     if(MG&&j>0)continue;
     lst.forEach(function(u){var zc=faces==2?((f&&!OX)?-1:1)*(Z0-150):Z0-u.b[2]/2;if(faces==1&&u.b[2]>=G.depth)zc=0;
@@ -116,7 +116,7 @@ function build(cl){
  return cnt}
 var bar=document.getElementById('bar');
 Object.keys(CL).forEach(function(c){var a=document.createElement('a');a.className='cl';a.dataset.c=c;a.textContent=c;a.href='#'+c.replace(/\./g,'-');bar.appendChild(a)});
-bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <label><input type="checkbox" id="xp" checked> Mở phẳng 2 mặt cạnh nhau (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
+bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <a id="tk" class="home" href="#" style="display:none;margin-left:6px">🌐 Xem toàn kho 3D</a> <label><input type="checkbox" id="xp" checked> Mở phẳng 2 mặt cạnh nhau (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
 var rx=-10,ry=-28,z=.78,dr=null,st=document.getElementById('stage');
 function fit(){var w=parseFloat(sh.style.width)||800;z=Math.min(.78,(st.clientWidth-16)/(w+40))}
 function ap(){sh.style.transform='scale('+z+') rotateX('+rx+'deg) rotateY('+ry+'deg)'}
@@ -130,9 +130,9 @@ document.querySelectorAll('button').forEach(function(b){b.onclick=function(){var
 document.getElementById('xp').onchange=function(){FLAT=this.checked;build(cur);fit();rx=-10;ry=FLAT?0:-60;ap()};
 document.getElementById('lk').onclick=function(){var h=location.hash.replace(/@khoa/i,'');location.hash=LOCK?h:h+'@khoa'};
 document.getElementById('dm').onchange=function(){boxes.forEach(function(b){b.style.display=this.checked?'':'none'},this)};
-function route(){LOCK=/@khoa/i.test(location.hash);var h=location.hash.replace(/@khoa/i,'').replace('#','').replace(/-/g,'.').toUpperCase(),p=h.split('.'),cl=p.length>=2?p[0]+'.'+p[1]:'';
- if(!CL[cl]){cl='F1.1';h=''}hl=p.length>=4?h:'';if(LOCK&&hl)document.getElementById('dm').checked=true;if(!hl)LOCK=false;build(cl);fit();document.getElementById('lk').style.background=LOCK?'#ffd54a':'';
- if(hl){var sp=document.getElementById('s'+hl);document.getElementById('hit').textContent=sp?sp.title:'';
+function route(){LOCK=/@khoa/i.test(location.hash);var h=location.hash.replace(/@khoa/i,'').replace('#','').replace(/-/g,'.').toUpperCase(),LST=h.split(',').filter(Boolean);h=LST[0]||'';var p=h.split('.'),cl=p.length>=2?p[0]+'.'+p[1]:'';HLS={};LST.forEach(function(c){if(c.indexOf(cl+'.')===0)HLS[c]=1});
+ if(!CL[cl]){cl='F1.1';h=''}hl=p.length>=4?h:'';var tk=document.getElementById('tk');if(tk){tk.style.display=(LOCK&&hl)?'':'none';tk.href='kho_3D_toan_kho.html#to='+LST.join(',')}if(LOCK&&hl)document.getElementById('dm').checked=true;if(!hl)LOCK=false;build(cl);fit();document.getElementById('lk').style.background=LOCK?'#ffd54a':'';
+ if(hl){var sp=document.getElementById('s'+hl);document.getElementById('hit').textContent=(sp?sp.title:'')+(Object.keys(HLS).length>1?'  · khoá '+Object.keys(HLS).length+' ô: '+Object.keys(HLS).join(', '):'');
   var back=sp&&/giáp F3/.test(sp.title);ry=back?160:-28;rx=-10;ap()}}
 window.onhashchange=route;route();ap();
 </script></body></html>

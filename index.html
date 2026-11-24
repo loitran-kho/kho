@@ -118,6 +118,7 @@ a.row.hlink .n{white-space:normal;font-weight:500;color:var(--mute);font-size:13
 .hrow .n small{display:block;font-weight:400;font-size:12px}
 details.dupbox{margin:0 16px 12px}details.dupbox summary{display:inline-block;cursor:pointer;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--okbg);color:var(--ok);border:1px solid var(--ok)}
 details.dupbox[open] summary{border-radius:12px}details.dupbox ol{margin:8px 0 0;padding:10px 12px 10px 30px;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.5}details.dupbox li{margin:6px 0}
+.card{margin-bottom:14px}a.row.hlink{margin:0 0 14px}.hdr+.dstat{margin-bottom:10px}.plan{margin-bottom:0}
 </style>
 </head><body>
 <div class="wrap">
@@ -174,7 +175,7 @@ function row(r){return '<a class="row" href="#'+r.kk+'">'+badge(r.hh)+'<span cla
 function wtRow(r){var T=window.TT;if(!T)return '';var e=T.est(r);if(!e||e.kg==null)return '';return (T.icon(e)?T.icon(e)+' ':'')+'≈ '+T.fmt(e.kg)+' kg ('+T.fmt(e.u)+' kg/đv) — nguồn: '+e.src+' · độ tin cậy '+e.conf}
 function field(k,v,full){return v?'<div'+(full?' class="full"':'')+'><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>':''}
 function card(r){
-  var hs1=hsdOne(r),h='<div class="card'+hsCls(hs1)+'"><div class="head"><div><div class="code">'+r.kk+(hs1?' <span class="pill hsp'+hs1+'">'+(hs1==='e'?'HSD quá hạn':'HSD dưới 30 ngày')+'</span>':'')+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a></div>'+badge(r.hh)+'</div>';
+  var hs1=hsdOne(r),h='<div class="card'+hsCls(hs1)+'"><div class="head"><div><div class="code">'+r.kk+(hs1?' <span class="pill hsp'+hs1+'">'+(hs1==='e'?'HSD quá hạn':'HSD dưới 30 ngày')+'</span>':'')+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a> <a class="loc" style="margin-left:10px" href="tim_duong.html#go='+encodeURIComponent(r.vt)+'" target="_blank" rel="noopener">🧭 Chỉ đường</a></div>'+badge(r.hh)+'</div>';
   h+='<div class="name">'+esc(r.ten)+'</div>';
   var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
@@ -224,7 +225,7 @@ function boxView(loc){
   var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip">'+tot+' đơn vị (cộng chung)</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
   if(hsdQ)chips+='<span class="chip warn">'+hsdQ+' loại quá hạn</span>';else if(hsd.length)chips+='<span class="chip warn">'+hsd.length+' loại sắp hết hạn (90 ngày)</span>';
   if(cx)chips+='<span class="chip warn">'+cx+' loại cần xác nhận</span>';
-  h+='<div class="chips">'+chips+'</div>'+dupBoxHTML(rs)+capHTML(loc)+wtHTML(loc)+galHTML(loc);
+  h+='<div class="chips">'+chips+'</div>'+dupBoxHTML(rs)+capHTML(loc)+wtHTML(loc)+(window.docHTML?docHTML(loc):'')+galHTML(loc);
   if(!OPENED[loc])return h+'<button class="open" onclick="openBox(\''+loc+'\')">Mở hộp xem bên trong</button></div>';
   var z='';
   if(bp.length||km.length||tb.length)z='<dl class="zone">'+field('Bộ phận sử dụng',bp.join(', '))+field('Khu chuyền / máy',km.join(', '))+field('Mã thiết bị',tb.join(', '))+'</dl>';
@@ -309,9 +310,9 @@ function bar(x,y,w,p){var c=TW()?TW().cls(p):capCls(p);return '<rect class="bk" 
 function lbl(c,x,y,w,hh,hlc,n,cp){var cx=x+w/2,T=TW();
   if(hlc)return '<text x="'+cx+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+cx+'" y="'+(y+hh/2+16)+'" text-anchor="middle" class="ps">'+hlc+' khớp</text>';
   if(!n)return '<text x="'+cx+'" y="'+(y+hh/2+5)+'" text-anchor="middle" class="pt">'+c+'</text>';
-  var cw=clusterW(c),bw=w-20,bx=x+10,vt=cp!=null?'📦 '+pf(cp):'📦 ?',wt=(cw&&cw.n)?'⚖️ '+T.fmt(cw.kg)+'/'+cw.cap:'⚖️ ?',wp=(cw&&cw.n)?cw.pct:null;
+  var cw=clusterW(c),bw=w-20,bx=x+10,vt=cp!=null?'📦 '+pf(cp):'📦 ?',wt=(cw&&cw.n)?'⚖️ '+T.fmt(cw.kg)+'/'+cw.cap:'⚖️ ?',wp=(cw&&cw.n)?cw.pct:null,tv='📦 Thể tích '+c+': '+(cp!=null?pf(cp)+' (vật tư / thể tích dùng được của các box)':'chưa tính được'),tw='⚖️ Tải trọng '+c+': '+((cw&&cw.n)?'≈ '+T.fmt(cw.kg)+' kg / '+cw.cap+' kg sức chịu tải cụm ('+Math.round(cw.pct)+'%) · '+cw.n+'/'+cw.N+' dòng đã ước kg':'chưa có số kg');
   if(hh<70)return '<text x="'+cx+'" y="'+(y+15)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+cx+'" y="'+(y+31)+'" text-anchor="middle" class="ps">'+vt+' · '+wt+' kg</text>'+(cp!=null?bar(x+12,y+38,(w-36)/2,cp):'')+(wp!=null?bar(x+w/2+6,y+38,(w-36)/2,wp):'');
-  return '<text x="'+cx+'" y="'+(y+20)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+cx+'" y="'+(y+42)+'" text-anchor="middle" class="ps">'+vt+'</text>'+(cp!=null?bar(bx,y+48,bw,cp):'')+'<text x="'+cx+'" y="'+(y+70)+'" text-anchor="middle" class="ps">'+wt+'</text>'+(wp!=null?bar(bx,y+76,bw,wp):'')+'<text x="'+cx+'" y="'+(y+100)+'" text-anchor="middle" class="ps">'+n+' nhãn</text>'+((wp!=null&&wp>=T.CFG.WARN)||(cp!=null&&cp>100)?'<text x="'+(x+w-8)+'" y="'+(y+16)+'" text-anchor="end" class="ps">⚠</text>':'')}
+  return '<text x="'+cx+'" y="'+(y+20)+'" text-anchor="middle" class="pt">'+c+'</text><g><title>'+tv+'</title><text x="'+cx+'" y="'+(y+42)+'" text-anchor="middle" class="ps">'+vt+'</text>'+(cp!=null?bar(bx,y+48,bw,cp):'')+'</g><g><title>'+tw+'</title><text x="'+cx+'" y="'+(y+70)+'" text-anchor="middle" class="ps">'+wt+'</text>'+(wp!=null?bar(bx,y+76,bw,wp):'')+'</g>'+'<text x="'+cx+'" y="'+(y+100)+'" text-anchor="middle" class="ps">'+n+' nhãn</text>'+((wp!=null&&wp>=T.CFG.WARN)||(cp!=null&&cp>100)?'<text x="'+(x+w-8)+'" y="'+(y+16)+'" text-anchor="end" class="ps">⚠</text>':'')}
 function planSVG(){
   var cnt={},hl={};DATA.forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var c=p[0]+'.'+p[1];cnt[c]=(cnt[c]||0)+1}});
   Object.keys(HL).forEach(function(v){var p=v.split('.');if(p.length>=2){var c=p[0]+'.'+p[1];hl[c]=(hl[c]||0)+HL[v]}});
@@ -319,7 +320,7 @@ function planSVG(){
     var wt='';if(!hl[c]&&cp!=null){cls+=' w';var id='cp'+c.replace(/\W/g,''),lh=hh*Math.min(100,Math.max(cp,6))/100,H=hh,q=w/4,
       d='M0 0q'+q+' -6 '+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0V'+H+'H0Z';
       wt='<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/></clipPath><g clip-path="url(#'+id+')"><g class="rs" style="--h:'+hh+'px"><g transform="translate('+x+','+(y+hh-lh)+')"><path class="wv '+capCls(cp)+'" style="--w:-'+w+'px;--sp:'+(5+(x%4))+'s" d="'+d+'"/></g></g></g>'}
-    return '<a href="#'+hashOf(c)+'"'+(govDim(c)?' style="opacity:.25"':'')+'><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/>'+wt+lbl(c,x,y,w,hh,hl[c],cnt[c],cp)+stripes(c,x,y,w,hh)+'<title>'+c+(cp!=null?' — thể tích '+pf(cp):'')+'</title></a>'}
+    return '<a href="#'+hashOf(c)+'"'+(govDim(c)?' style="opacity:.25"':'')+'><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/>'+wt+lbl(c,x,y,w,hh,hl[c],cnt[c],cp)+stripes(c,x,y,w,hh)+'</a>'}
   var s='<svg viewBox="0 0 940 390" class="plan" style="min-width:620px" role="img" aria-label="Mặt bằng kho"><text x="10" y="16" class="ps">Mặt bằng kho WH_EN-01 (bấm một cụm để xem các ô)</text>';
   var cols=[11,10,9,8,7,6,5,4,3,2,1];
   cols.forEach(function(d,i){var x=10+i*84;s+=rect('F'+d+'.2',x,26,80,130)+rect('F'+d+'.1',x,160,80,130)});
