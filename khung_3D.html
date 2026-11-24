@@ -8,7 +8,7 @@ header{padding:10px 14px}header b{font-size:16px}
 button,label,a.cl{padding:5px 11px;border:1px solid #9ab;background:#fff;border-radius:6px;font:inherit;color:#223;text-decoration:none}
 a.cl.on{background:#1f3a8a;color:#fff;border-color:#1f3a8a}
 #stage{height:68vh;min-height:500px;perspective:2200px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:grab;touch-action:none}
-#shelf{position:relative;transform-style:preserve-3d}
+#shelf{position:relative;transform-style:preserve-3d;flex:none}
 .c{position:absolute;transform-style:preserve-3d}.c>div{position:absolute;box-sizing:border-box}
 .beam>div{background:#f26a21;border:1px solid #b84a10}.post>div{background:#2457d6;border:1px solid #17389a}
 .box>div{border:1px solid rgba(0,0,0,.45)}
@@ -118,17 +118,20 @@ var bar=document.getElementById('bar');
 Object.keys(CL).forEach(function(c){var a=document.createElement('a');a.className='cl';a.dataset.c=c;a.textContent=c;a.href='#'+c.replace(/\./g,'-');bar.appendChild(a)});
 bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <label><input type="checkbox" id="xp" checked> Mở phẳng 2 mặt cạnh nhau (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
 var rx=-10,ry=-28,z=.78,dr=null,st=document.getElementById('stage');
+function fit(){var w=parseFloat(sh.style.width)||800;z=Math.min(.78,(st.clientWidth-16)/(w+40))}
 function ap(){sh.style.transform='scale('+z+') rotateX('+rx+'deg) rotateY('+ry+'deg)'}
-st.onpointerdown=function(e){dr=[e.clientX,e.clientY,rx,ry];st.setPointerCapture(e.pointerId)};
-st.onpointermove=function(e){if(!dr)return;ry=dr[3]+(e.clientX-dr[0])*.4;rx=Math.max(-90,Math.min(30,dr[2]-(e.clientY-dr[1])*.4));ap()};
-st.onpointerup=function(){dr=null};
-st.onwheel=function(e){e.preventDefault();z=Math.max(.35,Math.min(2.5,z*(e.deltaY<0?1.08:.92)));ap()};
+var ZMIN=.2,ZMAX=2.5,KR=.4,RXMIN=-90,RXMAX=30;
+var PT={},PD=0,PZ=1;
+st.onpointerdown=function(e){PT[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(PT);if(k.length===2){var a=PT[k[0]],b=PT[k[1]];PD=Math.hypot(a[0]-b[0],a[1]-b[1]);PZ=z;dr=null}else dr=[e.clientX,e.clientY,rx,ry];st.setPointerCapture(e.pointerId)};
+st.onpointermove=function(e){if(!PT[e.pointerId])return;PT[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(PT);if(k.length===2&&PD){var a=PT[k[0]],b=PT[k[1]];z=Math.max(ZMIN,Math.min(ZMAX,PZ*Math.hypot(a[0]-b[0],a[1]-b[1])/PD));ap();return}if(!dr)return;ry=dr[3]+(e.clientX-dr[0])*KR;rx=Math.max(RXMIN,Math.min(RXMAX,dr[2]-(e.clientY-dr[1])*KR));ap()};
+st.onpointerup=st.onpointercancel=function(e){delete PT[e.pointerId];dr=null;PD=0};
+st.onwheel=function(e){e.preventDefault();z=Math.max(ZMIN,Math.min(ZMAX,z*(e.deltaY<0?1.08:.92)));ap()};
 document.querySelectorAll('button').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
-document.getElementById('xp').onchange=function(){FLAT=this.checked;build(cur);rx=-10;ry=FLAT?0:-60;ap()};
+document.getElementById('xp').onchange=function(){FLAT=this.checked;build(cur);fit();rx=-10;ry=FLAT?0:-60;ap()};
 document.getElementById('lk').onclick=function(){var h=location.hash.replace(/@khoa/i,'');location.hash=LOCK?h:h+'@khoa'};
 document.getElementById('dm').onchange=function(){boxes.forEach(function(b){b.style.display=this.checked?'':'none'},this)};
 function route(){LOCK=/@khoa/i.test(location.hash);var h=location.hash.replace(/@khoa/i,'').replace('#','').replace(/-/g,'.').toUpperCase(),p=h.split('.'),cl=p.length>=2?p[0]+'.'+p[1]:'';
- if(!CL[cl]){cl='F1.1';h=''}hl=p.length>=4?h:'';if(LOCK&&hl)document.getElementById('dm').checked=true;if(!hl)LOCK=false;build(cl);document.getElementById('lk').style.background=LOCK?'#ffd54a':'';
+ if(!CL[cl]){cl='F1.1';h=''}hl=p.length>=4?h:'';if(LOCK&&hl)document.getElementById('dm').checked=true;if(!hl)LOCK=false;build(cl);fit();document.getElementById('lk').style.background=LOCK?'#ffd54a':'';
  if(hl){var sp=document.getElementById('s'+hl);document.getElementById('hit').textContent=sp?sp.title:'';
   var back=sp&&/giáp F3/.test(sp.title);ry=back?160:-28;rx=-10;ap()}}
 window.onhashchange=route;route();ap();
