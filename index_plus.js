@@ -25,7 +25,7 @@
  function stopCam(){if(scanT){clearInterval(scanT);scanT=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
  function show(h){stopCam();pop.innerHTML=h;pop.hidden=false;var x=pop.querySelector('.cls');if(x)x.onclick=hide}
  function hide(){stopCam();pop.hidden=true}
- document.addEventListener('click',function(e){if(!pop.hidden&&!pop.contains(e.target)&&!hb.contains(e.target)&&e.target.id!=='nkb')hide();var a=e.target.closest&&e.target.closest('.hpop a[href^="#"]');if(a)hide()});
+ document.addEventListener('click',function(e){if(!pop.hidden&&e.target.isConnected&&!pop.contains(e.target)&&!hb.contains(e.target)&&e.target.id!=='nkb')hide();var a=e.target.closest&&e.target.closest('.hpop a[href^="#"]');if(a)hide()});
  var H3=function(t){return '<h3>'+t+'<button class="cls" type="button" aria-label="Đóng">×</button></h3>'};
  /* ---- trạng thái dữ liệu ---- */
  function stat(){var on=navigator.onLine!==false;$('dstat').innerHTML=(on?'🟢':'🟠')+' '+DATA.length+' dòng · Cập nhật: '+esc(String(UPDATED).split(' (')[0])+(on?'':' · đang offline (dùng dữ liệu đã tải)')}

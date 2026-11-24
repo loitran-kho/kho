@@ -11,7 +11,7 @@ a.cl.on{background:#1f3a8a;color:#fff;border-color:#1f3a8a}
 #shelf{position:relative;transform-style:preserve-3d;flex:none}
 .c{position:absolute;transform-style:preserve-3d}.c>div{position:absolute;box-sizing:border-box}
 .beam>div{background:#f26a21;border:1px solid #b84a10}.post>div{background:#2457d6;border:1px solid #17389a}
-.box>div{border:1px solid rgba(0,0,0,.45)}
+.box>div{border:1px solid rgba(0,0,0,.45)}.ngam>div{background:rgba(142,36,170,.45);border:1px dashed #4a148c}
 .slot{position:absolute;box-sizing:border-box;border:1px solid #6d7f99;background:rgba(232,238,247,.5);font-size:9px;color:#345;display:flex;align-items:flex-end;justify-content:center;text-decoration:none;overflow:hidden}
 .slot.fa{background:rgba(46,123,214,.22)}.slot.fb{background:rgba(230,126,34,.28)}.slot:hover,.slot.on{background:#ffd54a}.slot.on{outline:3px solid #e65100;z-index:9}
 #hit{font-weight:600}#lg{padding:0 14px 14px;color:#456;font-size:13px}#lg i{display:inline-block;width:11px;height:11px;margin:0 4px 0 10px;vertical-align:-1px}
@@ -28,6 +28,7 @@ var TY={ // [rộng, cao, sâu] hộp chiếm chỗ
  8:{n:'Type 8',b:[400,400,500],c:'#c0392b'},9:{n:'Type 9',b:[400,145,590],c:'#7f8c8d'},10:{n:'Type 10',b:[300,230,400],c:'#95a5a6'},
  11:{n:'Zone L (chất lỏng)',b:[420,370,600],c:'#16a085'},12:{n:'Khu hàng cồng kềnh/bulk (kích thước tạm = Type 5)',b:[420,370,600],c:'#a1887f'},13:{n:'Type 10 + Type 9 chồng',stack:[10,9],c:'#7f8c8d'},
  4:{n:'Type 4',b:[130.5,120,220],c:'#e6a100'},5:{n:'Type 5',b:[420,370,600],c:'#8e44ad'},6:{n:'Type 6',b:[360,290,545],c:'#4aa3df'},7:{n:'Type 7',b:[310,225,455],c:'#5fb7e5'}};
+[6,7,8,9,10].forEach(function(i){if(TY[i])TY[i].lid=1});TY[13]&&(TY[13].lid=1);
 var CELL={'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'X':10,'L':11,'B':12,'S':13};
 // chuỗi 1 tầng: mỗi ký tự = 1 ô (0 trống; 1-9 Type; X=Type10; L=Zone L; B=bulk/oversize/coiled; S=Type10+9 chồng)
 function RT(a){return a.map(function(s){return {cells:s,n:s.length,rows:1,base:[0],h:[null]}})}
@@ -70,17 +71,17 @@ var GEO={'F6.2':{W:2380,inner:2290},
  'F12.3':{W:2820,inner:2737.5,postW:55,height:2605,floor:115,zone:(2605-115-560)/6}};
 var GD=JSON.parse(JSON.stringify(G));G.height=3500;GD.height=3500;
 (function(){var o={};['F1.1','F1.2','F2.1','F2.2','F3.1','F3.2','F4.1','F4.2','F5.1','F5.2','F6.1','F6.2','F7.1','F7.2','F8.1','F8.2','F9.1','F9.2','F10.1','F10.2','F11.1','F11.2','F12.1','F12.2','F12.3'].forEach(function(c){o[c]=CL[c]});CL=o})();
-var TO={'F11.2':{1:{y:143,z:572},2:{y:795,z:445}}};   // F11.2: bim tầng 2 cao 715 (Lợi 23/11), vùng chứa tầng 1 = 572
+var TO={'F11.2':{1:{dy:0,z:715},2:{dy:250,z:220}}};   // F11.2 (Lợi 24/11): bim1→bim2 = 715 (thường 465); bim2→bim3 = 220 (thường 465)   // F11.2: bim tầng 2 cao 715 (Lợi 23/11), vùng chứa tầng 1 = 572
 var STACK={'F1.1.5.2':1,'F8.2.3.3':2,'F8.2.3.4':2,'F8.2.3.5':2};   // F8.2.3.3-5: 2 hộp Type 9 chồng (bản vẽ F8)   // ô nào chồng N hộp (mỗi hộp 1 khối riêng). Ví dụ {'F2.1.5.3':2}
 /* ================================================================================ */
-var GAPZ=0,FLAT=true,LOCK=false,S=.17,H=3500+450,sh=document.getElementById('shelf'),Z0=G.depth/2,boxes=[],cur,hl='',HLS={};
+var GAPZ=0,FLAT=false,NG=false,LOCK=false,S=.17,H=3500+450,sh=document.getElementById('shelf'),Z0=G.depth/2,boxes=[],cur,hl='',HLS={};
 function tierY(k){return G.floor+G.beam+(k-1)*(G.beam+G.zone)}
-function cub(cls,x,y,zc,w,h,d,col){
+function cub(cls,x,y,zc,w,h,d,col,open){
  var c=document.createElement('div');c.className='c '+cls;
  c.style.cssText='left:'+x*S+'px;top:'+(H-y-h)*S+'px;width:'+w*S+'px;height:'+h*S+'px;transform:translateZ('+zc*S+'px)';
  [[w,h,0,0,'translateZ('+d*S/2+'px)'],[w,h,0,0,'rotateY(180deg) translateZ('+d*S/2+'px)'],
-  [w,d,0,(h-d)/2,'rotateX(90deg) translateZ('+h*S/2+'px)'],[w,d,0,(h-d)/2,'rotateX(-90deg) translateZ('+h*S/2+'px)'],
-  [d,h,(w-d)/2,0,'rotateY(90deg) translateZ('+w*S/2+'px)'],[d,h,(w-d)/2,0,'rotateY(-90deg) translateZ('+w*S/2+'px)']].forEach(function(a){
+  [w,d,0,(h-d)/2,open?null:'rotateX(90deg) translateZ('+h*S/2+'px)'],[w,d,0,(h-d)/2,'rotateX(-90deg) translateZ('+h*S/2+'px)'],
+  [d,h,(w-d)/2,0,'rotateY(90deg) translateZ('+w*S/2+'px)'],[d,h,(w-d)/2,0,'rotateY(-90deg) translateZ('+w*S/2+'px)']].forEach(function(a){if(!a[4])return;
   var e=document.createElement('div');e.style.cssText='width:'+a[0]*S+'px;height:'+a[1]*S+'px;left:'+a[2]*S+'px;top:'+a[3]*S+'px;transform:'+a[4]+';'+(col?'background:'+col:'');c.appendChild(e)});
  sh.appendChild(c);return c}
 function build(cl){
@@ -88,8 +89,9 @@ function build(cl){
  var hit=document.getElementById('hit'),cnt=0,used={};
  (OX?[0,OX]:[0]).forEach(function(ox){
  [0,G.W-G.postW].forEach(function(x){[Z0-15,-Z0+15].forEach(function(z){cub('post',x+ox,0,z,G.postW,G.height,30,'')})});
- for(var k=1;k<=7;k++){var to=(TO[cl]||{})[k],yb=(to?to.y:tierY(k))-G.beam;cub('beam',ox,yb,Z0-20,G.W,G.beam,40,'');cub('beam',ox,yb,-Z0+20,G.W,G.beam,40,'');cub('beam',ox+G.postW,yb+G.beam-18,0,G.inner,18,G.depth,'')}});
- CL[cl].forEach(function(t,i){var k=i+1,sw=G.inner/t.n,to=(TO[cl]||{})[k],y0=to?to.y:tierY(k),faces=t.faces||1,hz=function(r){return (to&&to.z)||t.h[r]||(k==7&&G.zone<400?450:G.zone)};
+ for(var k=1;k<=7;k++){var to=(TO[cl]||{})[k],yb=tierY(k)+(to?to.dy||0:0)-G.beam;cub('beam',ox,yb,Z0-20,G.W,G.beam,40,'');cub('beam',ox,yb,-Z0+20,G.W,G.beam,40,'');cub('beam',ox+G.postW,yb+G.beam-18,0,G.inner,18,G.depth,'')}});
+ if(NG){var t1=CL[cl][0],sw1=G.inner/t1.n;(OX?[0,OX]:[0]).forEach(function(ox){for(var j=0;j<t1.n;j++){var g=cub('ngam',G.postW+ox+j*sw1+3,0,0,sw1-6,G.floor-12,G.depth-60,'');g.title=cl+'.0.'+(j+1)+' — gầm (tầng 0)'}})}
+ CL[cl].forEach(function(t,i){var k=i+1,sw=G.inner/t.n,to=(TO[cl]||{})[k],y0=tierY(k)+(to?to.dy||0:0),faces=t.faces||1,hz=function(r){return (to&&to.z)||t.h[r]||(k==7&&G.zone<400?450:G.zone)};
   for(var f=0;f<faces;f++)for(var r=0;r<t.rows;r++)for(var j=0;j<t.n;j++){
    var no=f*t.rows*t.n+r*t.n+j+1,code=cl+'.'+k+'.'+no,base=y0+t.base[r],hh=hz(r),a=document.createElement('a');cnt++;
    var left=G.postW+(f&&!OX?(t.n-1-j):j)*sw+(f&&OX?OX:0),tid=t.cells?CELL[t.cells.charAt(j)]:t.ty,ty=tid?TY[tid]:null;
@@ -105,9 +107,9 @@ function build(cl){
      if(MG){bx=G.postW+(sw-bw)/2+(f&&OX?OX:0);ww=(t.n-1)*sw+bw}else if(f&&OX)bx+=0
      var dsp=document.getElementById('dm').checked?'':'none',b;
      if(u.step){var df=u.step.df,db=u.b[2]-df;   // máng heo: đáy phẳng, MẶT TRƯỚC thấp hơn
-      b=cub('box',bx,yy,zc-u.b[2]/2+(db+12)/2,ww,u.b[1],db+12,col);b.style.display=dsp;boxes.push(b);
-      var b2=cub('box',bx,yy,zc+u.b[2]/2-df/2,ww,u.step.hf,df,col);b2.style.display=dsp;boxes.push(b2)}
-     else{b=cub('box',bx,yy,zc,ww,u.b[1],u.b[2],col);b.style.display=dsp;boxes.push(b)}yy+=u.b[1]})}
+      b=cub('box',bx,yy,zc-u.b[2]/2+(db+12)/2,ww,u.b[1],db+12,col,!u.lid);b.style.display=dsp;boxes.push(b);
+      var b2=cub('box',bx,yy,zc+u.b[2]/2-df/2,ww,u.step.hf,df,col,!u.lid);b2.style.display=dsp;boxes.push(b2)}
+     else{b=cub('box',bx,yy,zc,ww,Math.min(u.b[1],hh),u.b[2],col,!u.lid);b.style.display=dsp;boxes.push(b)}yy+=Math.min(u.b[1],hh)})}
   }});
  document.getElementById('ttl').textContent='Mô hình 3D cụm '+cl;
  document.getElementById('sub').textContent='· '+cnt+' ô · kéo xoay, lăn chuột phóng, bấm ô để tra cứu';
@@ -116,7 +118,7 @@ function build(cl){
  return cnt}
 var bar=document.getElementById('bar');
 Object.keys(CL).forEach(function(c){var a=document.createElement('a');a.className='cl';a.dataset.c=c;a.textContent=c;a.href='#'+c.replace(/\./g,'-');bar.appendChild(a)});
-bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <a id="tk" class="home" href="#" style="display:none;margin-left:6px">🌐 Xem toàn kho 3D</a> <label><input type="checkbox" id="xp" checked> Mở phẳng 2 mặt cạnh nhau (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
+bar.insertAdjacentHTML('beforeend',' <button data-v="-10,-28">Chéo</button><button data-v="0,0">Thẳng</button><button data-v="0,180">Mặt sau</button><button data-v="0,-90">Cạnh</button><button data-v="-85,0">Từ trên</button><label><input type="checkbox" id="dm"> Hộp mẫu</label> <label title="Khe 100–200 mm (TB 150) dưới chân kệ, dùng cất đồ không chính quy"><input type="checkbox" id="ng"> 🕳 Bí ẩn thế giới ngầm</label> <a id="tk" class="home" href="#" style="display:none;margin-left:6px">🌐 Xem toàn kho 3D</a> <label><input type="checkbox" id="xp"> Tách 2 mặt đặt cạnh nhau (F2.1)</label> <button id="lk">🎯 Khoá mục tiêu</button> <span id="hit">—</span>');
 var rx=-10,ry=-28,z=.78,dr=null,st=document.getElementById('stage');
 function fit(){var w=parseFloat(sh.style.width)||800;z=Math.min(.78,(st.clientWidth-16)/(w+40))}
 function ap(){sh.style.transform='scale('+z+') rotateX('+rx+'deg) rotateY('+ry+'deg)'}
@@ -127,7 +129,8 @@ st.onpointermove=function(e){if(!PT[e.pointerId])return;PT[e.pointerId]=[e.clien
 st.onpointerup=st.onpointercancel=function(e){delete PT[e.pointerId];dr=null;PD=0};
 st.onwheel=function(e){e.preventDefault();z=Math.max(ZMIN,Math.min(ZMAX,z*(e.deltaY<0?1.08:.92)));ap()};
 document.querySelectorAll('button').forEach(function(b){b.onclick=function(){var v=b.dataset.v.split(',');rx=+v[0];ry=+v[1];ap()}});
-document.getElementById('xp').onchange=function(){FLAT=this.checked;build(cur);fit();rx=-10;ry=FLAT?0:-60;ap()};
+document.getElementById('xp').onchange=function(){FLAT=this.checked;build(cur);fit();rx=-10;ry=FLAT?0:-35;ap()};
+document.getElementById('ng').onchange=function(){NG=this.checked;build(cur);fit();ap()};
 document.getElementById('lk').onclick=function(){var h=location.hash.replace(/@khoa/i,'');location.hash=LOCK?h:h+'@khoa'};
 document.getElementById('dm').onchange=function(){boxes.forEach(function(b){b.style.display=this.checked?'':'none'},this)};
 function route(){LOCK=/@khoa/i.test(location.hash);var h=location.hash.replace(/@khoa/i,'').replace('#','').replace(/-/g,'.').toUpperCase(),LST=h.split(',').filter(Boolean);h=LST[0]||'';var p=h.split('.'),cl=p.length>=2?p[0]+'.'+p[1]:'';HLS={};LST.forEach(function(c){if(c.indexOf(cl+'.')===0)HLS[c]=1});

@@ -8,7 +8,7 @@ window.LT=(function(){
  var RULES=[
   {dept:'HVAC-B1',cl:'F9.1',t:[1,7],note:'cả kệ F9.1'},
   {dept:'HVAC-B1',cl:'F9.2',t:[5,7],note:'mượn tầng 5–7 của F9.2'},
-  {dept:'KTBT-B2',cl:'F9.2',t:[1,4],note:'phần còn lại của F9.2'},
+  {dept:'Tổng quản (Lợi)',cl:'F9.2',t:[1,4],note:'F9.2 tầng 1–4: kho quản (Lợi sửa 24/11)'},
   {dept:'KTBT-B2',cl:'F5.2',t:[1,7],note:'"địa bàn" của bro Hiếu'},
   {dept:'KTBT-B2',cl:'F5.1',t:[1,7],mix:true,note:'sheet: F5 = KTBT-B2 + R02, chưa chia tầng'},
   {dept:'R02',cl:'F5.1',t:[1,7],mix:true,note:'sheet: F5 = KTBT-B2 + R02, chưa chia tầng'}
