@@ -75,8 +75,9 @@ const tmpM=new THREE.Matrix4(),tmpQ=new THREE.Quaternion(),tmpP=new THREE.Vector
 function inst(list,material){const im=new THREE.InstancedMesh(UB,material,Math.max(1,list.length));list.forEach((b,i)=>{tmpP.set(b[0],b[1],b[2]);tmpS.set(b[3],b[4],b[5]);tmpM.compose(tmpP,tmpQ.identity(),tmpS);im.setMatrixAt(i,tmpM)});im.count=list.length;im.instanceMatrix.needsUpdate=true;world.add(im);return im}
 /* (x,y,z) mm trong bản vẽ (y = Nam) → three (x, z=cao, y) mét; box theo tâm */
 const bx=(L,cx,cy,cz,sx,sy,sz)=>L.push([cx*M,cz*M,cy*M,sx*M,sz*M,sy*M]);
+let floorMat;
 /* ---------- phòng ---------- */
-{const fl=new THREE.Mesh(new THREE.BoxGeometry(R0.W*M,.05,R0.D*M),mat(0xe4e9f1));fl.position.set(R0.W*M/2,-.025,R0.D*M/2);world.add(fl);
+{floorMat=mat(0xe4e9f1,{transparent:true});const fl=new THREE.Mesh(new THREE.BoxGeometry(R0.W*M,.05,R0.D*M),floorMat);fl.position.set(R0.W*M/2,-.025,R0.D*M/2);world.add(fl);
  const wm=mat(0x8fa0bd,{transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false});
  const DXo=R0.W-3300-245,T=.15;
  const wall=(x0,y0,w,d)=>{const m=new THREE.Mesh(UB,wm);m.scale.set(w*M,CH*M,d*M);m.position.set((x0+w/2)*M,CH*M/2,(y0+d/2)*M);world.add(m)};
@@ -113,13 +114,13 @@ clusters.forEach(cl=>{
    bx(full?CF:CE,ax,ay,cz,sx,sy,hh);addEdges(ax*M,cz*M,ay*M,sx*M,hh*M,sy*M,full?EDGE_F:EDGE_E);
    CELLN.push({cl,k,no,x:(ax+(f12?0:(lc.side==='W'?-1:1)*sx/2*1.02))*M,y:cz*M,z:(ay+(f12?-sy/2*1.02:0))*M,full})}
  })});
-const frameMat=mat(0xf57c00),deckMat=mat(0xbfe3ff,{transparent:true,opacity:.55,depthWrite:false});
-const cfMat=mat(0x5fc785),ceMat=mat(0xffffff,{transparent:true,opacity:.0});
-const mPosts=inst(POSTS,frameMat),mBeams=inst(BEAMS,frameMat),mDecks=inst(DECKS,deckMat),mCF=inst(CF,cfMat);
+const frameMat=mat(0x1f5fbf),shBeamMat=mat(0xf4511e),deckMat=mat(0xf4511e,{transparent:true,opacity:.9});   /* THỰC TẾ: cột xanh dương · beam + mâm cam */
+const cfMat=mat(0x1e6fd9),ceMat=mat(0xffffff,{transparent:true,opacity:.0});
+const mPosts=inst(POSTS,frameMat),mBeams=inst(BEAMS,shBeamMat),mDecks=inst(DECKS,deckMat),mCF=inst(CF,cfMat);
 function lines(arr,col,op){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));const m=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:op});const l=new THREE.LineSegments(g,m);world.add(l);return l}
-const lnE=lines(EDGE_E,0x8d9bb0,.75),lnF=lines(EDGE_F,0x1b5e20,.9);
+const lnE=lines(EDGE_E,0x8d9bb0,.75),lnF=lines(EDGE_F,0x0a2e73,.95);
 const ngMat=mat(0x8e24aa,{transparent:true,opacity:.7}),mNG=inst(NGB,ngMat);mNG.visible=false;
-const dimMats=[[frameMat,1],[deckMat,.55],[cfMat,1],[lnE.material,.75],[lnF.material,.9]];
+const dimMats=[[frameMat,1],[shBeamMat,1],[deckMat,.9],[cfMat,1],[lnE.material,.75],[lnF.material,.9]];
 /* thanh liên kết 40×20 (Lợi 24/11): đỉnh tầng 7, 6 hành lang × 2 */
 const tieMat=mat(0xe64a19);
 function tie(x1,y1,x2,y2){const L=Math.hypot(x2-x1,y2-y1),m=new THREE.Mesh(UB,tieMat);m.scale.set(L*M,.02,.04);m.position.set((x1+x2)/2*M,3.49,(y1+y2)/2*M);m.rotation.y=-Math.atan2(y2-y1,x2-x1);world.add(m)}
@@ -159,7 +160,7 @@ $('bOrb').onclick=()=>setMode('orbit');$('bWalk').onclick=()=>setMode('walk');$(
 $('bHome').onclick=()=>{if(mode==='walk')setMode('orbit');resetView()};
 $('bFlip').onclick=()=>{rollT=rollT?0:Math.PI;$('bFlip').classList.toggle('on',!!rollT)};
 $('cNg').onchange=e=>{mNG.visible=e.target.checked};
-function applyDim(){const on=$('cDim').checked;dimMats.forEach(([m,o])=>{m.transparent=true;m.opacity=on?Math.min(o,.3):o;m.depthWrite=!on&&m!==deckMat;m.needsUpdate=true})}
+function applyDim(){const on=$('cDim').checked;dimMats.forEach(([m,o])=>{m.transparent=true;m.opacity=on?Math.min(o,.3):o;m.depthWrite=!on;m.needsUpdate=true})}
 $('cDim').onchange=applyDim;if(TO.length){$('cDim').checked=true;applyDim()}
 /* nhìn quanh bằng kéo (chuột/cảm ứng) */
 let drag=null;cv.addEventListener('pointerdown',e=>{if(mode!=='walk')return;drag={x:e.clientX,y:e.clientY,yaw,pit};cv.setPointerCapture(e.pointerId)});
@@ -205,7 +206,7 @@ function walk(dt){
 renderer.setAnimationLoop(()=>{const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
  if(mode==='walk')walk(dt);else orbit.update();
  const k=.5+.5*Math.sin(t*6);tgtMat.emissiveIntensity=.3+.9*k;beamMat.opacity=.15+.3*k;
- pivot.rotation.x+=(rollT-pivot.rotation.x)*Math.min(1,dt*4);if(mode==='orbit'&&camera.position.y<.2){camera.position.y=.2}
+ pivot.rotation.x+=(rollT-pivot.rotation.x)*Math.min(1,dt*4);{const ft=rollT?.06:1;floorMat.opacity+=(ft-floorMat.opacity)*Math.min(1,dt*6);floorMat.depthWrite=floorMat.opacity>.95}if(mode==='orbit'&&camera.position.y<.2){camera.position.y=.2}
  $('hAlt').textContent=(mode==='walk'?'Độ cao hiện tại: ':'Camera cách sàn: ')+Math.round(Math.max(0,camera.position.y/M))+' mm';
  if((nt+=dt)>.25){nt=0;updNums()}
  renderer.render(scene,camera)});
