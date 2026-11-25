@@ -61,8 +61,8 @@ function sideFix(c,wp,dp,hh,col,plain){ // thay 4 mặt đứng bằng cách d�
 // sàn + tường
 var fl=document.createElement('div');fl.className='f';fl.style.cssText='left:0;top:0;width:'+ROOM.W*S+'px;height:'+ROOM.D*S+'px;background:#e9edf3;border:2px solid #7a8aa0;box-sizing:border-box';w.appendChild(fl);
 var door=document.createElement('div');door.style.cssText='position:absolute;left:'+(ROOM.W-3300-245)*S+'px;top:'+(ROOM.D*S-3)+'px;width:'+3300*S+'px;height:5px;background:#27ae60;transform:translateZ(1px)';w.appendChild(door);
-Object.keys(X).forEach(function(f){['.2','.1'].forEach(function(s){var y=s==='.2'?Y2:Y1,L=RL,code=f+s;if(code==='F6.2'){y=470;L=2380}blk(X[f],y,RW,L,H,cnt[code]?'#7fcf9a':'#c9d3e2',code)})});
-F12.forEach(function(f){blk(f[1],F12Y,f[2],RW,H12,cnt[f[0]]?'#7fcf9a':'#c9d3e2',f[0])});
+Object.keys(X).forEach(function(f){['.2','.1'].forEach(function(s){var y=s==='.2'?Y2:Y1,L=RL,code=f+s;if(code==='F6.2'){y=470;L=2380}blk(X[f],y,RW,L,H,cnt[code]?'#4f7fe0':'#f2b27c',code)})});
+F12.forEach(function(f){blk(f[1],F12Y,f[2],RW,H12,cnt[f[0]]?'#4f7fe0':'#f2b27c',f[0])});
 /* ===== THANH LIÊN KẾT CHỐNG ĐỔ (Lợi 24/11): mỗi hành lang 2 thanh ở đỉnh tầng 7 (đầu Bắc + đầu Nam dãy), dài = bề rộng hành lang, tiết diện 40×20 mm.
    F7–F6: thanh phía Bắc xiên vì F6.2 (y=470) ngắn hơn F7.2 (y=50). ===== */
 var TIES=document.createElement('div');TIES.id='ties';TIES.style.cssText='position:absolute;left:0;top:0;transform-style:preserve-3d';w.appendChild(TIES);

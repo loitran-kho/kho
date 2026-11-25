@@ -88,7 +88,7 @@ function nav(){var n=document.getElementById('nav');if(!ROUTE||!ROUTE.stops.leng
  var first=q[0];document.getElementById('cpt').innerHTML='Mũi tên đỏ chỉ <b>thẳng tới ô '+tgt.code+'</b> (vector, lên = Bắc bản vẽ) — cách '+(vd/1000).toFixed(1)+' m theo đường chim bay; bước đầu đi hướng <b>'+nd+'</b>.<br>Tổng quãng đường ≈ <b>'+(ROUTE.len/1000).toFixed(1)+' m</b> · '+q.length+' điểm lấy hàng';
  var codes=q.map(function(x){return x.code}).join(',');
  document.getElementById('l3').href='kho_3D_toan_kho.html#to='+codes+'&from='+Math.round(ME.x)+','+Math.round(ME.y);
- var same=q.filter(function(x){return x.cl===first.cl&&x.side!=='F'}).map(function(x){return x.code.replace(/\./g,'-')});document.getElementById('lc').href='khung_3D.html#'+same.join(',')+'@khoa';document.getElementById('lc').textContent='🧊 Khoá '+same.length+' ô trong 3D cụm '+first.cl;
+ var same=q.filter(function(x){return x.cl===first.cl&&x.side!=='F'}).map(function(x){return x.code.replace(/\./g,'-')});document.getElementById('lc').href='khung_3D_three.html#'+same.join(',')+'@khoa';document.getElementById('lc').textContent='🧊 Khoá '+same.length+' ô trong 3D cụm '+first.cl;
  elev(ALT.length>1?[first]:q)}
 function corr(p){var c=K.CX.map(function(v,i){return Math.abs(p[0]-v)<2?K.CN[i]:null}).filter(Boolean)[0];if(c)return' (dọc '+c+')';if(Math.abs(p[1]-K.MY)<2)return' (dọc HL-G, hành lang chính F12)';return''}
 function elev(xs){if(!xs.push)xs=[xs];var e=document.getElementById('el');e.style.display='block';

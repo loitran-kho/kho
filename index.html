@@ -387,7 +387,7 @@ function clusterView(l){
   if(p.length>=2)cls=[p[0]+'.'+p[1]]; else cls=Object.keys(idx).filter(function(c){return c.split('.')[0]===p[0]});
   var tf=p.length===3?+p[2]:0;
   if(!cls.length)return '<a class="back" href="#">← Bản đồ kho</a><div class="card"><div class="empty">Không có dãy "'+esc(l)+'" trong danh mục.</div></div>';
-  var v3=cls.filter(function(c){return D3.indexOf(c)>=0}).map(function(c){return ' <a class="back" href="khung_3D.html#'+hashOf(c)+'" target="_blank" rel="noopener">🧊 Xem 3D '+c+'</a>'}).join('');
+  var v3=cls.filter(function(c){return D3.indexOf(c)>=0}).map(function(c){return ' <a class="back" href="khung_3D_three.html#'+hashOf(c)+'" target="_blank" rel="noopener">🧊 Xem 3D '+c+'</a>'}).join('');
   return '<a class="back" href="#">← Bản đồ kho</a>'+v3+cls.map(function(c){return gridFor(c,o,tf)}).join('');
 }
 function kkOf(t){var m=/KK-\d{4}/.exec(t||'');return m?m[0]:''}
@@ -402,7 +402,7 @@ function tdHTML(r){var T=window.TD;if(!T)return '';var o='',L=(T.tuong_duong||{}
  return o}
 function crumb(l){var p=l.split('.');if(p.length<4)return '';return '<div class="crumb"><span>Kệ <b>'+p[0]+'</b></span>›<span>Mặt/Khoang <b>.'+p[1]+'</b></span>›<span>Tầng <b>'+p[2]+'</b></span>›<span>Box/ô <b>'+p[3]+'</b></span></div>'}
 function locView(l){var p=l.split('.');
-  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a> <a class="back" href="tim_duong.html#go='+l+'" target="_blank" rel="noopener">🧭 Chỉ đường tới ô này</a>':'')+crumb(l)+boxView(l);
+  if(p.length>=4)return '<a class="back" href="#'+hashOf(p[0]+'.'+p[1])+'">← Cụm '+p[0]+'.'+p[1]+' (mặt đứng)</a>'+(D3.indexOf(p[0]+'.'+p[1])>=0?' <a class="back" href="khung_3D_three.html#'+hashOf(l)+'" target="_blank" rel="noopener">🧊 Xem ô này trong 3D</a> <a class="back" href="tim_duong.html#go='+l+'" target="_blank" rel="noopener">🧭 Chỉ đường tới ô này</a>':'')+crumb(l)+boxView(l);
   return clusterView(l);
 }
 function render(){
