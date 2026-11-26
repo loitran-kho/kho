@@ -25,7 +25,7 @@
 @media(max-width:520px){#walkui .pad{grid-template-columns:repeat(3,64px)}#walkui .pad button,#walkui .upd button{width:64px;height:64px}#walkui .upd button{width:64px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-<script src="data.js"></script><script src="kho_geo.js"></script>
+<script src="data.js"></script><script src="kho_geo.js"></script><script src="kho_box_v5.js"></script><script src="kho_loai_box.js"></script><script src="kho_version.js"></script>
 </head><body>
 <canvas id="cv"></canvas>
 <div id="top">
@@ -36,6 +36,9 @@
  <button class="b" id="bHome">📍 Về vị trí ban đầu</button>
  <button class="b" id="bFlip">🙃 Lật úp toà nhà</button>
  <label class="chk"><input type="checkbox" id="cNg"> 🕳 Bí ẩn thế giới ngầm</label>
+ <label class="chk"><input type="checkbox" id="cCeil"> 🏠 Hiện trần + đèn</label>
+ <label class="chk" title="Tấm lọc gió, quạt, camera, thanh chắn xanh — vị trí/kích thước ƯỚC TÍNH từ ảnh"><input type="checkbox" id="cEq" checked> 🔧 Thiết bị (ước tính)</label>
+ <label class="chk"><input type="checkbox" id="cTy"> 🎨 Tô theo Type</label>
  <label class="chk"><input type="checkbox" id="cDim"> 🌫 Làm mờ xung quanh</label>
  <a class="b" id="bOld" href="kho_3D_toan_kho.html">Bản cũ (CSS 3D)</a>
 </div>
@@ -75,19 +78,25 @@ const tmpM=new THREE.Matrix4(),tmpQ=new THREE.Quaternion(),tmpP=new THREE.Vector
 function inst(list,material){const im=new THREE.InstancedMesh(UB,material,Math.max(1,list.length));list.forEach((b,i)=>{tmpP.set(b[0],b[1],b[2]);tmpS.set(b[3],b[4],b[5]);tmpM.compose(tmpP,tmpQ.identity(),tmpS);im.setMatrixAt(i,tmpM)});im.count=list.length;im.instanceMatrix.needsUpdate=true;world.add(im);return im}
 /* (x,y,z) mm trong bản vẽ (y = Nam) → three (x, z=cao, y) mét; box theo tâm */
 const bx=(L,cx,cy,cz,sx,sy,sz)=>L.push([cx*M,cz*M,cy*M,sx*M,sz*M,sy*M]);
-let floorMat;
+let floorMat;const ceilG=new THREE.Group();world.add(ceilG);ceilG.visible=false;
+/* hình khối có đỉnh cao thấp theo mặt trần (tường nghiêng, trần) — 4 góc đáy (x,y mm) + cao độ trần tại góc */
+function prismCeil(x0,y0,w,d){const cl=(v,mx)=>Math.max(0,Math.min(mx,v)),P=[[x0,y0],[x0+w,y0],[x0+w,y0+d],[x0,y0+d]],pos=[];P.forEach(p=>pos.push(p[0]*M,0,p[1]*M));P.forEach(p=>pos.push(p[0]*M,KG.CEIL(cl(p[0],R0.W),cl(p[1],R0.D))*M,p[1]*M));const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex([0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,1,5,6,1,6,2,2,6,7,2,7,3,3,7,4,3,4,0]);g.computeVertexNormals();return g}
 /* ---------- phòng ---------- */
 {floorMat=mat(0xe4e9f1,{transparent:true});const fl=new THREE.Mesh(new THREE.BoxGeometry(R0.W*M,.05,R0.D*M),floorMat);fl.position.set(R0.W*M/2,-.025,R0.D*M/2);world.add(fl);
  const wm=mat(0x8fa0bd,{transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false});
  const DXo=R0.W-3300-245,T=.15;
- const wall=(x0,y0,w,d)=>{const m=new THREE.Mesh(UB,wm);m.scale.set(w*M,CH*M,d*M);m.position.set((x0+w/2)*M,CH*M/2,(y0+d/2)*M);world.add(m)};
+ const wall=(x0,y0,w,d)=>{const m=new THREE.Mesh(prismCeil(x0,y0,w,d),wm);world.add(m)};
  wall(0,-150,R0.W,150);wall(-150,0,150,R0.D);wall(R0.W,0,150,R0.D);wall(0,R0.D,DXo,150);wall(DXo+3300,R0.D,R0.W-DXo-3300,150);
+ {/* mặt trần (bật bằng nút 🏠 Hiện trần) + tấm trần thấp trên F12.1 */
+  const cg=new THREE.BufferGeometry(),cp=[[0,0],[R0.W,0],[R0.W,R0.D],[0,R0.D]],pp=[];cp.forEach(p=>pp.push(p[0]*M,KG.CEIL(p[0],p[1])*M,p[1]*M));cg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));cg.setIndex([0,1,2,0,2,3]);cg.computeVertexNormals();
+  ceilG.add(new THREE.Mesh(cg,mat(0xffb74d,{transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false})));
+  KG.CEIL_LOW.forEach(r=>{const sl=new THREE.Mesh(UB,mat(0xe53935,{transparent:true,opacity:.5,depthWrite:false}));sl.scale.set(r.w*M,.04,r.h*M);sl.position.set((r.x+r.w/2)*M,r.z*M,(r.y+r.h/2)*M);ceilG.add(sl)})}
  const door=new THREE.Mesh(UB,mat(0x43a047,{transparent:true,opacity:.5}));door.scale.set(3.3,2.69,.1);door.position.set((DXo+1650)*M,1.345,R0.D*M+.1);world.add(door)}
 /* ---------- kệ ---------- */
 const POSTS=[],BEAMS=[],DECKS=[],CF=[],CE=[],EDGE=[],NGB=[],CELLN=[],PICK=[],LABELS=[],TGT=[];
 const clusters=Object.keys(KG.TIERS),RECTS={};
 function addEdges(cx,cy,cz,sx,sy,sz,out){const x=sx/2,y=sy/2,z=sz/2,v=[[-x,-y,-z],[x,-y,-z],[x,y,-z],[-x,y,-z],[-x,-y,z],[x,-y,z],[x,y,z],[-x,y,z]],e=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];e.forEach(([a,b])=>{out.push(cx+v[a][0],cy+v[a][1],cz+v[a][2],cx+v[b][0],cy+v[b][1],cz+v[b][2])})}
-const EDGE_E=[],EDGE_F=[];
+const EDGE_E=[],EDGE_F=[],TYL={};
 clusters.forEach(cl=>{
  const R=KG.rect(cl),f12=!!KG.F12[cl],tiers=KG.TIERS[cl];RECTS[cl]=R;const topZ=f12?2605:3500;
  const cx=R.x+R.w/2,cy=R.y+R.h/2;
@@ -111,7 +120,7 @@ clusters.forEach(cl=>{
    else{ay=lc.fy;depth=faces===1?R.x+R.w/2:(lc.side==='W'?R.x+hd/2:R.x+R.w-hd/2);ax=depth;sx=hd*.9;sy=Lr/n*.88}
    const hh=zone/rowsN*.86,cz=dz+r*(zone/rowsN)+hh/2+6,full=cnt[code]>0;
    if(TOS.has(code)){TGT.push({code,x:ax,y:ay,z:cz,sx:sx*1.12,sy:sy*1.12,sz:hh*1.12});continue}
-   bx(full?CF:CE,ax,ay,cz,sx,sy,hh);addEdges(ax*M,cz*M,ay*M,sx*M,hh*M,sy*M,full?EDGE_F:EDGE_E);
+   bx(full?CF:CE,ax,ay,cz,sx,sy,hh);{const _b=window.BX?BX.cell(cl,k,no):null;if(_b)bx((TYL[_b.t]=TYL[_b.t]||[]),ax,ay,cz,sx*1.03,sy*1.03,hh*1.03)}addEdges(ax*M,cz*M,ay*M,sx*M,hh*M,sy*M,full?EDGE_F:EDGE_E);
    CELLN.push({cl,k,no,x:(ax+(f12?0:(lc.side==='W'?-1:1)*sx/2*1.02))*M,y:cz*M,z:(ay+(f12?-sy/2*1.02:0))*M,full})}
  })});
 const frameMat=mat(0x1f5fbf),shBeamMat=mat(0xf4511e),deckMat=mat(0xf4511e,{transparent:true,opacity:.9});   /* THỰC TẾ: cột xanh dương · beam + mâm cam */
@@ -123,8 +132,31 @@ const ngMat=mat(0x8e24aa,{transparent:true,opacity:.7}),mNG=inst(NGB,ngMat);mNG.
 const dimMats=[[frameMat,1],[shBeamMat,1],[deckMat,.9],[cfMat,1],[lnE.material,.75],[lnF.material,.9]];
 /* thanh liên kết 40×20 (Lợi 24/11): đỉnh tầng 7, 6 hành lang × 2 */
 const tieMat=mat(0xe64a19);
-function tie(x1,y1,x2,y2){const L=Math.hypot(x2-x1,y2-y1),m=new THREE.Mesh(UB,tieMat);m.scale.set(L*M,.02,.04);m.position.set((x1+x2)/2*M,3.49,(y1+y2)/2*M);m.rotation.y=-Math.atan2(y2-y1,x2-x1);world.add(m)}
-[['F11','F10'],['F9','F8'],['F7','F6'],['F5','F4'],['F3','F2'],['F2','F1']].forEach(p=>{const xl=KG.X[p[0]]+600,xr=KG.X[p[1]],yl=p[0]+'.2'==='F6.2'?470:KG.Y2,yr=p[1]+'.2'==='F6.2'?470:KG.Y2,yS=KG.Y1+KG.RL-80;tie(xl,yl+80,xr,yr+80);tie(xl,yS,xr,yS)});
+const TIE_N_DROP=.10;   /* Lợi 26/11: thanh giằng ở các thanh xà phía BẮC tụt xuống 1 chút (ước 100 mm — sửa số này nếu khác) */
+function tie(x1,y1,x2,y2,dn){const L=Math.hypot(x2-x1,y2-y1),m=new THREE.Mesh(UB,tieMat);m.scale.set(L*M,.02,.04);m.position.set((x1+x2)/2*M,3.49-(dn||0),(y1+y2)/2*M);m.rotation.y=-Math.atan2(y2-y1,x2-x1);world.add(m)}
+[['F11','F10'],['F9','F8'],['F7','F6'],['F5','F4'],['F3','F2'],['F2','F1']].forEach(p=>{const xl=KG.X[p[0]]+600,xr=KG.X[p[1]],yl=p[0]+'.2'==='F6.2'?470:KG.Y2,yr=p[1]+'.2'==='F6.2'?470:KG.Y2,yS=KG.Y1+KG.RL-80;tie(xl,yl+80,xr,yr+80,TIE_N_DROP);tie(xl,yS,xr,yS)});
+
+/* ---- THIẾT BỊ TƯỜNG/TRẦN + ĐÈN (ƯỚC TÍNH từ ảnh Lợi gửi 26/11 — kích thước/vị trí chưa đo, sửa trong khối này) ---- */
+const eqG=new THREE.Group();world.add(eqG);
+{const mk=(g,sx,sy,sz,x,y,z,m)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);return o},cl=(v,m)=>Math.max(0,Math.min(m,v)),cAt=(x,y)=>KG.CEIL(cl(x,R0.W),cl(y,R0.D)),B=(sx,sy,sz,x,y,z,m,g)=>{const o=mk(UB,sx*M,sz*M,sy*M,x*M,z*M,y*M,m);(g||eqG).add(o);return o};
+ const frameG=mat(0xb0b7c3),meshG=mat(0x4a5360),fanM=mat(0x263238),camM=mat(0xf5f5f5),blueM=mat(0x1f5fbf);
+ /* tấm lọc gió trên tường Nam (y=D): rộng 1800 × cao 500, mép trên cách trần 880 (Lợi đo cho tấm trên F12.3: cách tường Tây 1,6 m) */
+ const filterS=(x0,w,h,tag)=>{const xc=x0+w/2,top=KG.CEIL_PLANE(xc,R0.D)-880,zc=top-h/2;B(w,90,h,xc,R0.D-45,zc,frameG);B(w-80,60,h-80,xc,R0.D-70,zc,meshG);return{xc,top,tag}};
+ filterS(1600,1800,600,'F12.3');                                    /* trên F12.3 — Lợi đo */
+ filterS(KG.O.x-900,1800,600,'cửa cuốn');                           /* ngay trên cửa cuốn — ƯỚC TÍNH tương đương */
+ /* tấm lọc + quạt hút + camera ở tường Bắc, giữa dãy F9 và F8 */
+ {const rx=c=>KG.rect(c),a=rx('F9.2'),b=rx('F8.2'),xl=Math.min(a.x,b.x),xr=Math.max(a.x+a.w,b.x+b.w);const gx=Math.min(a.x+a.w,b.x+b.w),gx2=Math.max(a.x,b.x),xc=(gx+gx2)/2,top=KG.CEIL_PLANE(xc,0)-880,h=600,zc=top-h/2;
+  B(1200,90,h,xc,45,zc,frameG);B(1120,60,h-80,xc,70,zc,meshG);
+  const fan=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.12,24),fanM);fan.rotation.x=Math.PI/2;fan.position.set((xc-1100)*M,zc*M,.06);eqG.add(fan);   /* quạt hút kế bên */
+  const cam=new THREE.Mesh(new THREE.SphereGeometry(.055,16,12),camM);cam.position.set(xc*M,(top+170)*M,.06);eqG.add(cam)}                                     /* camera phía trên tấm lọc */
+ /* thanh chắn xanh ở cuối kệ F12.3 (đầu Tây): nối trụ kệ với vách Tây, cao ~1500, tiết diện 50×30 — VỊ TRÍ ƯỚC TÍNH */
+ {const r=KG.rect('F12.3');B(r.x,30,50,r.x/2,r.y+30,1500,blueM)}
+ /* đèn trần (ƯỚC TÍNH): ống LED 1200 dọc các hành lang giữa cột kệ + vài máng lưới; bật/tắt cùng nút 🏠 Hiện trần */
+ const cols=[];Object.keys(KG.TIERS).forEach(c=>{if(KG.F12[c])return;const r=KG.rect(c);if(!cols.some(q=>Math.abs(q.x-r.x)<5))cols.push({x:r.x,w:r.w})});cols.sort((p,q)=>p.x-q.x);
+ const lampM=new THREE.MeshBasicMaterial({color:0xfff6b0}),grillM=mat(0xd7dbe0);let n=0;
+ for(let i=0;i+1<cols.length;i++){const g0=cols[i].x+cols[i].w,g1=cols[i+1].x;if(g1-g0<500)continue;const xc=(g0+g1)/2;
+  for(let y=700;y<=6300;y+=1800){const z=cAt(xc,y)-30;n++;const g=(n%4===0);const o=mk(UB,(g?600:60)*M,40*M,1200*M,xc*M,z*M,y*M,g?grillM:lampM);ceilG.add(o)}}
+ window.__LAMPS=n}
 /* ô mục tiêu (vàng, nhấp nháy) + cột sáng */
 const tgtMat=new THREE.MeshLambertMaterial({color:0xffd600,emissive:0xffb300,emissiveIntensity:.8}),tgtMeshes=[];
 const beamMat=new THREE.MeshBasicMaterial({color:0xffd600,transparent:true,opacity:.35,depthWrite:false});
@@ -161,6 +193,11 @@ $('bHome').onclick=()=>{if(mode==='walk')setMode('orbit');resetView()};
 $('bFlip').onclick=()=>{rollT=rollT?0:Math.PI;$('bFlip').classList.toggle('on',!!rollT)};
 $('cNg').onchange=e=>{mNG.visible=e.target.checked};
 function applyDim(){const on=$('cDim').checked;dimMats.forEach(([m,o])=>{m.transparent=true;m.opacity=on?Math.min(o,.3):o;m.depthWrite=!on;m.needsUpdate=true})}
+/* 🎨 Tô theo Type (data v5: 871 box) */
+const mTY=window.BX?Object.keys(TYL).map(t=>{const m=inst(TYL[t],mat(BX.TC[t],{transparent:true,opacity:.62,depthWrite:false}));m.visible=false;m.userData.t=+t;return m}):[];
+let lgd=document.createElement('div');lgd.style.cssText='display:none;position:fixed;left:10px;bottom:10px;z-index:5;background:#fffffff0;border-radius:10px;padding:8px 12px;font-size:13px;max-width:90vw';document.body.appendChild(lgd);
+$('cTy').onchange=e=>{if(!window.BX){alert('Chưa nạp kho_box_v5.js / kho_loai_box.js');e.target.checked=false;return}mTY.forEach(m=>m.visible=e.target.checked);lgd.style.display=e.target.checked?'block':'none';lgd.innerHTML='<b>Loại box theo bản vẽ v5</b> (ô nào chưa có trong bản vẽ thì không tô)<br>'+mTY.map(m=>m.userData.t).sort((a,b)=>a-b).map(t=>'<span style="display:inline-block;width:12px;height:12px;background:#'+BX.TC[t].toString(16).padStart(6,'0')+';margin-right:5px;border-radius:2px"></span>Type '+t+' '+BX.TI[t].name+' · '+TYL[t].length+' ô').join('<br>')};
+$('cCeil').onchange=e=>{ceilG.visible=e.target.checked};$('cEq').onchange=e=>{eqG.visible=e.target.checked};
 $('cDim').onchange=applyDim;if(TO.length){$('cDim').checked=true;applyDim()}
 /* nhìn quanh bằng kéo (chuột/cảm ứng) */
 let drag=null;cv.addEventListener('pointerdown',e=>{if(mode!=='walk')return;drag={x:e.clientX,y:e.clientY,yaw,pit};cv.setPointerCapture(e.pointerId)});
@@ -200,7 +237,7 @@ function walk(dt){
  if(tgtV.lengthSq()>0)vel.lerp(tgtV,1-Math.exp(-dt*6));else{vel.multiplyScalar(Math.exp(-dt*22));if(vel.length()<.05)vel.set(0,0,0)}    /* gia tốc / giảm tốc */
  const p=camera.position,nx=p.x+vel.x*dt,nz=p.z+vel.z*dt;if(!blocked(nx,p.z))p.x=nx;else vel.x=0;if(!blocked(p.x,nz))p.z=nz;else vel.z=0;
  let vyT=((keys.up?1:0)-(keys.dn?1:0))*1.8;if(eyeT!==null){const d=eyeT-p.y;vyT=Math.max(-2.5,Math.min(2.5,d*2.2));if(Math.abs(d)<.02)eyeT=null}
- vy+=(vyT-vy)*(1-Math.exp(-dt*(vyT?6:20)));p.y=Math.max(EYE0,Math.min(YMAX,p.y+vy*dt));
+ vy+=(vyT-vy)*(1-Math.exp(-dt*(vyT?6:20)));p.y=Math.max(EYE0,Math.min(YMAX,KG.CEIL(Math.max(0,Math.min(R0.W,p.x*1000)),Math.max(0,Math.min(R0.D,p.z*1000)))*M-.2,p.y+vy*dt));
  bob+=vel.length()*dt*2.2;const mv=Math.min(1,vel.length()/1.8);hands.position.y=Math.sin(bob*2)*.012*mv;hands.position.x=Math.cos(bob)*.01*mv;
  camera.rotation.set(pit,yaw,0,'YXZ')}
 renderer.setAnimationLoop(()=>{const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;

@@ -39,4 +39,16 @@ function route(S,codes){var st=codes.map(locate).filter(Boolean),P={x:S.x,y:S.y}
  var out=[pts[0]];for(var i=1;i<pts.length;i++){var a=out[out.length-1],b=pts[i];if(Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])>1)out.push(b)}
  var L=0;for(i=1;i<out.length;i++)L+=Math.hypot(out[i][0]-out[i-1][0],out[i][1]-out[i-1][1]);
  return{pts:out,stops:order,len:L}}
-return{ROOM:ROOM,DX:DX,RL:RL,Y1:Y1,Y2:Y2,F12Y:F12Y,MY:MY,O:O,X:X,F12:F12,CX:CX,CN:CN,CD:CD,FACE:FACE,TIERS:TIERS,GAM:GAM,GAM_N:GAM_N,ZONES:ZONES,zoneOf:zoneOf,deckZ:deckZ,GAP12:GAP12,rect:rect,locate:locate,floorCells:floorCells,route:route,alts:alts,rel:rel}})();
+/* ---- TRẦN (Lợi đo 26/11/2026; số cũ 4830 & 5525/5535 SAI, đã bỏ). x Tây→Đông, y Bắc→Nam, mm.
+   4 điểm góc: Tây Bắc 1400+3500=4900 · Tây Nam 2250+2605=4855 · Đông Bắc 136,5+3500=3636,5 · Đông Nam(gần góc) 137+3400=3537.
+   Mặt trần = mặt phẳng bình phương tối thiểu qua 4 điểm. TRẦN THẤP cục bộ: trên kệ F12.1 (gần cửa) cao 226,5+2605=2831,5. ---- */
+var CEIL_PTS=[[0,0,4900],[0,ROOM.D,4855],[ROOM.W,0,3636.5],[ROOM.W,ROOM.D,3537]];
+var CEIL_PL=(function(){var n=0,sx=0,sy=0,sz=0,sxx=0,sxy=0,syy=0,sxz=0,syz=0;CEIL_PTS.forEach(function(p){n++;sx+=p[0];sy+=p[1];sz+=p[2];sxx+=p[0]*p[0];sxy+=p[0]*p[1];syy+=p[1]*p[1];sxz+=p[0]*p[2];syz+=p[1]*p[2]});
+ function det(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0])}
+ var A=[[n,sx,sy],[sx,sxx,sxy],[sy,sxy,syy]],B=[sz,sxz,syz],D=det(A);
+ function rep(c){var m=A.map(function(r,i){var q=r.slice();q[c]=B[i];return q});return det(m)/D}
+ return{a:rep(0),b:rep(1),c:rep(2)}})();
+var CEIL_LOW=[{x:5920,y:6415,w:4000,h:1200,z:2831.5,note:'Hộp trần thạch cao che ống gió/motor cửa cuốn: trên F12.1, thò ra phía trên cửa cuốn. UOC LUONG Loi 26/11: dài 4000 (x 5920 den 9920) x thò ra 1200 từ tường Nam; mặt dưới 226,5+2605=2831,5'}];
+function ceilPlane(x,y){return CEIL_PL.a+CEIL_PL.b*x+CEIL_PL.c*y}
+function ceilAt(x,y){var h=CEIL_PL.a+CEIL_PL.b*x+CEIL_PL.c*y;CEIL_LOW.forEach(function(r){if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h)h=Math.min(h,r.z)});return h}
+return{CEIL:ceilAt,CEIL_PLANE:ceilPlane,CEIL_PTS:CEIL_PTS,CEIL_PL:CEIL_PL,CEIL_LOW:CEIL_LOW,ROOM:ROOM,DX:DX,RL:RL,Y1:Y1,Y2:Y2,F12Y:F12Y,MY:MY,O:O,X:X,F12:F12,CX:CX,CN:CN,CD:CD,FACE:FACE,TIERS:TIERS,GAM:GAM,GAM_N:GAM_N,ZONES:ZONES,zoneOf:zoneOf,deckZ:deckZ,GAP12:GAP12,rect:rect,locate:locate,floorCells:floorCells,route:route,alts:alts,rel:rel}})();

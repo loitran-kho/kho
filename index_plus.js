@@ -157,3 +157,6 @@ try{if(typeof render==='function')render()}catch(e){}
 refreshNk();
 try{if(typeof render==='function')render()}catch(e){}
 })();
+
+/* dấu phiên bản */
+(function(){if(window.KHO_VER)return;var s=document.createElement('script');s.src='kho_version.js';document.head.appendChild(s)})();

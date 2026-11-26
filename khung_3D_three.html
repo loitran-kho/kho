@@ -16,7 +16,7 @@
 #msg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;background:#eaf1fb;z-index:20;font-size:16px}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-<script src="data.js"></script><script src="kho_geo.js"></script><script src="hop_con.js"></script><script src="tuong_duong.js"></script>
+<script src="data.js"></script><script src="kho_box_v5.js"></script><script src="kho_loai_box.js"></script><script src="kho_version.js"></script><script src="kho_geo.js"></script><script src="hop_con.js"></script><script src="tuong_duong.js"></script>
 </head><body>
 <canvas id="cv"></canvas>
 <div id="top">
@@ -27,10 +27,11 @@
  <button class="b" id="bReset">↺ Đặt lại góc nhìn</button>
  <button class="b" id="bFlip">🙃 Lật úp</button>
  <label class="chk"><input type="checkbox" id="cNg"> 🕳 Bí ẩn thế giới ngầm</label>
+ <label class="chk"><input type="checkbox" id="cTy"> 🎨 Tô theo Type</label>
  <a class="b" id="bOld" href="khung_3D.html">Bản cũ</a>
 </div>
 <div id="hud"><span id="hT">Cụm</span><small id="hS">Kéo: xoay · cuộn/chụm: zoom · chạm một ô để xem hộp bên trong</small></div>
-<div id="panel"></div><div id="msg"></div>
+<div id="lgd" style="display:none;position:fixed;left:10px;bottom:10px;z-index:5;background:#fffffff0;border-radius:10px;padding:8px 12px;font-size:13px;max-width:90vw"></div><div id="panel"></div><div id="msg"></div>
 <script type="module">
 const $=i=>document.getElementById(i);
 let THREE,OrbitControls;
@@ -65,7 +66,7 @@ cluster.add(mk(UB,(R.w+3000)*M,.04,(R.h+3000)*M,cx*M,-.02,cy*M,floorM));
 [0,.5,1].forEach(a=>[0,1].forEach(s=>{const px=f12?R.x+a*R.w:R.x+(s?R.w-25:25),py=f12?R.y+(s?R.h-25:25):R.y+a*R.h;cluster.add(mk(UB,.05,topZ*M,.05,px*M,topZ*M/2,py*M,frameM))}));
 const NG=mk(UB,(R.w+50)*M,.15,(R.h+50)*M,cx*M,.075,cy*M,mat(0x8e24aa,{transparent:true,opacity:.75}));NG.visible=false;cluster.add(NG);
 const BIN=(()=>{const sh=new THREE.Shape();sh.moveTo(-.5,-.5);sh.lineTo(.5,-.5);sh.lineTo(.5,.02);sh.lineTo(.12,.5);sh.lineTo(-.5,.5);sh.lineTo(-.5,-.5);const g=new THREE.ExtrudeGeometry(sh,{depth:1,bevelEnabled:false});g.translate(0,0,-.5);return g})(),BINE=new THREE.EdgesGeometry(BIN),LABM=new THREE.MeshLambertMaterial({color:0xffffff});
-const CELLS=[],pick=[],tgtM=new THREE.MeshLambertMaterial({color:0xffd600,emissive:0xffb300,emissiveIntensity:.8}),kyM=new THREE.MeshLambertMaterial({color:0xff1744,emissive:0xd50000,emissiveIntensity:.8}),blink=[];
+const CELLS=[],pick=[],TINTS=[],tgtM=new THREE.MeshLambertMaterial({color:0xffd600,emissive:0xffb300,emissiveIntensity:.8}),kyM=new THREE.MeshLambertMaterial({color:0xff1744,emissive:0xd50000,emissiveIntensity:.8}),blink=[];
 tiers.forEach((t,i)=>{const k=i+1,dz=KG.deckZ(CL,k),zone=KG.zoneOf?KG.zoneOf(CL,k):465,n=t[0],rowsN=t[1],faces=t[2]||1,per=rowsN*n,Lr=f12?R.w:R.h,hd=R.w/faces;
  cluster.add(mk(UB,(R.w-10)*M,.02,(R.h-10)*M,cx*M,(dz-10)*M,cy*M,deckM));
  [0,1].forEach(s=>{if(f12)cluster.add(mk(UB,R.w*M,.08,.04,cx*M,(dz-60)*M,(R.y+(s?R.h-20:20))*M,beamM));else cluster.add(mk(UB,.04,.08,R.h*M,(R.x+(s?R.w-20:20))*M,(dz-60)*M,cy*M,beamM))});
@@ -78,7 +79,9 @@ tiers.forEach((t,i)=>{const k=i+1,dz=KG.deckZ(CL,k),zone=KG.zoneOf?KG.zoneOf(CL,
   if(bin){o=new THREE.Mesh(BIN,m);const dep=f12?sy:sx,len=f12?sx:sy;o.scale.set(dep*M,hh*M,len*M);o.position.set(ax*M,cz*M,ay*M);o.rotation.y=f12?Math.PI/2:(lc.side==='W'?Math.PI:0);
    o.add(new THREE.LineSegments(BINE,new THREE.LineBasicMaterial({color:0x0a2e73,transparent:true,opacity:.95})));const lb=new THREE.Mesh(UB,LABM);lb.scale.set(.015,.28,.62);lb.position.set(.5,-.18,0);o.add(lb)}
   else{o=mk(UB,sx*M,hh*M,sy*M,ax*M,cz*M,ay*M,new THREE.MeshBasicMaterial({visible:false}));o.add(edges(1,1,1,0x8d9bb0,.8))}
-  o.userData={code,k,no,full};cluster.add(o);pick.push(o);
+  const bx=window.BX?BX.cell(CL,k,no):null;o.userData={code,k,no,full,ty:bx?bx.t:0};
+  if(bx){const tn=new THREE.Mesh(UB,new THREE.MeshLambertMaterial({color:BX.TC[bx.t],transparent:true,opacity:.62,depthWrite:false}));tn.scale.set(.97,.97,.97);tn.visible=false;o.add(tn);TINTS.push(tn)}
+  cluster.add(o);pick.push(o);
   if(tg||ky)blink.push(o);
   const fx=ax+(f12?0:(lc.side==='W'?-1:1)*sx/2*1.03),fz=ay+(f12?-sy/2*1.03:0),sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txtTex(String(no),64,64,40,'#0d2b57',null),transparent:true}));sp.scale.set(.13,.13,1);sp.position.set(fx*M,cz*M,fz*M);cluster.add(sp);
   CELLS.push(o)}
@@ -99,23 +102,40 @@ cvEl.addEventListener('pointerup',e=>{if(inBox||!dn||Math.hypot(e.clientX-dn[0],
 const LID=new Set([6,7,8,9,10]),TYD={1:[273,210,420],2:[420,135,600],3:[420,305,600],5:[420,370,600],6:[360,290,545],7:[310,225,455],8:[400,400,500],9:[400,145,590],10:[300,230,400],11:[420,370,600],12:[420,370,600]};
 let lidMesh=null,lidOpen=true;
 function clearBox(){while(boxG.children.length){const c=boxG.children.pop();c.traverse&&c.traverse(o=>{if(o.material&&o.material.dispose)o.material.dispose()})}}
-function boxDims(code,items){const tn=items[0]&&parseInt(String(items[0].type).replace(/\D/g,''))||0;return{t:tn,d:TYD[tn]||[300,210,420]}}
-function buildBox(code,items){clearBox();const {t,d}=boxDims(code,items),W=d[0]*M,Hh=d[1]*M,D=d[2]*M,wall=.008,bm=mat(0x4d8fd6,{transparent:true,opacity:.55,side:THREE.DoubleSide});
+function codeParts(code){const p=code.split('.');return{cl:p[0]+'.'+p[1],k:+p[2],no:+p[3]}}
+let caseOn=false;
+function boxDims(code,items){const it=items[0]&&parseInt(String(items[0].type).replace(/\D/g,''))||0,cp=codeParts(code),bx=window.BX?BX.cell(cp.cl,cp.k,cp.no):null,tn=bx?bx.t:it,ti=window.BX&&tn?BX.info(tn):null;let d=TYD[tn]||[300,210,420];if(ti&&ti.shape==='box')d=[ti.W,ti.H,ti.L];if(ti&&ti.shape==='frustum')d=[ti.top,ti.H,ti.top];return{t:tn,d:d,ti:ti,bx:bx,it:it}}
+function buildBox(code,items){clearBox();const bi=boxDims(code,items),t=bi.t,d=bi.d,W=d[0]*M,Hh=d[1]*M,D=d[2]*M,wall=.008,bm=mat(0x4d8fd6,{transparent:true,opacity:.55,side:THREE.DoubleSide});
+ if(bi.ti&&bi.ti.shape==='frustum'){/* thùng xanh chóp cụt (Type 6, 7) */
+  const r=Math.SQRT1_2,fg=new THREE.CylinderGeometry(bi.ti.top*r*M,bi.ti.bot*r*M,Hh,4,1,true);fg.rotateY(Math.PI/4);
+  const fm=new THREE.Mesh(fg,mat(0x2fb8c4,{transparent:true,opacity:.35,side:THREE.DoubleSide,depthWrite:false}));fm.position.y=Hh/2;boxG.add(fm);
+  const fe=new THREE.LineSegments(new THREE.EdgesGeometry(fg),new THREE.LineBasicMaterial({color:0x1e5fa8}));fe.position.y=Hh/2;boxG.add(fe);
+  boxG.add(mk(UB,bi.ti.bot*M,.005,bi.ti.bot*M,0,.0025,0,mat(0x2e7bd6)));
+ }else{
  boxG.add(mk(UB,W,wall,D,0,wall/2,0,mat(0x2e7bd6)));boxG.add(mk(UB,wall,Hh,D,-W/2,Hh/2,0,bm),mk(UB,wall,Hh,D,W/2,Hh/2,0,bm),mk(UB,W,Hh,wall,0,Hh/2,-D/2,bm),mk(UB,W,Hh,wall,0,Hh/2,D/2,bm));
- [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>boxG.add(mk(UB,wall*1.5,Hh,wall*1.5,a*W/2,Hh/2,b*D/2,mat(0x1e5fa8))));
+ [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>boxG.add(mk(UB,wall*1.5,Hh,wall*1.5,a*W/2,Hh/2,b*D/2,mat(0x1e5fa8))))}
  lidMesh=null;if(LID.has(t)){const lg=new THREE.Group();lg.add(mk(UB,W+.01,wall,D+.01,0,0,D/2,mat(0x1e5fa8)));lg.position.set(0,Hh,-D/2);lg.rotation.x=lidOpen?-1.9:0;boxG.add(lg);lidMesh=lg}
  /* vật tư minh hoạ: các khối nhỏ xếp theo số lượng (không phải kích thước thật) */
- const n=Math.min(items.reduce((s,r)=>s+(parseInt(r.sl)||0),0),30),cols=Math.max(1,Math.floor(W/.06));for(let i=0;i<n;i++){const x=-W/2+.04+(i%cols)*.055,z=-D/2+.04+Math.floor(i/cols)*.055;if(z>D/2-.03)break;boxG.add(mk(UB,.045,.04,.045,x,.03,z,mat(0xffb74d)))}
+ const n=caseOn?0:Math.min(items.reduce((s,r)=>s+(parseInt(r.sl)||0),0),30),cols=Math.max(1,Math.floor(W/.06));for(let i=0;i<n;i++){const x=-W/2+.04+(i%cols)*.055,z=-D/2+.04+Math.floor(i/cols)*.055;if(z>D/2-.03)break;boxG.add(mk(UB,.045,.04,.045,x,.03,z,mat(0xffb74d)))}
+ /* Parts Case 165 (170×120×60 mm) xếp vào lòng hộp chữ nhật */
+ if(caseOn&&bi.ti&&bi.ti.shape==='box'){const f=BX.fit(bi.ti.L,bi.ti.W,bi.ti.H),CS=BX.CASE,cl=f.sw?CS[1]:CS[0],cw=f.sw?CS[0]:CS[1],ox=(bi.ti.W-f.nw*cw)/2,oz=(bi.ti.L-f.nl*cl)/2,cg=new THREE.BoxGeometry((cw-3)*M,(CS[2]-3)*M,(cl-3)*M),eg=new THREE.EdgesGeometry(cg),cm=mat(0xf2f4f3),lm=new THREE.LineBasicMaterial({color:0x1d2321});
+  for(let l=0;l<f.lay;l++)for(let i=0;i<f.nl;i++)for(let j=0;j<f.nw;j++){const m=new THREE.Mesh(cg,cm);m.position.set((-bi.ti.W/2+ox+j*cw+cw/2)*M,(l*CS[2]+CS[2]/2+8)*M,(-bi.ti.L/2+oz+i*cl+cl/2)*M);boxG.add(m);const ln=new THREE.LineSegments(eg,lm);ln.position.copy(m.position);boxG.add(ln)}}
  /* boxx con (Giai đoạn 2): hộp con hiển thị bên trong theo dữ liệu hop_con.js */
  const kids=HC.filter(h=>h.parent_box===code);kids.forEach((h,i)=>{const k=h.kich_thuoc||[100,80,100];const kx=-W/2+.03+k[0]*M/2+(i%3)*.12,kz=-D/2+.03+k[2]*M/2+Math.floor(i/3)*.12;boxG.add(mk(UB,k[0]*M,k[1]*M,k[2]*M,kx,wall+k[1]*M/2,kz,mat(0x9c27b0,{transparent:true,opacity:.6})))});
- return{t,d,kids}}
+ return{t,d,kids,bi}}
 function openBox(code){const items=byVt[code]||[],info=buildBox(code,items);inBox=true;saveCam={p:camera.position.clone(),t:orbit.target.clone()};cluster.visible=false;pivot.rotation.set(0,0,0);rollT=0;boxG.visible=true;boxG.position.set(0,0,0);
  camera.position.set(.55,.5,.7);orbit.target.set(0,info.d[1]*M/2,0);orbit.minDistance=.15;orbit.update();$('bBack').style.display='';
- $('hT').textContent='Ô '+code;$('hS').textContent='Hộp '+(info.t?'Type '+info.t:'(chưa rõ loại)')+' ≈ '+info.d.join('×')+' mm'+(info.t?(LID.has(info.t)?' · có nắp':' · không nắp'):'')+' · khối cam = minh hoạ số lượng';
+ $('hT').textContent='Ô '+code;$('hS').textContent='Hộp '+(info.t?'Type '+info.t+(info.bi.ti?' '+info.bi.ti.name:''):'(chưa rõ loại)')+' ≈ '+(info.bi.ti&&info.bi.ti.shape==='box'?'lòng '+info.bi.ti.L+'×'+info.bi.ti.W+'×'+info.bi.ti.H:info.d.join('×'))+' mm'+(info.t?(LID.has(info.t)?' · có nắp':' · không nắp'):'')+' · khối cam = minh hoạ số lượng';
  let h='<h3>📦 '+code+'</h3><div class="mu">Hộp '+(info.t?'Type '+info.t:'?')+' · '+(LID.has(info.t)?'<button class="b" id="bLid" style="min-height:34px">Đậy/Mở nắp</button>':'không nắp')+'</div>';
+ {const bi=info.bi,ti=bi.ti;let v5='<div class="it" style="background:#f6f9ff"><b>📐 Theo bản vẽ (data v5)</b>';
+  if(!window.BX)v5+='<div class="mu">Chưa nạp kho_box_v5.js.</div>';
+  else if(!bi.bx){const cp0=codeParts(code),tn0=BX.tier(cp0.cl,cp0.k).n===0;v5+='<div class="mu">'+(tn0?'Tầng này <b>có trong bản vẽ nhưng chưa khai loại box</b> (data v5 chưa ghi) → cần Lợi xác nhận loại box.':'Ô này <b>không có box</b> theo data v5 (ô trống / bản vẽ không vẽ box).')+(bi.it?' Dữ liệu cũ ghi Type '+bi.it+'.':'')+'</div>'}
+  else{v5+='<div class="mu">Type '+bi.t+' · '+ti.name+(bi.bx.all.length>1?' (chồng '+bi.bx.all.map(x=>'Type '+x).join(' + ')+')':'')+'<br>'+(ti.shape==='box'?'Lòng Dài×Rộng×Cao: '+ti.L+' × '+ti.W+' × '+ti.H+' mm':'Chóp cụt: miệng '+ti.top+' mm, đáy '+ti.bot+' mm, cao '+ti.H+' mm')+(ti.lv>1?' · '+ti.lv+' lớp/tầng':'')+'<br>'+(bi.bx.est?'⚠ Vị trí ô theo thứ tự bản vẽ (ước tính – data v5 chỉ ghi số lượng theo loại)':'✔ Vị trí ô ghi rõ trong bản vẽ')+(bi.it&&bi.it!==bi.t?'<br>⚠ data.js cũ ghi Type '+bi.it+' ≠ bản vẽ v5 Type '+bi.t:'')+(bi.bx.note?'<br>🏷 <b>'+bi.bx.note+'</b> · '+bi.bx.qty+' thùng chung cho các ô của nhóm (chưa rõ chia mỗi ô bao nhiêu)'+(bi.bx.extra?' · ngoài 871 box của data v5':''):'')+'</div>';
+   if(ti.shape==='box'){const f=BX.fit(ti.L,ti.W,ti.H);v5+='<label style="display:block;margin-top:6px"><input type="checkbox" id="cCase"'+(caseOn?' checked':'')+'> Xếp Parts Case 165 (170×120×60) vào trong</label><div class="mu">Chứa tối đa <b>'+f.n+'</b> hộp = '+f.nl+' × '+f.nw+' × '+f.lay+' lớp</div>'}else v5+='<div class="mu">Chóp cụt không ghép được Parts Case chữ nhật.</div>'}
+  h+=v5+'</div>'}
  h+=items.length?items.map(r=>'<div class="it"><b>'+esc(r.ten)+'</b><div class="mu">'+esc(r.kk)+' · SL '+esc(r.sl)+' '+esc(r.dvt)+(r.kt?' · '+esc(r.kt):'')+'</div><a href="index.html#'+r.kk+'" target="_top">Xem thẻ vật tư →</a></div>').join(''):'<p>Ô này chưa có nhãn kiểm kê.</p>';
  h+=info.kids.length?'<h3 style="margin-top:12px">🟣 Boxx con ('+info.kids.length+')</h3>'+info.kids.map(k=>'<div class="it"><b>'+esc(k.box_id)+'</b> '+esc(k.loai_box||'')+'<div class="mu">'+(k.vat_tu||[]).map(v=>esc(v.kk)+' ×'+esc(v.sl)).join(', ')+'</div></div>').join(''):'<p class="mu">Boxx con: chưa có dữ liệu (hop_con.js).</p>';
- const P=$('panel');P.innerHTML='<button class="x" id="pX" aria-label="Đóng">✕</button>'+h;P.style.display='block';$('bInfo').style.display='none';$('pX').onclick=()=>{P.style.display='none';$('bInfo').style.display=''};$('bInfo').onclick=()=>{P.style.display='block';$('bInfo').style.display='none'};const bl=$('bLid');if(bl)bl.onclick=()=>{lidOpen=!lidOpen;if(lidMesh)lidMesh.rotation.x=lidOpen?-1.9:0}}
+ const P=$('panel');P.innerHTML='<button class="x" id="pX" aria-label="Đóng">✕</button>'+h;P.style.display='block';$('bInfo').style.display='none';$('pX').onclick=()=>{P.style.display='none';$('bInfo').style.display=''};$('bInfo').onclick=()=>{P.style.display='block';$('bInfo').style.display='none'};const cc=$('cCase');if(cc)cc.onchange=()=>{caseOn=cc.checked;buildBox(code,items);const a=$('panel');};const bl=$('bLid');if(bl)bl.onclick=()=>{lidOpen=!lidOpen;if(lidMesh)lidMesh.rotation.x=lidOpen?-1.9:0}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 $('bBack').onclick=()=>{inBox=false;boxG.visible=false;cluster.visible=true;orbit.minDistance=.25;camera.position.copy(saveCam.p);orbit.target.copy(saveCam.t);orbit.update();$('panel').style.display='none';$('bInfo').style.display='none';$('bBack').style.display='none';const full=CELLS.filter(c=>c.userData.full).length;$('hT').textContent='Cụm '+CL+' · '+tiers.length+' tầng · '+CELLS.length+' ô · '+full+' ô có nhãn';$('hS').textContent='Kéo: xoay · cuộn/chụm: zoom · chạm một ô để xem hộp bên trong'};
 /* ---- vòng lặp ---- */
@@ -128,6 +148,8 @@ function cellView(o){const tp=o.position.clone(),d=HOME.clone().sub(ctr);d.y=0;i
 const DLC=(LST.length===1&&LST[0].split('.').length>=4&&!/@khoa/i.test(location.hash))?CELLS.find(c=>c.userData.code===LST[0]):null;
 if(DLC){const v=cellView(DLC);camera.position.copy(v.p);orbit.target.copy(v.t);orbit.update();openBox(DLC.userData.code);}
 else if(TOS.size===1){const c=CELLS.find(c=>TOS.has(c.userData.code));if(c){const v=cellView(c);camera.position.copy(v.p);orbit.target.copy(v.t);orbit.update()}}
+function legend(){const c={};CELLS.forEach(o=>{if(o.userData.ty)c[o.userData.ty]=(c[o.userData.ty]||0)+1});const g=$('lgd');g.innerHTML='<b>Loại box theo bản vẽ v5</b><br>'+Object.keys(c).map(Number).sort((a,b)=>a-b).map(t=>'<span style="display:inline-block;width:12px;height:12px;background:#'+BX.TC[t].toString(16).padStart(6,'0')+';margin-right:5px;border-radius:2px"></span>Type '+t+' '+BX.TI[t].name+' · '+c[t]+' ô').join('<br>')||'Cụm này chưa có ô nào trong data v5'}
+$('cTy').onchange=e=>{if(!window.BX){alert('Chưa nạp kho_box_v5.js / kho_loai_box.js');e.target.checked=false;return}TINTS.forEach(t=>t.visible=e.target.checked);$('lgd').style.display=e.target.checked?'block':'none';if(e.target.checked)legend()};
 window.K3C={cells:CELLS.length,openBox,state:()=>({inBox,cl:CL,cells:CELLS.length})};
 if(TOS.size){const c0=[...TOS][0];setTimeout(()=>{},0)}
 </script></body></html>
