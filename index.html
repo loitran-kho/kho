@@ -77,6 +77,7 @@ a{color:var(--ink)}
 #lbx{position:absolute;top:10px;right:12px;width:48px;height:48px;border:0;border-radius:50%;background:#fff;color:#111;font-size:32px;line-height:1;cursor:pointer}
 #lbc{color:#fff;font-size:15px;text-align:center;max-width:92vw}#lbo{color:#9bbcff;font-size:14px}
 .pic{cursor:zoom-in}
+.noimg{flex:none;width:104px;height:104px;border-radius:12px;border:1px dashed rgba(128,128,128,.55);background:rgba(128,128,128,.15);display:flex;align-items:center;justify-content:center;text-align:center;font:12px/1.2 sans-serif;color:#888}
 .cap{margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:6px}.cap small{color:var(--mute);font-size:12.5px}.capt{font-size:14.5px}
 .bar{height:12px;border-radius:6px;background:rgba(128,128,128,.25);overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
 .bar i.cg,.legend i.cg{background:#2ea05a}.bar i.cy,.legend i.cy{background:#e9a21c}.bar i.cr,.legend i.cr{background:#d94040}
@@ -189,10 +190,10 @@ function card(r){
   if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
   h+=dupHTML(r)+tdHTML(r);
   h+='<div class="qa"><button type="button" data-qa="X" data-kk="'+r.kk+'">➖ Xuất nhanh</button><button type="button" data-qa="D" data-kk="'+r.kk+'">➕ Báo kiểm kê lệch</button></div>';
-  var ik=IMG_ALIAS[r.kk]||r.kk,pic=IMG_BASE+encodeURIComponent(ik)+'.jpg', big=IMG_BIG+encodeURIComponent(ik)+'.jpg';
+  var ik=IMG_ALIAS[r.kk]||r.kk,IL=IMG_LOC[r.vt],pic=(IL?IL.mini:IMG_BASE)+encodeURIComponent(ik)+'.jpg', big=(IL?IL.big:IMG_BIG)+encodeURIComponent(ik)+'.jpg';
   h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+'</span></div>';
   if(r.sld)h+='<div class="qd">'+esc(r.sld)+'</div>';
-  h+='</div><a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+pic+'" data-cap="'+esc(r.kk+' · '+(r.ten||''))+'" aria-label="Phóng to ảnh '+esc(r.kk)+'"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></a></div>';
+  h+='</div><a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+pic+'" data-cap="'+esc(r.kk+' · '+(r.ten||''))+'" aria-label="Phóng to ảnh '+esc(r.kk)+'"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.outerHTML=\'<div class=noimg>Chưa có ảnh</div>\'"></a></div>';
   h+='<dl>'+field('Mới / Cũ',r.mc)+field('Tình trạng',r.tt)+field('Kích thước bao',ktOf(r))+field('Thể tích ước tính',itemVol(r)!=null?nf(itemVol(r))+' cm³ (1 chiếc × SL)':'')+field('Trọng lượng ước tính',wtRow(r))+field('Mất nhãn gốc',r.mnh)+field('Mã lô',r.lo)+field('Ngày nhập',r.nn)+field('NSX',r.nsx)+field('HSD',r.hsd)+field('NCC',r.ncc)+field('Người kiểm',r.nk)+field('Ngày kiểm',r.ngk)+field('Người dự trù',r.dt)+field('Mức chắc chắn',r.cc)+field('Loại box',r.type)+field('Bộ phận sử dụng',r.bp)+field('Khu chuyền / máy',r.km)+field('Mã thiết bị',r.mtb)+'</dl>';
   if(r.cx){var w=r.ai&&r.ai!=='Rõ';h+='<div class="note'+(w?'':' ok')+'"><strong>'+(w?'Cần xác nhận':'Ghi chú đọc nhãn')+'</strong>'+esc(r.cx)+'</div>';}
   if(r.gc)h+='<p class="plain">'+esc(r.gc)+'</p>';
@@ -206,6 +207,8 @@ function openBox(loc){OPENED[loc]=1;render()}
    Tên KK-xxxx.jpg tự lấy chú thích từ dữ liệu; mục dạng ['tên.jpg','Chú thích'] là ảnh toàn cảnh. */
 /* Mã KK chưa có ảnh riêng dùng lại ảnh của mã khác (VD KK-0086 tách từ KK-0082 nên dùng chung ảnh). Thêm dòng: 'KK-xxxx':'KK-yyyy'. */
 var IMG_ALIAS={'KK-0136':'KK-0082'};
+/* Ô có ảnh nằm thư mục riêng (mini/ + big/): ảnh mini lên thẻ vật tư, bấm → ảnh big. Thêm ô: IMG_LOC['F1.1.1.x']={mini:'img/images/F1_1_1_x/mini/',big:'img/images/F1_1_1_x/big/'} */
+var IMG_LOC={'F1.1.1.9':{mini:'img/images/F1_1_1_9/mini/',big:'img/images/F1_1_1_9/big/'}};
 var GALLERY={'F1.1.1.9':{dir:'img/images/F1_1_1_9/',mini:'mini/',pano:[['toancanh_1.jpg','Toàn cảnh khay F1.1.1.9 (1)'],['toancanh_2.jpg','Toàn cảnh khay F1.1.1.9 (2)']]},'F1.1.1.8':{dir:'img/F1.1.1.8/',pano:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.8 (1)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.8 (2)']]},'F1.1.1.7':{dir:'img/F1.1.1.7/',pano:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.7 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.7 (các túi có huy hiệu số)']]},'F1.1.1.6':{dir:'img/F1.1.1.6/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.6 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.6'],
  'KK-0057.jpg','KK-0058.jpg','KK-0059.jpg','KK-0060.jpg','KK-0061.jpg','KK-0062.jpg','KK-0063.jpg','KK-0064.jpg','KK-0065.jpg','KK-0066.jpg','KK-0067.jpg','KK-0068.jpg','KK-0069.jpg','KK-0070.jpg','KK-0071.jpg','KK-0072.jpg','KK-0073.jpg','KK-0074.jpg','KK-0075.jpg','KK-0076.jpg','KK-0077.jpg']},'F1.1.1.5':{dir:'img/F1.1.1.5/',files:[['toan-canh-1.jpg','Toàn cảnh khay F1.1.1.5 (nhãn khay cũ)'],['toan-canh-2.jpg','Toàn cảnh khay F1.1.1.5 (các túi có huy hiệu số)'],
  'KK-0043.jpg','KK-0044.jpg','KK-0045.jpg','KK-0046.jpg','KK-0047.jpg','KK-0048.jpg','KK-0049.jpg','KK-0050.jpg','KK-0051.jpg','KK-0052.jpg','KK-0053.jpg','KK-0054.jpg','KK-0055.jpg']}};
@@ -217,7 +220,7 @@ function galHTML(loc){var g=GALLERY[loc];if(!g)return '';var by={};DATA.forEach(
     var pf=m&&IMG_ALIAS[m[1].toUpperCase()]?IMG_ALIAS[m[1].toUpperCase()]+'.jpg':file;
     var sm=g.dir+(g.mini||'')+pf,big=g.dir+'big/'+pf;
     return '<a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+sm+'" data-cap="'+esc(cap)+'" aria-label="Phóng to: '+esc(cap)+'"><img src="'+sm+'" alt="'+esc(cap)+'" loading="lazy" onerror="this.parentNode.style.display=\'none\'"><span>'+esc(lab)+'</span></a>'}).join('');
-  return '<details class="gal" open><summary>Ảnh thực tế tại ô '+esc(loc)+' ('+fl.length+' ảnh)</summary><div class="galg">'+a+'</div></details>'}
+  return '<details class="gal" open><summary>Ảnh thực tế tại ô '+esc(loc)+' ('+fl.length+' ảnh)</summary><div class="galg">'+a+'</div>'+(loc==='F1.1.1.9'?'<p><a href="gallery_F1_1_1_9.html" target="_blank" rel="noopener">Mở trang lưới ảnh đầy đủ ↗</a></p>':'')+'</details>'}
 function boxView(loc){
   var rs=DATA.filter(function(r){return r.vt===loc}).sort(function(a,b){return (+a.hh||999)-(+b.hh||999)});
   var cpx=capOf(loc),tn=(cpx.type||'').replace(/\D/g,''),bd=cpx.type?boxDim(cpx.type,loc.split('.')[0]):null,bcap=cpx.type+(bd?' · '+bd.join('×')+' mm':'')+' · ô '+loc;
