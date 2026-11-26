@@ -370,5 +370,5 @@
 ];
   var have={}; K.rows.forEach(function(r){have[r.kk]=1});
   var n=0; ADD.forEach(function(r){ if(!have[r.kk]){K.rows.push(r);n++} });
-  window.KHO_BOSUNG={added:n,total:ADD.length};
+  window.KHO_BOSUNG={added:n,total:ADD.length,rows:ADD};
 })();

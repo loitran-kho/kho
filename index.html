@@ -458,7 +458,8 @@ function loadSheet(){
     if(/^\s*<(!doctype|html)/i.test(t))throw new Error('Google trả về trang web, không phải CSV');var rows=parseCSV(t);if(rows.length<2)throw new Error('CSV rỗng hoặc chỉ có tiêu đề');
     var keys=rows[0].map(function(h){h=h.trim().toLowerCase();return HEAD[h]||h});
     var d=[];rows.slice(1).forEach(function(r){var o={};keys.forEach(function(k,i){o[k]=(r[i]||'').trim()});if(/^KK-/i.test(o.kk)||o.loai)d.push(o)});
-    if(d.length){DATA=d;SRC='Google Sheets ('+d.length+' dòng KK)';UPDATED=new Date().toLocaleString('vi-VN')}else{UPDATED=UPDATED+' (Google Sheets tải được nhưng không có dòng KK hợp lệ. Cột đầu đọc được: '+rows[0].slice(0,4).join(' | ')+')'}
+    var nb=0;if(d.length&&window.KHO_BOSUNG&&KHO_BOSUNG.rows){var hv={};d.forEach(function(o){hv[o.kk]=1});KHO_BOSUNG.rows.forEach(function(o){if(!hv[o.kk]){d.push(o);nb++}})}
+    if(d.length){DATA=d;SRC='Google Sheets ('+(d.length-nb)+' dòng KK'+(nb?' + '+nb+' dòng bổ sung từ kho_bosung.js, chưa có trong Sheet':'')+')';UPDATED=new Date().toLocaleString('vi-VN')}else{UPDATED=UPDATED+' (Google Sheets tải được nhưng không có dòng KK hợp lệ. Cột đầu đọc được: '+rows[0].slice(0,4).join(' | ')+')'}
     setFoot();render();if(d.length)showDL();
   }).catch(function(e){UPDATED=UPDATED+' (không tải được Google Sheets: '+((e&&e.message)||'lỗi mạng/CORS')+'; đang dùng bản chụp)';setFoot();render()});
 }var IMG_BASE='img/', IMG_BIG='img/big/';  /* đổi 2 dòng này nếu sau này chuyển ảnh sang nơi khác */
