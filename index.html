@@ -77,6 +77,8 @@ a{color:var(--ink)}
 #lbx{position:absolute;top:10px;right:12px;width:48px;height:48px;border:0;border-radius:50%;background:#fff;color:#111;font-size:32px;line-height:1;cursor:pointer}
 #lbc{color:#fff;font-size:15px;text-align:center;max-width:92vw}#lbo{color:#9bbcff;font-size:14px}
 .pic{cursor:zoom-in}
+.lech{margin:8px 0;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.6);font-size:13px}.lech.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.5)}.qnote{font-size:11.5px;color:#888;margin:4px 0 6px}
+.idl{display:flex;flex-wrap:wrap;gap:4px 14px}.idl b{font-weight:600}.tem{font-size:12px;color:#888;margin:2px 0 6px}.miss2{font-size:12.5px;color:#888;margin:8px 0}.miss2 strong{margin-right:6px}
 .noimg{flex:none;width:104px;height:104px;border-radius:12px;border:1px dashed rgba(128,128,128,.55);background:rgba(128,128,128,.15);display:flex;align-items:center;justify-content:center;text-align:center;font:12px/1.2 sans-serif;color:#888}
 .cap{margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:6px}.cap small{color:var(--mute);font-size:12.5px}.capt{font-size:14.5px}
 .bar{height:12px;border-radius:6px;background:rgba(128,128,128,.25);overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
@@ -183,18 +185,24 @@ function dupHTML(r){if(!skuShared(r))return '';var a=skuIdx()[r.sku],bx=skuBoxes
 function row(r){return '<a class="row" href="#'+r.kk+'">'+badge(r.hh)+'<span class="t"><b>'+esc(r.ten)+'</b>'+lnkIcon(r)+'<small>'+r.kk+(r.loai?' (nhập)':'')+' · '+esc(r.vt)+(r.sku?' · '+esc(r.sku):'')+'</small></span><span class="n">'+esc(r.sl)+' '+esc(r.dvt)+'</span></a>'}
 function wtRow(r){var T=window.TT;if(!T)return '';var e=T.est(r);if(!e||e.kg==null)return '';return (T.icon(e)?T.icon(e)+' ':'')+'≈ '+T.fmt(e.kg)+' kg ('+T.fmt(e.u)+' kg/đv) — nguồn: '+e.src+' · độ tin cậy '+e.conf}
 function field(k,v,full){return v?'<div'+(full?' class="full"':'')+'><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>':''}
+function lechHTML(r){var a=(window.NK&&NK.all())||[],e=null;a.forEach(function(x){if(x.act==='LECH'&&x.kk===r.kk)e=x});if(!e)return '';
+  var so=parseFloat(String(e.so).replace(',','.')),tt=parseFloat(String(e.qty).replace(',','.')),df=(isNaN(so)||isNaN(tt))?'':' = lệch <b>'+nf(so-tt)+'</b>';
+  return '<div class="lech'+(e.done?' ok':'')+'">'+(e.done?'✔ Lệch đã xử lý':'⚠️ Lệch nhãn')+': sổ <b>'+esc(e.so)+'</b> − thực tế <b>'+esc(e.qty)+'</b>'+df+' '+esc(e.dvt||'')+' · '+esc((e.who||'?')+' '+e.d+' '+e.t)+(e.done?'':' · chưa xử lý (xem 🔔)')+'</div>'}
 function card(r){
   var hs1=hsdOne(r),h='<div class="card'+hsCls(hs1)+'"><div class="head"><div><div class="code">'+r.kk+(hs1?' <span class="pill hsp'+hs1+'">'+(hs1==='e'?'HSD quá hạn':'HSD dưới 30 ngày')+'</span>':'')+(r.loai?' <span class="pill">'+esc(r.loai)+'</span>':'')+'</div><a class="loc" href="#'+hashOf(r.vt)+'">'+esc(r.vt)+' · xem cả box</a> <a class="loc" style="margin-left:10px" href="tim_duong.html#go='+encodeURIComponent(r.vt)+'" target="_blank" rel="noopener">🧭 Chỉ đường</a></div>'+badge(r.hh)+'</div>';
   h+=crumb(r.vt)+'<div class="name">'+esc(r.ten)+'</div>';
-  var sub=[r.hang&&r.model?r.hang+' '+r.model:(r.model||r.hang),r.sku].filter(Boolean).join(' · ');
-  if(sub)h+='<div class="sub">'+esc(sub)+'</div>';
+  h+='<div class="sub idl"><span>Hãng <b>'+esc(r.hang||'Chưa có')+'</b></span><span>SKU nội bộ <b>'+esc(r.sku||'Chưa có')+'</b></span><span>Model <b>'+esc(r.model||'Chưa có')+'</b></span></div>';
+  if(r.hh)h+='<div class="tem">Tem huy hiệu <b>#'+esc(r.hh)+'</b> = số dán trên túi, <u>không phải số ô</u> (ô là '+esc(r.vt)+').</div>';
   h+=dupHTML(r)+tdHTML(r);
-  h+='<div class="qa"><button type="button" data-qa="X" data-kk="'+r.kk+'">➖ Xuất nhanh</button><button type="button" data-qa="D" data-kk="'+r.kk+'">➕ Báo kiểm kê lệch</button></div>';
+  h+='<div class="qa"><button type="button" data-qa="X" data-kk="'+r.kk+'">➖ Xuất nhanh</button><button type="button" data-qa="D" data-kk="'+r.kk+'">➕ Báo kiểm kê lệch</button></div><div class="qnote">Hai nút này chỉ ghi vào <b>Nhật ký trên máy/trình duyệt này</b>, chưa tự gửi lên Sheet. Muốn lưu chính thức: mở 📖 Nhật ký → tải CSV → dán vào Sheet tổng. Tồn sổ vẫn giữ nguyên.</div>';
   var ik=IMG_ALIAS[r.kk]||r.kk,IL=IMG_LOC[r.vt],pic=(IL?IL.mini:IMG_BASE)+encodeURIComponent(ik)+'.jpg', big=(IL?IL.big:IMG_BIG)+encodeURIComponent(ik)+'.jpg';
-  h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+'</span></div>';
+  h+=lechHTML(r);
+  h+='<div class="qrow"><div class="qcol"><div class="qty"><b>'+esc(r.sl)+'</b><span>'+esc(r.dvt)+' · tồn sổ</span></div>';
   if(r.sld)h+='<div class="qd">'+esc(r.sld)+'</div>';
   h+='</div><a class="pic" href="'+big+'" data-big="'+big+'" data-small="'+pic+'" data-cap="'+esc(r.kk+' · '+(r.ten||''))+'" aria-label="Phóng to ảnh '+esc(r.kk)+'"><img src="'+pic+'" alt="Ảnh '+esc(r.kk)+'" loading="lazy" onerror="this.parentNode.outerHTML=\'<div class=noimg>Chưa có ảnh</div>\'"></a></div>';
-  h+='<dl>'+field('Mới / Cũ',r.mc)+field('Tình trạng',r.tt)+field('Kích thước bao',ktOf(r))+field('Thể tích ước tính',itemVol(r)!=null?nf(itemVol(r))+' cm³ (1 chiếc × SL)':'')+field('Trọng lượng ước tính',wtRow(r))+field('Mất nhãn gốc',r.mnh)+field('Mã lô',r.lo)+field('Ngày nhập',r.nn)+field('NSX',r.nsx)+field('HSD',r.hsd)+field('NCC',r.ncc)+field('Người kiểm',r.nk)+field('Ngày kiểm',r.ngk)+field('Người dự trù',r.dt)+field('Mức chắc chắn',r.cc)+field('Loại box',r.type)+field('Bộ phận sử dụng',r.bp)+field('Khu chuyền / máy',r.km)+field('Mã thiết bị',r.mtb)+'</dl>';
+  h+='<dl>'+field('Mới / Cũ',r.mc)+field('Tình trạng',r.tt)+field('Kích thước bao',ktOf(r))+field('Thể tích ước tính',itemVol(r)!=null?'≈ '+nf(parseKT(ktOf(r)))+' cm³/cái × '+esc(r.sl)+' ≈ '+nf(itemVol(r))+' cm³'+(/[Øø⌀]/.test(ktOf(r))?' (theo hình trụ bao)':' (theo hộp bao)'):'')+field('Trọng lượng ước tính',wtRow(r))+field('Mất nhãn gốc',r.mnh)+field('Mã lô',r.lo)+field('Ngày nhập',r.nn)+field('NSX',r.nsx)+field('HSD',r.hsd)+field('NCC',r.ncc)+field('Người kiểm',r.nk)+field('Ngày kiểm',r.ngk)+field('Người dự trù',r.dt)+field('Mức chắc chắn',r.cc)+field('Loại box',r.type)+field('Bộ phận sử dụng',r.bp)+field('Khu chuyền / máy',r.km)+field('Mã thiết bị',r.mtb)+'</dl>';
+  var ms=[['Model',r.model],['Mã lô',r.lo],['NSX',r.nsx],['NCC',r.ncc],['Người dự trù',r.dt],['Ngày nhập',r.nn]].filter(function(x){return !x[1]||/^không rõ$/i.test(x[1])}).map(function(x){return x[0]});
+  if(ms.length)h+='<div class="miss2"><strong>Còn thiếu</strong> '+ms.join(' · ')+'</div>';
   if(r.cx){var w=r.ai&&r.ai!=='Rõ';h+='<div class="note'+(w?'':' ok')+'"><strong>'+(w?'Cần xác nhận':'Ghi chú đọc nhãn')+'</strong>'+esc(r.cx)+'</div>';}
   if(r.gc)h+='<p class="plain">'+esc(r.gc)+'</p>';
   return h+'</div>';
@@ -430,7 +438,7 @@ function quick(kind,kk){var r=DATA.filter(function(x){return x.kk===kk})[0];if(!
  var d=new Date(),p=function(x){return ('0'+x).slice(-2)};
  var e={d:p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(),t:p(d.getHours())+':'+p(d.getMinutes()),who:n,act:kind==='X'?'XUAT':'LECH',kk:r.kk,sku:r.sku||'',vt:r.vt,qty:v,so:r.sl,dvt:r.dvt||''};
  if(window.NK)NK.add(e);
- alert(kind==='X'?'Đã ghi nhật ký xuất '+v+' '+(r.dvt||'')+' · '+kk+'.\nXem/tải CSV ở nút 📖 Nhật ký.':'Đã ghi LỆCH '+kk+': Sổ '+r.sl+', Thực tế '+v+'. Có cảnh báo đỏ ở 🔔.')}
+ alert((kind==='X'?'Đã ghi nhật ký xuất '+v+' '+(r.dvt||'')+' · '+kk+'.':'Đã ghi LỆCH '+kk+': Sổ '+r.sl+', Thực tế '+v+'. Có cảnh báo đỏ ở 🔔.')+'\n\nLƯU Ý: dữ liệu chỉ lưu tạm trên máy/trình duyệt này. Để lưu chính thức: 📖 Nhật ký → tải CSV → dán vào Sheet tổng.');render()}
 document.getElementById('f').addEventListener('submit',function(e){e.preventDefault();STAT='';var v=q.value.trim();var k=normKK(v),l=normLoc(v);
   if(k||l){location.hash=k||hashOf(l);}else if(location.hash){location.hash='';}else{render();}});
 q.addEventListener('input',function(){if(location.hash){location.hash='';}else{render();}});
