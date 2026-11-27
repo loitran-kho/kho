@@ -35,7 +35,7 @@ window.TT=(function(){
     1) số ghi trên nhãn/cân thật (TT_OVR[kk]) → 2) tra mạng theo SKU/model (TT_OVR, src 'model') → 3) tên có "x kg/…" →
     4) kích thước × mật độ vật liệu → 5) cảm nhận sức người (TT_CAM[kk]) */
  function est(r){var q=qty(r),o=(window.TT_OVR||{})[r.kk],c=(window.TT_CAM||{})[r.kk];
-  if(o&&(o.u!=null||o.kg!=null)){var u=o.u!=null?o.u:(q?o.kg/q:null),k=o.kg!=null?o.kg:(q?o.u*q:null);return {u:u,kg:k,src:o.src||'nhãn',conf:o.src==='model'?'vừa':'cao'}}
+  if(o&&(o.u!=null||o.kg!=null)){var u=o.u!=null?o.u:(q?o.kg/q:null),k=o.kg!=null?o.kg:(q?o.u*q:null);return {u:u,kg:k,src:o.src||'nhãn',conf:o.conf||(o.src==='model'?'vừa':'cao')}}
   var m=/(\d+(?:[.,]\d+)?)\s*kg\s*\/\s*(hộp|cuộn|túi|bịch|cái|bộ|thùng|chai)/i.exec(r.ten||'');
   if(m&&q){var u2=num(m[1]);return {u:u2,kg:u2*q,src:'tên (ghi '+m[0]+')',conf:'vừa'}}
   var v=dims(r),mt=mat(r);

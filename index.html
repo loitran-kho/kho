@@ -77,6 +77,12 @@ a{color:var(--ink)}
 #lbx{position:absolute;top:10px;right:12px;width:48px;height:48px;border:0;border-radius:50%;background:#fff;color:#111;font-size:32px;line-height:1;cursor:pointer}
 #lbc{color:#fff;font-size:15px;text-align:center;max-width:92vw}#lbo{color:#9bbcff;font-size:14px}
 .pic{cursor:zoom-in}
+.badge{display:flex;flex-direction:column;justify-content:center;align-items:center;line-height:1}.badge .tm{font-size:8px;font-weight:600;letter-spacing:.08em;opacity:.9;margin-bottom:1px}.row .badge .tm{font-size:6.5px}
+.need{color:#b00000;font-weight:800}@media (prefers-color-scheme:dark){.need{color:#ff8a8a}}
+.plan .wn{fill:#d94040;font-weight:700}
+.chip{background:rgba(128,128,128,.15)!important;color:var(--mute)!important}.q3{border-color:var(--line)!important;color:var(--fg)!important}
+details.tech{margin-top:6px}details.tech summary{font-size:12px;color:var(--mute);cursor:pointer}
+@media (max-width:600px){.plan{width:100%;height:auto}.plan .ps{font-size:17px}.plan .pt{font-size:21px}}
 .lech{margin:8px 0;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.6);font-size:13px}.lech.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.5)}.qnote{font-size:11.5px;color:#888;margin:4px 0 6px}
 .idl{display:flex;flex-wrap:wrap;gap:4px 14px}.idl b{font-weight:600}.tem{font-size:12px;color:#888;margin:2px 0 6px}.miss2{font-size:12.5px;color:#888;margin:8px 0}.miss2 strong{margin-right:6px}
 .noimg{flex:none;width:104px;height:104px;border-radius:12px;border:1px dashed rgba(128,128,128,.55);background:rgba(128,128,128,.15);display:flex;align-items:center;justify-content:center;text-align:center;font:12px/1.2 sans-serif;color:#888}
@@ -150,7 +156,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 function hashOf(loc){return loc.replace(/\./g,'-')}
 function normKK(s){var m=/^kk-?(\d{1,4})$/i.exec(s.trim());return m?'KK-'+('0000'+m[1]).slice(-4):null}
 function normLoc(s){var t=s.trim().toUpperCase().replace(/-/g,'.');return /^F\d+(\.\d+){0,3}$/.test(t)?t:null}
-function badge(h){return h?'<span class="badge" title="Số huy hiệu">'+esc(h)+'</span>':''}
+function badge(h){return h?'<span class="badge" title="Tem huy hiệu: số dán trên túi, KHÔNG phải số lượng"><small class="tm">TEM</small>'+esc(h)+'</span>':''}
 /* ===== CẬN HẠN DÙNG + viền cảnh báo (vàng <30 ngày, đỏ quá hạn) ===== */
 var HSDF='all';
 function hdays(r){var d=pdate(r.hsd);if(!d)return null;var t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/864e5)}
@@ -177,7 +183,7 @@ function skuIdx(){if(SKUI)return SKUI;SKUI={};DATA.forEach(function(r){if(!/^[A-
 function skuBoxes(s){return uniq((skuIdx()[s]||[]).map(function(r){return r.vt}))}
 function skuShared(r){return !!r.sku&&skuBoxes(r.sku).length>1}
 function lnkIcon(r){return skuShared(r)?' <span class="lnk" title="SKU '+esc(r.sku)+' có ở '+skuBoxes(r.sku).length+' box">🔗</span>':''}
-function dupHTML(r){if(!skuShared(r))return '';var a=skuIdx()[r.sku],bx=skuBoxes(r.sku).sort(),tot=0,num=true;
+function dupHTML(r){if(!skuShared(r))return '';var a=skuIdx()[r.sku],bx=skuBoxes(r.sku).sort(nat),tot=0,num=true;
   a.forEach(function(x){var n=parseFloat(String(x.sl||'').replace(',','.'));if(isNaN(n))num=false;else tot+=n});
   var li=bx.map(function(v){var ks=a.filter(function(x){return x.vt===v}).map(function(x){return (x.kk===r.kk?'<b>'+x.kk+' (đây)</b>':'<a href="#'+x.kk+'">'+x.kk+'</a>')+' · '+esc(x.sl)+' '+esc(x.dvt)});
     return '<li><a href="#'+hashOf(v)+'">'+esc(v)+'</a>: '+ks.join('; ')+'</li>'}).join('');
@@ -243,7 +249,7 @@ function boxView(loc){
   var bp=uniq(rs.map(function(r){return r.bp})),km=uniq(rs.map(function(r){return r.km})),tb=uniq(rs.map(function(r){return r.mtb}));
   var type=uniq(rs.map(function(r){return r.type}))[0]||'';
   var tot=rs.reduce(function(a,r){return a+(+r.sl||0)},0);
-  var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip">'+tot+' đơn vị (cộng chung)</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
+  var chips='<span class="chip">'+rs.length+' loại vật tư</span><span class="chip" title="Cộng số lượng của mọi dòng trong ô, không phân biệt đơn vị tính (cái, bộ, cuộn…)">Tổng số lượng: '+nf(tot)+'</span>'+(type?'<span class="chip">'+esc(type)+'</span>':'');
   if(hsdQ)chips+='<span class="chip warn">'+hsdQ+' loại quá hạn</span>';else if(hsd.length)chips+='<span class="chip warn">'+hsd.length+' loại sắp hết hạn (90 ngày)</span>';
   if(cx)chips+='<span class="chip warn">'+cx+' loại cần xác nhận</span>';
   h+='<div class="chips">'+chips+'</div>'+dupBoxHTML(rs)+capHTML(loc)+wtHTML(loc)+(window.docHTML?docHTML(loc):'')+galHTML(loc);
@@ -300,18 +306,19 @@ function capOf(loc){
   c.pct=(c.box&&c.n)?c.vol/c.box*100:null;
   return c}
 function capCls(p){return p==null?'':(p>100?'cx':(p<CAP_LO?'cg':(p<=CAP_HI?'cy':'cr')))}   /* >100% = quá tải (đỏ đậm) */
+function nat(a,b){return String(a).localeCompare(String(b),'en',{numeric:true})}
 function nf(x,d){return (+x).toLocaleString('vi-VN',{maximumFractionDigits:d==null?0:d})}
 function pf(p){return nf(p,p<10?1:0)+'%'}
 function capHTML(loc){var c=capOf(loc);if(!c.rs.length)return '';
-  var miss=c.miss.length?'<small>'+c.n+'/'+c.rs.length+' loại có kích thước nên được tính; thiếu: '+c.miss.join(', ')+'</small>':'';
+  var miss=c.miss.length?'<small>'+c.n+'/'+c.rs.length+' loại có kích thước nên được tính; thiếu kích thước: <b class="need">'+c.miss.join(', ')+'</b></small>':'';
   if(!c.box)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · chưa có số đo box '+esc(c.type)+'</div><small>Thể tích vật tư đã đo: '+nf(c.vol)+' cm³</small>'+miss+'</div>';
-  if(c.pct==null)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · vật tư chưa có kích thước</div>'+miss+'</div>';
+  if(c.pct==null)return '<div class="cap"><div class="capt"><b>Sức chứa: chưa tính được</b> · <span class="need">⚠ THIẾU KÍCH THƯỚC</span></div>'+miss+'</div>';
   return '<div class="cap"><div class="capt"><b>Sức chứa: '+pf(c.pct)+'</b> · vật tư chiếm '+nf(c.vol)+' cm³ / thể tích dùng được của box '+esc(c.type)+' '+nf(c.box)+' cm³ (đã nhân hệ số lấp đầy '+USABLE+')</div><div class="bar"><i class="'+capCls(c.pct)+'" style="width:'+Math.min(100,c.pct)+'%"></i></div>'+(c.pct>100?'<div class="warn">⚠ Quá tải! Vượt ngưỡng an toàn</div>':'')+miss+'</div>'}
 function wtHTML(loc){var T=TW();if(!T)return '';var c=capOf(loc);if(!c.rs.length)return '';var t=T.cell(loc,c.rs,c.type);
   var h='<div class="cap"><div class="capt"><b>⚖️ Tải trọng: '+(t.n?'≈ '+T.fmt(t.kg)+' kg':'chưa có số kg')+(t.cap?' / '+t.cap+' kg (hộp '+esc(c.type)+')':'')+'</b>'+(t.pct!=null?' · '+Math.round(t.pct)+'%':'')+'</div>';
   if(t.pct!=null)h+='<div class="bar"><i class="'+T.cls(t.pct)+'" style="width:'+Math.min(100,t.pct)+'%"></i></div>';
   t.warn.forEach(function(w){h+='<div class="warn">'+w+'</div>'});
-  return h+'<small>'+t.n+'/'+t.N+' dòng đã ước được kg (nhãn → model → tên → kích thước×vật liệu → cảm nhận). Sai số có thể ±40%; ghi số thật vào trong_luong.js.</small></div>'}
+  return h+'<small>'+t.n+'/'+t.N+' dòng đã ước được kg (nhãn → model → tên → kích thước×vật liệu → cảm nhận). Sai số có thể ±40%. Có số cân thật thì báo kho để cập nhật.</small><details class="tech"><summary>Hướng dẫn kỹ thuật</summary><small>Người quản lý ghi số kg thật vào file trong_luong.js (TT_OVR theo mã KK; src: nhãn | cân | model). Không cần sửa data.js hay Google Sheet.</small></details></div>'}
 function clusterCap(cl){var es=(window.KHO_VITRI&&vtIdx()[cl])||[],num=0,den=0,k=0;
   es.forEach(function(e){var c=capOf(e[0]);if(c.box){den+=c.box;num+=c.vol;if(c.rs.length)k++}});
   return (den&&k)?num/den*100:null}
@@ -320,7 +327,7 @@ function clusterW(cl){var T=TW();if(!T)return null;var es=(window.KHO_VITRI&&vtI
   es.forEach(function(e){var c=capOf(e[0]);if(!c.rs.length)return;var t=T.cell(e[0],c.rs,c.type);kg+=t.kg;n+=t.n;N+=t.N;cell++});
   var cap=T.rackCap(cl);return {kg:kg,n:n,N:N,cap:cap,pct:(n?kg/cap*100:null)}}
 function deptLegend(){if(!window.LT)return '';var d=LT.DEPTS;return '<div class="legend dl"><b>Phân khu liên bang (vạch màu ở mép cụm: dưới→trên = tầng 1→7; nét đứt = dùng chung, chưa chia tầng):</b>'+Object.keys(d).map(function(k){return '<span><i style="background:'+d[k]+'"></i>'+esc(k)+'</span>'}).join('')+'</div>'}
-function legend(){return deptLegend()+'<div class="legend"><span><i class="cg"></i>&lt;'+CAP_LO+'% còn nhiều chỗ</span><span><i class="cy"></i>'+CAP_LO+'–'+CAP_HI+'% vừa</span><span><i class="cr"></i>&gt;'+CAP_HI+'% sắp đầy</span><span><i class="cx"></i>&gt;100% quá tải</span><span><i class="has"></i>có nhãn, chưa tính được %</span><span>📦 thể tích · ⚖️ tải trọng (kg ước tính / sức chịu tải cụm kệ — số GIẢ ĐỊNH, xem Cẩm nang)</span><span><i class="hlg"></i>khớp tìm kiếm</span></div>'}
+function legend(){return deptLegend()+'<div class="legend"><span><i class="cg"></i>&lt;'+CAP_LO+'% còn nhiều chỗ</span><span><i class="cy"></i>'+CAP_LO+'–'+CAP_HI+'% vừa</span><span><i class="cr"></i>&gt;'+CAP_HI+'% sắp đầy</span><span><i class="cx"></i>&gt;100% quá tải</span><span><i class="has"></i>có dòng KK, chưa tính được %</span><span><b>📦 % = thể tích vật tư chiếm trong box (KHÔNG phải tiến độ kiểm kê)</b> · ⚖️ tải trọng (kg ước tính / sức chịu tải cụm kệ — số GIẢ ĐỊNH, xem Cẩm nang)</span><span><b class="need">⚠n</b> = có n ô quá tải bên trong cụm, dù % chung của cụm còn thấp</span><span><i class="hlg"></i>khớp tìm kiếm</span></div>'}
 function occ(){var o={};DATA.forEach(function(r){o[r.vt]=(o[r.vt]||0)+1});return o}
 var GOV='';
 function govDim(c){return GOV&&window.LT&&LT.clusterOwners(c).indexOf(GOV)<0}
@@ -337,7 +344,8 @@ function lbl(c,x,y,w,hh,hlc,n,cp){var cx=x+w/2,T=TW();
   if(!n)return '<text x="'+cx+'" y="'+(y+hh/2-2)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+cx+'" y="'+(y+hh/2+14)+'" text-anchor="middle" class="ps">📦 0% · 0 nhãn</text>';
   var cw=clusterW(c),bw=w-20,bx=x+10,vt=cp!=null?'📦 '+pf(cp):'📦 ?',wt=(cw&&cw.n)?'⚖️ '+T.fmt(cw.kg)+'/'+cw.cap:'⚖️ ?',wp=(cw&&cw.n)?cw.pct:null,tv='📦 Thể tích '+c+': '+(cp!=null?pf(cp)+' (vật tư / thể tích dùng được của các box)':'chưa tính được'),tw='⚖️ Tải trọng '+c+': '+((cw&&cw.n)?'≈ '+T.fmt(cw.kg)+' kg / '+cw.cap+' kg sức chịu tải cụm ('+Math.round(cw.pct)+'%) · '+cw.n+'/'+cw.N+' dòng đã ước kg':'chưa có số kg');
   if(hh<70)return '<text x="'+cx+'" y="'+(y+15)+'" text-anchor="middle" class="pt">'+c+'</text><text x="'+cx+'" y="'+(y+31)+'" text-anchor="middle" class="ps">'+vt+' · '+wt+' kg</text>'+(cp!=null?bar(x+12,y+38,(w-36)/2,cp):'')+(wp!=null?bar(x+w/2+6,y+38,(w-36)/2,wp):'');
-  return '<text x="'+cx+'" y="'+(y+20)+'" text-anchor="middle" class="pt">'+c+'</text><g><title>'+tv+'</title><text x="'+cx+'" y="'+(y+42)+'" text-anchor="middle" class="ps">'+vt+'</text>'+(cp!=null?bar(bx,y+48,bw,cp):'')+'</g><g><title>'+tw+'</title><text x="'+cx+'" y="'+(y+70)+'" text-anchor="middle" class="ps">'+wt+'</text>'+(wp!=null?bar(bx,y+76,bw,wp):'')+'</g>'+'<text x="'+cx+'" y="'+(y+100)+'" text-anchor="middle" class="ps">'+n+' nhãn</text>'+((wp!=null&&wp>=T.CFG.WARN)||(cp!=null&&cp>100)?'<text x="'+(x+w-8)+'" y="'+(y+16)+'" text-anchor="end" class="ps">⚠</text>':'')}
+  return '<text x="'+cx+'" y="'+(y+20)+'" text-anchor="middle" class="pt">'+c+'</text><g><title>'+tv+'</title><text x="'+cx+'" y="'+(y+42)+'" text-anchor="middle" class="ps">'+vt+'</text>'+(cp!=null?bar(bx,y+48,bw,cp):'')+'</g><g><title>'+tw+'</title><text x="'+cx+'" y="'+(y+70)+'" text-anchor="middle" class="ps">'+wt+'</text>'+(wp!=null?bar(bx,y+76,bw,wp):'')+'</g>'+'<text x="'+cx+'" y="'+(y+100)+'" text-anchor="middle" class="ps">'+n+' dòng KK</text>'+(function(){var oc=overCells(c);return (oc>0||(wp!=null&&wp>=T.CFG.WARN)||(cp!=null&&cp>100))?'<text x="'+(x+w-8)+'" y="'+(y+16)+'" text-anchor="end" class="ps wn"><title>'+(oc>0?oc+' ô trong cụm quá tải (>100% thể tích)':'Cụm gần/đã quá tải')+'</title>⚠'+(oc>0?oc:'')+'</text>':''})()}
+function overCells(cl){var es=(window.KHO_VITRI&&vtIdx()[cl])||[],n=0;es.forEach(function(e){var c=capOf(e[0]);if(c.pct!=null&&c.pct>100)n++});return n}
 function planSVG(){
   var cnt={},hl={};DATA.forEach(function(r){var p=(r.vt||'').split('.');if(p.length>=2){var c=p[0]+'.'+p[1];cnt[c]=(cnt[c]||0)+1}});
   Object.keys(HL).forEach(function(v){var p=v.split('.');if(p.length>=2){var c=p[0]+'.'+p[1];hl[c]=(hl[c]||0)+HL[v]}});
@@ -346,7 +354,7 @@ function planSVG(){
       d='M0 0q'+q+' -6 '+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0t'+w/2+' 0V'+H+'H0Z';
       wt='<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/></clipPath><g clip-path="url(#'+id+')"><g class="rs" style="--h:'+hh+'px"><g transform="translate('+x+','+(y+hh-lh)+')"><path class="wv '+capCls(cp)+'" style="--w:-'+w+'px;--sp:'+(5+(x%4))+'s" d="'+d+'"/></g></g></g>'}
     return '<a href="#'+hashOf(c)+'"'+(govDim(c)?' style="opacity:.25"':'')+'><rect class="'+cls+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" rx="3"/>'+wt+lbl(c,x,y,w,hh,hl[c],cnt[c],cp)+stripes(c,x,y,w,hh)+'</a>'}
-  var s='<svg viewBox="0 0 940 390" class="plan" style="min-width:620px" role="img" aria-label="Mặt bằng kho"><text x="10" y="16" class="ps">Mặt bằng kho WH_EN-01 (bấm một cụm để xem các ô)</text>';
+  var s='<svg viewBox="0 0 940 390" class="plan" role="img" aria-label="Mặt bằng kho"><text x="10" y="16" class="ps">Mặt bằng kho WH_EN-01 (bấm một cụm để xem các ô)</text>';
   var cols=[11,10,9,8,7,6,5,4,3,2,1];
   cols.forEach(function(d,i){var x=10+i*84;s+=rect('F'+d+'.2',x,26,80,130)+rect('F'+d+'.1',x,160,80,130)});
   s+=rect('F12.3',10,310,200,56)+rect('F12.2',214,310,200,56)+rect('F12.1',418,310,200,56);
@@ -370,8 +378,8 @@ function home(){
   HL={};var locs=occ();
   var nh=DATA.filter(function(r){var d=hdays(r);return d!=null&&d<183}).length;
   var h=planSVG()+'<a class="row hlink" href="tim_duong.html" target="_blank" rel="noopener">🧭 <b>Tìm vật tư & chỉ đường</b> <span class="n">bản đồ phát sáng · la bàn · khoá mục tiêu</span></a><a class="row hlink" href="kho_3D_toan_kho.html" target="_blank" rel="noopener">🧊 <b>Xem 3D toàn kho</b> <span class="n">xoay, phóng, bấm cụm</span></a><a class="row hlink" href="#can-han">⏳ <b>Cận hạn dùng</b> <span class="n">'+(nh?nh+' vật tư dưới 6 tháng':'xem danh sách')+'</span></a><div class="card"><div class="head"><div><div class="code">'+DATA.length+' phiếu</div><span class="sub" style="padding:0">Gõ từ khóa (VD: que hàn 3.2), hoặc bấm cụm trên bản đồ, hoặc bấm ô bên dưới</span></div></div><div class="list">';
-  Object.keys(locs).sort().forEach(function(l){h+='<a class="row'+hsCls(hsdState(function(r){return r.vt===l}))+'" href="#'+hashOf(l)+'"><span class="t"><b>'+esc(l)+'</b></span><span class="n">'+locs[l]+' dòng</span></a>'});
-  return h+'</div></div>';
+  Object.keys(locs).sort(nat).forEach(function(l){h+='<a class="row'+hsCls(hsdState(function(r){return r.vt===l}))+'" href="#'+hashOf(l)+'"><span class="t"><b>'+esc(l)+'</b></span><span class="n">'+locs[l]+' dòng</span></a>'});
+  return h+'</div></div><div class="card" style="padding:10px 14px"><small><b>Gọi tên thống nhất:</b> <b>dòng KK</b> = một mã KK-xxxx = một loại vật tư trong một ô · <b>nhãn KK</b> = tem dán trên túi/hộp (1 nhãn = 1 dòng) · <b>phiếu</b> = tờ kiểm kê giấy · <b>tem huy hiệu</b> = số đỏ dán trên túi, không phải số lượng.</small></div>';
 }
 var VT_IDX=null;
 function vtIdx(){if(VT_IDX)return VT_IDX;VT_IDX={};(window.KHO_VITRI||[]).forEach(function(e){(VT_IDX[e[1]]=VT_IDX[e[1]]||[]).push(e)});return VT_IDX}
