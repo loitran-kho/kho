@@ -1,5 +1,5 @@
 /* kho_version.js — dán dấu phiên bản góc dưới-phải mọi trang. Mỗi lần giao bản mới chỉ sửa dòng KHO_VER. */
-(function(){var V='2026-11-27 20:40 · bản: SKU F1.1.1.9 theo đối chiếu KN-0103..0110';
+(function(){var V='2026-11-27 21:10 · bản: Lợi chốt số liệu KK-0139/0140/0142/0148';
 window.KHO_VER=V;
 function add(){if(document.getElementById('khoVer'))return;var d=document.createElement('div');d.id='khoVer';d.textContent='v '+V;
  d.style.cssText='position:fixed;right:8px;bottom:4px;z-index:2;font:11px system-ui,sans-serif;color:#7a8696;background:#ffffffcc;padding:1px 6px;border-radius:6px;pointer-events:none';
