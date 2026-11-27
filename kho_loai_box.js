@@ -45,7 +45,7 @@ window.BX={
  CASE:[170,120,60],
  info:function(t){return TI[t]||null},
  tier:tier,
- cell:function(cl,k,no){var T=tier(cl,k),c=T.map[no];if(!c)return null;var r={t:c.t,all:c.all,est:!T.exact},nt=NOTE[cl+'.'+k];if(nt&&nt.cells.indexOf(no)>=0){r.note=nt.note;r.qty=nt.qty;r.extra=nt.extra}return r},
+ cell:function(cl,k,no){var T=tier(cl,k),c=T.map[no];if(!c&&/^F12\./.test(cl)&&!T.map[no]&&!(T.n>0&&T.exact)){c={t:3,all:[3]};T={exact:false}}/* Lợi 28/11: F12 tạm lấy Type 3 làm box cơ sở (ước) cho ô chưa có dữ liệu */if(!c)return null;var r={t:c.t,all:c.all,est:!T.exact},nt=NOTE[cl+'.'+k];if(nt&&nt.cells.indexOf(no)>=0){r.note=nt.note;r.qty=nt.qty;r.extra=nt.extra}return r},
  /* đếm số ô theo loại trong 1 cụm (chỉ ô có trong map v5) */
  count:function(cl){var o={};for(var k=1;k<=7;k++){var T=tier(cl,k);Object.keys(T.map).forEach(function(c){T.map[c].all.forEach(function(t){o[t]=(o[t]||0)+1})})}return o},
  /* xếp hộp con Parts Case vào lòng L×W×H (mm): trả {nl,nw,sw,lay,n} */
