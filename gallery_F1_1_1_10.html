@@ -1,0 +1,40 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lưới ảnh F1.1.1.10</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#1c2330;--mut:#667085;--card:#fff;--ln:#dfe3ea;--ac:#1d5fd1;--warn:#b54708}
+@media(prefers-color-scheme:dark){:root{--bg:#10141b;--fg:#e8ecf3;--mut:#98a2b3;--card:#1a212c;--ln:#2b3442;--ac:#6ea0ff;--warn:#f79009}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--ln);background:var(--card);position:sticky;top:0;z-index:2}
+h1{font-size:18px;margin:0 0 2px}header p{margin:0;color:var(--mut);font-size:13px}header a{color:var(--ac)}
+main{padding:14px 16px;max-width:1200px;margin:auto}
+h2{font-size:14px;color:var(--mut);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.c{background:var(--card);border:1px solid var(--ln);border-radius:10px;overflow:hidden;text-decoration:none;color:inherit;display:block}
+.c:hover,.c:focus-visible{border-color:var(--ac);outline:none}
+.c img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--ln)}
+.c div{padding:6px 8px}.c b{display:block;font-size:13px}.c span{display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q{color:var(--warn)!important}
+.miss{display:flex;align-items:center;justify-content:center;aspect-ratio:3/4;color:var(--mut);font-size:12px;background:var(--ln)}
+</style></head><body>
+<header><h1>Lưới ảnh · ô F1.1.1.10</h1><p id="sub">Đang tải…</p><p><a href="index.html">← Về trang tra cứu</a> · <a href="index.html#F1-1-1-10">Xem thẻ ô F1.1.1.10</a></p></header>
+<main id="m"></main>
+<script src="data.js" charset="utf-8"></script><script src="kho_bosung.js" charset="utf-8"></script>
+<script>
+(function(){
+var DIR='img/F1_1_1_10/',LOC='F1.1.1.10';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var rows=((window.KHO_DATA&&KHO_DATA.rows)||[]).filter(function(r){return r.vt===LOC}).sort(function(a,b){return((+a.hh||99)-(+b.hh||99))||(a.kk<b.kk?-1:1)});
+var pano=[['toancanh_1.jpg','Toàn cảnh khay (1)'],['toancanh_2.jpg','Toàn cảnh khay (2)']];
+function card(file,t1,t2,warn,big){
+  /* lưới nạp ảnh MINI trước; bấm → ảnh BIG mở tab mới (target=_blank). Thiếu ảnh thì hiện ô xám, không vỡ trang. */
+  return '<a class="c" href="'+DIR+'big/'+file+'" target="_blank" rel="noopener" title="Mở ảnh lớn"><img src="'+DIR+'mini/'+file+'" alt="'+esc(t1+' '+t2)+'" loading="lazy" onerror="this.outerHTML=\'<div class=miss>Chưa có ảnh</div>\'"><div><b'+(warn?' class="q"':'')+'>'+esc(t1)+'</b><span>'+esc(t2)+'</span></div></a>';
+}
+var h='<h2>Toàn cảnh</h2><div class="g">'+pano.map(function(p){return card(p[0],'Toàn cảnh',p[1],0)}).join('')+'</div>';
+h+='<h2>Từng vật tư ('+rows.length+')</h2><div class="g">'+rows.map(function(r){
+  var w=r.ai&&r.ai!=='Rõ';
+  return card(r.kk+'.jpg',r.kk+(r.hh?' · #'+r.hh:''),(r.ten||'')+' — SL '+(r.sl||'?')+' '+(r.dvt||''),w);
+}).join('')+'</div>';
+document.getElementById('m').innerHTML=h;
+document.getElementById('sub').textContent=rows.length?(rows.length+' vật tư · bấm ảnh nhỏ để mở ảnh lớn ở tab mới · chữ cam = còn mục cần xác nhận'):'Chưa nạp được dữ liệu F1.1.1.10 (kiểm tra data.js và kho_bosung.js).';
+})();
+</script></body></html>
